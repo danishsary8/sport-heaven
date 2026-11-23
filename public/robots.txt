@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /account/login
+Disallow: /account/register
+Disallow: /account/recover
+Disallow: /checkout
+Disallow: /cart
+
+Sitemap: https://sportcastle.com.kh/sitemap.xml
