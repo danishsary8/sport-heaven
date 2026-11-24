@@ -53,6 +53,8 @@ export interface KitVariant {
  */
 export interface ProductMediaSet {
   front: string;
+  /** True when `front` is a real photo added with `npm run images` (not the placeholder). */
+  isPhoto?: boolean;
   back?: string;
   gallery?: string[];
   details?: string[];

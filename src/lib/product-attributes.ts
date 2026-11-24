@@ -59,6 +59,7 @@ export function enrichProduct(product: Product, manifest: ProductImageManifest =
   const media = {
     ...product.media,
     front: photos.front ?? product.media?.front ?? product.image,
+    isPhoto: Boolean(photos.front) || product.media?.isPhoto,
     back: photos.back ?? product.media?.back,
     gallery: photos.gallery ?? product.media?.gallery,
     details: photos.details ?? product.media?.details,

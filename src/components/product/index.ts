@@ -5,7 +5,7 @@ export { KitPdpView } from './KitPdpView';
 export { ProductDetailsTable } from './ProductDetailsTable';
 export { ProductMedia } from './ProductMedia';
 export { JerseyPreviewSvg } from './JerseyPreviewSvg';
-export { StudioHero } from './StudioHero';
+export { KitStageHero } from './KitStageHero';
 export { YouMayAlsoLikeCarousel } from './YouMayAlsoLikeCarousel';
 export {
   KitProductCardSkeleton,

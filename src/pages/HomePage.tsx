@@ -16,7 +16,7 @@ import {
   KitAutoShiftCarousel,
   KitProductCard,
   ProductCard,
-  StudioHero,
+  KitStageHero,
 } from '../components/product';
 
 type CollectionTab = 'trending' | 'ucl' | 'boots' | 'jerseys' | 'f1' | 'balls';
@@ -140,8 +140,8 @@ export function HomePage() {
 
   return (
     <div className="animate-page-enter">
-      {/* 1. STUDIO HERO STAGE */}
-      <StudioHero />
+      {/* 1. KIT STAGE HERO */}
+      <KitStageHero />
 
       {/* 2. MINIMALIST OFFICIAL PARTNER BRAND BAR */}
       <section
