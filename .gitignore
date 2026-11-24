@@ -10,3 +10,6 @@ coverage/
 # Product photos: keep only the converted WebP files (npm run images)
 public/products/*/*
 !public/products/*/web/
+
+# AI Studio tool cache
+.gmp_cache/

@@ -1,7 +1,8 @@
 {
-  "name": "react-example",
+  "name": "sport-castle",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Sport Castle: a football and F1 kit store built as a portfolio project (React 19, TypeScript, Vite, Tailwind CSS).",
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
