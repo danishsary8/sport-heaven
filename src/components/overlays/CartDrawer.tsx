@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { formatKitVariant } from '../../lib/product-attributes';
 import {
   ArrowRight,
   Minus,
@@ -184,6 +185,9 @@ export function CartDrawer() {
                       <p className="mt-0.5 text-xs text-[#56616A]">
                         {item.colorway} · Size {item.size}
                       </p>
+                      {item.variant && (
+                        <p className="mt-0.5 text-xs text-[#56616A]">{formatKitVariant(item.variant)}</p>
+                      )}
 
                       {item.customPrint?.enabled && (
                         <div className="mt-1.5 rounded bg-[#F5F7F8] px-2.5 py-1.5 text-[11px] text-[#18222D] border border-[#18222D]/8">

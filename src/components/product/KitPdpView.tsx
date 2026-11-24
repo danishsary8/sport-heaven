@@ -18,11 +18,14 @@ import {
   ZoomIn,
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
+import { getDefaultKitVariant, getVariantPrice } from '../../lib/product-attributes';
+import { KitVariantPicker } from './KitVariantPicker';
 import {
   formatTagLabel,
   getRecommendedProducts,
 } from '../../lib/mock-store/catalog';
 import type {
+  KitVariant,
   CustomPrintConfig,
   JerseyFontStyle,
   JerseyPatchId,
@@ -96,6 +99,8 @@ export function KitPdpView({ product }: KitPdpViewProps) {
   };
 
   const [selectedSize, setSelectedSize] = useState<string>(pickInitialSize);
+  const [variant, setVariant] = useState<KitVariant>(() => getDefaultKitVariant(product));
+  useEffect(() => setVariant(getDefaultKitVariant(product)), [product]);
   const [notifySize, setNotifySize] = useState<string | null>(null);
   const [notifyContact, setNotifyContact] = useState(memberProfile.email);
   const [notifySubmitted, setNotifySubmitted] = useState<string | null>(null);
@@ -199,7 +204,7 @@ export function KitPdpView({ product }: KitPdpViewProps) {
         }
       : undefined;
 
-  const unitPrice = getCartItemUnitPrice(product.price, customPrintConfig);
+  const unitPrice = getCartItemUnitPrice(getVariantPrice(product, variant), customPrintConfig);
   const discountPct =
     product.originalPrice && product.originalPrice > product.price
       ? Math.round(
@@ -241,7 +246,7 @@ export function KitPdpView({ product }: KitPdpViewProps) {
   );
 
   const handleAddToBag = () => {
-    addToCart(product, selectedSize, 1, customPrintConfig, true);
+    addToCart(product, selectedSize, 1, customPrintConfig, true, variant);
   };
 
   const handleShare = () => {
@@ -619,6 +624,10 @@ export function KitPdpView({ product }: KitPdpViewProps) {
                 Size guide
               </button>
             </div>
+
+            {product.category === 'jerseys' && (
+              <KitVariantPicker product={product} value={variant} onChange={setVariant} />
+            )}
 
             {/* Clean Rectangular Size Matrix with Cross-Dependent Out-of-Stock Handling */}
             <div className="mt-5">

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { formatKitVariant } from '../lib/product-attributes';
 import {
   ArrowRight,
   Gift,
@@ -190,6 +191,9 @@ export function CartPage() {
                       <p className="mt-1 font-mono text-xs text-[#5A5D57]">
                         Size / Spec: <strong className="text-[#0E1113]">{item.size}</strong>
                       </p>
+                      {item.variant && (
+                        <p className="mt-0.5 text-xs text-[#5A5D57]">{formatKitVariant(item.variant)}</p>
+                      )}
                       {item.customPrint?.enabled && (
                         <p className="mt-1 font-mono text-[11px] text-[#032EA1]">
                           HEAT-PRESS: {item.customPrint.playerName || 'NO NAME'} #

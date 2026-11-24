@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { formatKitVariant } from '../lib/product-attributes';
 import {
   ArrowLeft,
   ArrowRight,
@@ -986,6 +987,7 @@ export function CheckoutPage() {
                     <p className="text-[#5A5D57]">
                       Size {item.size} · Qty {item.quantity}
                     </p>
+                    {item.variant && <p className="text-[#5A5D57]">{formatKitVariant(item.variant)}</p>}
                     {item.customPrint?.enabled && (
                       <p className="font-mono text-[10.5px] text-[#032EA1]">
                         Print: {item.customPrint.playerName || 'NO NAME'} #

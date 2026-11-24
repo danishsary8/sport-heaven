@@ -57,7 +57,28 @@ export function KitProductCard({ product, priority = false }: KitProductCardProp
   const displayed =
     siblings.find((s) => s.id === activeProductId) ?? product;
 
-  const hasBackView = Boolean(displayed.jerseyTheme);
+  // Real back photo when available (Project 2), otherwise the drawn SVG back.
+  const backPhoto = displayed.media?.back;
+  const hasBackView = Boolean(backPhoto || displayed.jerseyTheme);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const didSwipe = useRef(false);
+
+  // Mobile: swipe left on the image for the back, right for the front.
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    touchStart.current = { x: t.clientX, y: t.clientY };
+    didSwipe.current = false;
+  };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStart.current || !hasBackView) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStart.current.x;
+    const dy = t.clientY - touchStart.current.y;
+    touchStart.current = null;
+    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+    didSwipe.current = true;
+    setPinnedView(dx < 0 ? 'back' : 'front');
+  };
   const showingBack = resolveKitCardShowingBack({
     hasBackView,
     isHovering: isHoveringMedia,
@@ -104,7 +125,9 @@ export function KitProductCard({ product, priority = false }: KitProductCardProp
 
   return (
     <article
-      onMouseLeave={() => {
+      onPointerLeave={(e) => {
+        // Touch devices fire a synthetic "leave" after each tap; only reset for a real mouse.
+        if (e.pointerType !== 'mouse') return;
         setIsHoveringMedia(false);
         setPinnedView('auto');
       }}
@@ -114,17 +137,26 @@ export function KitProductCard({ product, priority = false }: KitProductCardProp
       <div
         ref={mediaRef}
         data-card-view={showingBack ? 'back' : 'front'}
-        onMouseEnter={() => {
-          if (hasBackView) setIsHoveringMedia(true);
+        onPointerEnter={(e) => {
+          // Only a real mouse hover flips to the back; touch uses swipe or the toggle.
+          if (hasBackView && e.pointerType === 'mouse') setIsHoveringMedia(true);
         }}
-        onMouseLeave={() => {
-          setIsHoveringMedia(false);
+        onPointerLeave={(e) => {
+          if (e.pointerType === 'mouse') setIsHoveringMedia(false);
         }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
         className="relative aspect-[3/4] w-full overflow-hidden bg-[#F1EFEA] transition-colors duration-300 group-hover:bg-[#EAE7DF]"
       >
         <button
           type="button"
-          onClick={openDetail}
+          onClick={() => {
+            if (didSwipe.current) {
+              didSwipe.current = false;
+              return;
+            }
+            openDetail();
+          }}
           aria-label={`View ${displayed.name}`}
           className="relative block h-full w-full cursor-pointer text-left"
         >
@@ -163,7 +195,22 @@ export function KitProductCard({ product, priority = false }: KitProductCardProp
               </div>
 
               {/* Back-of-Kit Smooth Hover Layer (Zando-style crossfade) */}
-              {displayed.jerseyTheme && (
+              {backPhoto ? (
+                <div
+                  aria-hidden={!showingBack}
+                  className={`absolute inset-0 h-full w-full transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+                    showingBack ? 'opacity-100 scale-100' : 'opacity-0 scale-[1.02] pointer-events-none'
+                  }`}
+                >
+                  <img
+                    src={backPhoto}
+                    alt={`Back of ${displayed.name}`}
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              ) : displayed.jerseyTheme && (
                 <div
                   aria-hidden={!showingBack}
                   className={`absolute inset-0 flex h-full w-full items-center justify-center bg-gradient-to-b from-[#E4E9EE] via-[#E9ECEE] to-[#DFE3E7] px-2.5 pt-7 pb-3 sm:px-3 sm:pt-3 sm:pb-14 transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
@@ -199,6 +246,14 @@ export function KitProductCard({ product, priority = false }: KitProductCardProp
           </span>
         )}
 
+        {/* Mobile: front/back position dots (the toggle button is the accessible control) */}
+        {hasBackView && (
+          <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-2.5 z-10 flex justify-center gap-1.5 sm:hidden">
+            <span className={`h-1.5 rounded-full transition-all ${showingBack ? 'w-1.5 bg-[#1B1E1B]/30' : 'w-4 bg-[#1B1E1B]'}`} />
+            <span className={`h-1.5 rounded-full transition-all ${showingBack ? 'w-4 bg-[#1B1E1B]' : 'w-1.5 bg-[#1B1E1B]/30'}`} />
+          </div>
+        )}
+
         {/* Subtle Top-Right Secondary View & Quick-View Controls */}
         <div className="absolute right-2.5 top-2.5 z-10 flex flex-col gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200">
           {hasBackView && (
@@ -219,7 +274,7 @@ export function KitProductCard({ product, priority = false }: KitProductCardProp
                   : `Show back view of ${displayed.shortName}`
               }
               title={showingBack ? 'Show front view' : 'Show back view'}
-              className={`flex h-8 w-8 items-center justify-center border transition-colors cursor-pointer ${
+              className={`flex h-11 w-11 sm:h-9 sm:w-9 items-center justify-center border transition-colors cursor-pointer ${
                 showingBack
                   ? 'border-[#0E1113] bg-[#0E1113] text-[#FDFCF9]'
                   : 'border-[#0E1113]/12 bg-[#FFFFFF]/92 text-[#0E1113] hover:border-[#0E1113]'
@@ -233,7 +288,7 @@ export function KitProductCard({ product, priority = false }: KitProductCardProp
             onClick={() => setQuickViewProduct(displayed)}
             aria-label={`Quick view ${displayed.shortName}`}
             title="Quick View"
-            className="flex h-8 w-8 items-center justify-center border border-[#0E1113]/12 bg-[#FFFFFF]/92 text-[#0E1113] hover:border-[#0E1113] transition-colors cursor-pointer"
+            className="hidden sm:flex h-9 w-9 items-center justify-center border border-[#0E1113]/12 bg-[#FFFFFF]/92 text-[#0E1113] hover:border-[#0E1113] transition-colors cursor-pointer"
           >
             <Eye className="h-3.5 w-3.5" strokeWidth={1.7} />
           </button>
