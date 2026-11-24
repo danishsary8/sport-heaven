@@ -65,7 +65,7 @@ export const MAIN_MENU: MenuSection[] = [
       {
         title: 'Shop by',
         links: [
-          jersey('New season 2026/27', 'season=2026-27'),
+          jersey('New season kits', 'season=2026-27,2026'),
           jersey('Retro classics', 'season=retro'),
           jersey('Champions League kits', 'only=ucl'),
           jersey('Player version', 'version=player'),

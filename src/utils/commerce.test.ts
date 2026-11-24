@@ -732,7 +732,7 @@ test('dynamic product SEO metadata builds SERP-ready titles, descriptions, OG/Tw
 
   const origin = 'https://sportcastle.com.kh';
   const barcaSeo = buildProductSeoMetadata(barca, origin, '/');
-  assert.ok(barcaSeo.title.includes('FC Barcelona 2026/27 Home Authentic Jersey'));
+  assert.ok(barcaSeo.title.includes('FC Barcelona 2026/27 Home Jersey'));
   assert.ok(barcaSeo.title.includes('SPORT CASTLE'));
   assert.ok(barcaSeo.description.length >= 100 && barcaSeo.description.length <= 160);
   assert.equal(barcaSeo.ogType, 'product');
@@ -1524,7 +1524,7 @@ test('expanded sub-category filters cover National Team regions, Season Year-Yea
     { ...baseFilters, season: '2026/27' },
     'featured',
   );
-  assert.ok(season2627.length >= 30);
+  assert.ok(season2627.length >= 20); // national team kits use the tournament year (2026)
   assert.ok(season2627.every((p) => p.season === '2026/27'));
 
   const retroKits = filterAndSortProducts(
@@ -1532,7 +1532,7 @@ test('expanded sub-category filters cover National Team regions, Season Year-Yea
     { ...baseFilters, retroOnly: true },
     'featured',
   );
-  assert.ok(retroKits.length >= 3);
+  assert.ok(retroKits.length >= 2); // the 2026/27 Barça third kit is no longer marked retro
   assert.ok(retroKits.some((p) => p.id === 'jersey-barca-1999-retro'));
   assert.ok(retroKits.some((p) => p.id === 'jersey-brazil-2002-retro'));
 

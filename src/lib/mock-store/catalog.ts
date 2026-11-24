@@ -16,6 +16,7 @@ import type {
   ProductCategory,
   StockLevel,
 } from '../../types/store';
+import { getKitDetails, isShowable } from '../../data/kit-details';
 
 export interface CategoryDefinition {
   id: ProductCategory;
@@ -403,6 +404,19 @@ export function buildStructuredDetailsTable(
         group: 'technical',
         mono: true,
       });
+    }
+    const kit = getKitDetails(product);
+    if (kit && isShowable(kit.supplier)) {
+      rows.push({ label: 'Kit Supplier', value: kit.supplier.value, group: 'classification' });
+    }
+    if (kit?.sponsor && isShowable(kit.sponsor)) {
+      rows.push({ label: 'Front Sponsor', value: kit.sponsor.value ?? 'None', group: 'technical' });
+    }
+    if (kit?.fanName && isShowable(kit.fanName)) {
+      rows.push({ label: 'Brand Name (Fan)', value: kit.fanName.value, group: 'technical' });
+    }
+    if (kit?.playerName && isShowable(kit.playerName) && product.versions?.includes('Player')) {
+      rows.push({ label: 'Brand Name (Player)', value: kit.playerName.value, group: 'technical' });
     }
     rows.push({
       label: 'Colorway',
