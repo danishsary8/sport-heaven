@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   ArrowRight,
@@ -13,8 +13,7 @@ import { useStore } from '../../context/StoreContext';
 import { assignMorphSource } from '../../hooks/useViewTransition';
 import { formatUsd, getNextCarouselIndex, isKitProduct } from '../../utils/commerce';
 import { ProductMedia } from './ProductMedia';
-
-const HERO_AUTO_SHIFT_MS = 5600;
+import { HeroCoverflowCarousel } from './HeroCoverflowCarousel';
 
 const PRIORITY_SPOTLIGHT_IDS = [
   'jersey-madrid-2627-home',
@@ -36,7 +35,6 @@ export function StudioHero() {
   const { catalog, navigate, navigateToShop, addToCart } = useStore();
   const stageRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [direction, setDirection] = useState<1 | -1>(1);
   const [hoverPaused, setHoverPaused] = useState(false);
 
   const items = useMemo(() => {
@@ -61,22 +59,8 @@ export function StudioHero() {
     items[(activeIndex + 1) % items.length] ?? catalog[1] ?? active;
 
   const step = (dir: 1 | -1) => {
-    setDirection(dir);
     setActiveIndex((prev) => getNextCarouselIndex(prev, dir, items.length));
   };
-
-  useEffect(() => {
-    if (hoverPaused || items.length <= 1) return;
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (mediaQuery.matches) return;
-
-    const timer = window.setInterval(() => {
-      setDirection(1);
-      setActiveIndex((prev) => getNextCarouselIndex(prev, 1, items.length));
-    }, HERO_AUTO_SHIFT_MS);
-
-    return () => window.clearInterval(timer);
-  }, [hoverPaused, items.length]);
 
   const openProduct = (target: typeof active) => {
     assignMorphSource(stageRef.current);
@@ -158,7 +142,7 @@ export function StudioHero() {
 
           <div className="relative z-10 grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-6">
             {/* LEFT COLUMN: Editorial Kicker, Statement, Primary Pill CTA & Social Proof */}
-            <div className="order-2 lg:order-1 lg:col-span-4 flex flex-col items-start justify-between lg:min-h-[430px] gap-6">
+            <div className="relative z-20 order-2 lg:order-1 lg:col-span-4 flex flex-col items-start justify-between lg:min-h-[430px] gap-6">
               <div>
                 {/* Clean Unboxed Kicker with Minimal 4-Point Star */}
                 <p className="inline-flex items-center gap-2 text-xs sm:text-[13px] font-medium tracking-[0.02em] text-[#F7F5EE]">
@@ -254,83 +238,18 @@ export function StudioHero() {
                   />
                 </svg>
 
-                {/* Tall Rounded Arch Editorial Frame */}
-                <div className="relative overflow-hidden rounded-t-[200px] rounded-b-[28px] border-[7px] border-[#FAF9F5] bg-[#D7E0E8] shadow-[0_22px_50px_rgba(14,17,19,0.22)] aspect-[4/5]">
-                  <AnimatePresence initial={false}>
-                    <motion.button
-                      key={active.id}
-                      type="button"
-                      onClick={() => openProduct(active)}
-                      aria-label={`Inspect ${active.name}`}
-                      initial={{ opacity: 0, x: direction * 20, scale: 0.99 }}
-                      animate={{ opacity: 1, x: 0, scale: 1 }}
-                      exit={{ opacity: 0, x: direction * -16, scale: 0.99 }}
-                      transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-                      className="group absolute inset-0 block h-full w-full cursor-pointer text-left"
-                    >
-                      <ProductMedia
-                        product={active}
-                        loading="eager"
-                        fit={isKitProduct(active) ? 'cover' : 'contain'}
-                        className="h-full w-full bg-[#D7E0E8]"
-                        imgClassName={
-                          isKitProduct(active)
-                            ? 'scale-[1.03] transition-transform duration-500 group-hover:scale-[1.08]'
-                            : 'pb-12 transition-transform duration-500 group-hover:scale-105'
-                        }
-                      />
-
-                      {/* Subtle Bottom Gradient Scrim With Active Item Label */}
-                      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#161916]/80 via-[#161916]/30 to-transparent px-5 pb-4 pt-12">
-                        <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#EAE5DA]/90">
-                          {active.brand} · {active.season ?? active.surface ?? '2026/27'}
-                        </p>
-                        <div className="mt-0.5 flex items-baseline justify-between gap-2">
-                          <p className="truncate font-sans text-sm font-bold text-white">
-                            {active.shortName}
-                          </p>
-                          <span className="font-mono text-xs font-semibold tabular-nums text-[#F4F2EC]">
-                            {formatUsd(active.price)}
-                          </span>
-                        </div>
-                      </div>
-                    </motion.button>
-                  </AnimatePresence>
-                </div>
-
-                {/* Minimal Slide Dot Selector Beneath Centerpiece */}
-                <div
-                  className="mt-3 flex items-center justify-center gap-1.5"
-                  role="tablist"
-                  aria-label="Hero featured looks"
-                >
-                  {items.map((item, idx) => {
-                    const isCurrent = idx === activeIndex % items.length;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        role="tab"
-                        aria-selected={isCurrent}
-                        aria-label={`Show ${item.shortName}`}
-                        onClick={() => {
-                          setDirection(idx >= activeIndex ? 1 : -1);
-                          setActiveIndex(idx);
-                        }}
-                        className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                          isCurrent
-                            ? 'w-7 bg-[#FAF9F5]'
-                            : 'w-2 bg-[#FAF9F5]/45 hover:bg-[#FAF9F5]/80'
-                        }`}
-                      />
-                    );
-                  })}
-                </div>
+                <HeroCoverflowCarousel
+                  items={items}
+                  activeIndex={activeIndex}
+                  externallyPaused={hoverPaused}
+                  onChange={(index) => setActiveIndex(index)}
+                  onOpen={openProduct}
+                />
               </div>
             </div>
 
             {/* RIGHT COLUMN: 3-Icon Value Pillars + Floating "Featured Look" Card + Circular Next Button */}
-            <div className="order-3 lg:col-span-4 flex flex-col items-center lg:items-end justify-between lg:min-h-[430px] gap-6">
+            <div className="relative z-20 order-3 lg:col-span-4 flex flex-col items-center lg:items-end justify-between lg:min-h-[430px] gap-6">
               {/* Top 3-Icon Value Proposition Row */}
               <div className="grid w-full max-w-[300px] grid-cols-3 gap-3 pt-1">
                 <div className="flex flex-col items-center text-center">
