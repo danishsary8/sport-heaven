@@ -591,7 +591,10 @@ export function formatTelegramOrderMessage(order: Order): string {
         item.customPrint?.enabled
           ? ` [PRINT: ${item.customPrint.playerName || 'NO NAME'} #${item.customPrint.squadNumber || '--'} / ${getPatchLabel(item.customPrint.patch)}]`
           : '';
-      return `• ${item.quantity}x ${item.name} (${item.size})${printText} — ${formatUsd(item.unitPrice * item.quantity)}`;
+      const variantText = item.variant
+        ? ` [${item.variant.version} / ${item.variant.fit} / ${item.variant.sleeve} sleeve]`
+        : '';
+      return `• ${item.quantity}x ${item.name} (${item.size})${variantText}${printText} — ${formatUsd(item.unitPrice * item.quantity)}`;
     }),
     `--- TOTAL ---`,
     `Total: ${formatUsd(order.totalUsd)} (${formatKhr(order.totalUsd)})`,

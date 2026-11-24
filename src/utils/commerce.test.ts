@@ -4129,3 +4129,39 @@ test('24-hour System Health PDF report aggregates metrics, outputs valid binary 
 
 
 
+
+test('Telegram order message includes the kit version, fit and sleeve', () => {
+  const msg = formatTelegramOrderMessage({
+    id: 'SC-1001',
+    createdAt: new Date().toISOString(),
+    status: 'Confirmed',
+    fulfillmentMethod: 'pickup',
+    pickupBranch: 'sonthormuk',
+    customer: { fullName: 'Dara', phone: '+85512000000', telegram: '@dara', khan: '', sangkat: '', streetAddress: '', notes: '' },
+    paymentMethod: 'aba-khqr',
+    items: [
+      {
+        lineId: 'x',
+        productId: 'jersey-madrid-2627-home',
+        slug: 'real-madrid-2026-27-home-authentic-jersey',
+        name: 'Real Madrid 2026/27 Home Jersey',
+        brand: 'Adidas',
+        category: 'jerseys',
+        colorway: 'White',
+        image: '',
+        size: 'M',
+        basePrice: 153,
+        unitPrice: 153,
+        quantity: 1,
+        variant: { version: 'Player', fit: 'Men', sleeve: 'Long' },
+      },
+    ],
+    subtotal: 153,
+    teamDiscount: 0,
+    promoDiscount: 0,
+    shippingFee: 0,
+    totalUsd: 153,
+    totalKhr: 0,
+  });
+  assert.ok(msg.includes('Real Madrid 2026/27 Home Jersey (M) [Player / Men / Long sleeve]'));
+});
