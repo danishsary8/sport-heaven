@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronRight, SlidersHorizontal, X } from 'lucide-react';
 import { COLLECTION_BY_SLUG } from '../data/editorial';
 import { useStore } from '../context/StoreContext';
@@ -21,6 +21,7 @@ import {
   type ShopQuery,
 } from '../lib/shop-filters';
 import { KitProductCard, ProductCard } from '../components/product';
+import { parseHashToRoute } from '../utils/router';
 import { FilterPanel } from '../components/shop/FilterPanel';
 import { FilterSheet } from '../components/shop/FilterSheet';
 
@@ -60,6 +61,14 @@ const RESULT_NOUN: Record<ShopCategory, [string, string]> = {
 export function ShopPage({ collectionSlug = 'all' }: ShopPageProps) {
   const { catalog, route, navigate, updateShopRoute } = useStore();
   const [sheetOpen, setSheetOpen] = useState(false);
+  // Phone Back button closes the filter sheet (see effect below).
+  const sheetOpenRef = useRef(false);
+  const openedAtHash = useRef('');
+  const ignoreNextPop = useRef(false);
+  /** URL with the filters picked while the sheet is open. */
+  const sheetUrlRef = useRef('');
+  const updateRouteRef = useRef(updateShopRoute);
+  updateRouteRef.current = updateShopRoute;
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const routeParams = route.page === 'shop' ? route.params ?? '' : '';
@@ -87,13 +96,67 @@ export function ShopPage({ collectionSlug = 'all' }: ShopPageProps) {
 
   useEffect(() => setVisibleCount(PAGE_SIZE), [query]);
 
+  const openSheet = () => {
+    openedAtHash.current = window.location.hash;
+    sheetUrlRef.current = window.location.hash;
+    window.history.pushState({ filterSheet: true }, '', window.location.hash);
+    sheetOpenRef.current = true;
+    setSheetOpen(true);
+  };
+
+  /** Closed with X, backdrop, Esc or "Show results": tidy up the history entry we added. */
+  const closeSheet = useCallback(() => {
+    if (!sheetOpenRef.current) return;
+    sheetOpenRef.current = false;
+    setSheetOpen(false);
+    if (window.history.state?.filterSheet) {
+      if (window.location.hash === openedAtHash.current) {
+        ignoreNextPop.current = true;
+        window.history.back(); // nothing changed: drop the duplicate entry
+      } else {
+        window.history.replaceState(null, '', window.location.hash); // keep the new filters as a normal step
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!sheetOpen) return;
+    const onPop = () => {
+      if (ignoreNextPop.current) {
+        ignoreNextPop.current = false;
+        return;
+      }
+      if (!sheetOpenRef.current) return;
+      // Back pressed while the sheet is open: close it and keep the chosen filters.
+      const chosen = sheetUrlRef.current;
+      sheetOpenRef.current = false;
+      setSheetOpen(false);
+      if (chosen && chosen !== window.location.hash) {
+        window.history.pushState(null, '', chosen);
+        const parsed = parseHashToRoute(chosen);
+        if (parsed.page === 'shop') {
+          updateRouteRef.current({ collectionSlug: parsed.collectionSlug ?? 'all', params: parsed.params, sort: parsed.sort });
+        }
+      }
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+    // Attach once per open: re-attaching on every render would drop the listener mid-event,
+    // because the store's own popstate handler re-renders this page before ours runs.
+  }, [sheetOpen]);
+
   const applyQuery = useCallback(
     (next: ShopQuery) => {
-      updateShopRoute({
-        collectionSlug: CATEGORY_COLLECTION_SLUG[next.category],
-        params: serializeShopParams(next),
-        sort: next.sort,
-      });
+      updateShopRoute(
+        {
+          collectionSlug: CATEGORY_COLLECTION_SLUG[next.category],
+          params: serializeShopParams(next),
+          sort: next.sort,
+        },
+        // While the sheet is open, filter changes update its one history entry.
+        { replace: sheetOpenRef.current },
+      );
+      if (sheetOpenRef.current) sheetUrlRef.current = window.location.hash;
     },
     [updateShopRoute],
   );
@@ -176,7 +239,7 @@ export function ShopPage({ collectionSlug = 'all' }: ShopPageProps) {
       <div className="sticky top-[var(--header-h,4rem)] z-20 -mx-4 mt-4 flex items-center justify-between gap-3 border-b border-[#1B1E1B]/10 bg-[#FAF9F5]/95 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6 lg:hidden">
         <button
           type="button"
-          onClick={() => setSheetOpen(true)}
+          onClick={openSheet}
           aria-haspopup="dialog"
           className="inline-flex h-11 items-center gap-2 rounded-full border border-[#1B1E1B]/15 bg-white px-4 text-sm font-semibold text-[#1B1E1B] cursor-pointer"
         >
@@ -297,7 +360,7 @@ export function ShopPage({ collectionSlug = 'all' }: ShopPageProps) {
         title="Filters"
         resultCount={results.length}
         activeCount={activeCount}
-        onClose={() => setSheetOpen(false)}
+        onClose={closeSheet}
         onClearAll={() => applyQuery(clearAllFilters(query))}
       >
         <FilterPanel products={catalog} query={query} onChange={applyQuery} />

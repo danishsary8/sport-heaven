@@ -289,7 +289,10 @@ interface StoreContextValue {
     params?: string;
   }) => void;
   /** Updates shop filters/sort in the URL without scrolling (used by the filter UI). */
-  updateShopRoute: (next: { collectionSlug: string; params?: string; sort?: SortOption }) => void;
+  updateShopRoute: (
+    next: { collectionSlug: string; params?: string; sort?: SortOption },
+    options?: { replace?: boolean },
+  ) => void;
   cart: CartItem[];
   addToCart: (
     product: Product,
@@ -901,7 +904,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const updateShopRoute: StoreContextValue['updateShopRoute'] = (next) => {
+  const updateShopRoute: StoreContextValue['updateShopRoute'] = (next, options) => {
     const nextRoute: PageRoute = {
       page: 'shop',
       collectionSlug: next.collectionSlug,
@@ -909,7 +912,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       ...(next.sort && next.sort !== 'featured' ? { sort: next.sort } : {}),
     };
     const hash = routeToHash(nextRoute);
-    if (window.location.hash !== hash) {
+    if (options?.replace) {
+      // Keep the current history entry (and its state), only change the URL.
+      window.history.replaceState(window.history.state, '', hash);
+    } else if (window.location.hash !== hash) {
       window.history.pushState(null, '', hash);
     }
     setRoute(nextRoute);
