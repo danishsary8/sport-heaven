@@ -401,7 +401,7 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
 
-        <div className="mt-auto flex items-baseline justify-between gap-2 pt-3 border-t border-[#0E1113]/8 mt-3.5">
+        <div className="mt-auto flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1 pt-3 border-t border-[#0E1113]/8 mt-3.5">
           <div className="flex items-baseline gap-2">
             <span
               className={`font-mono text-[15px] font-semibold tabular-nums ${
