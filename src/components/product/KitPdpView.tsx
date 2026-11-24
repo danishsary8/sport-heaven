@@ -48,7 +48,7 @@ import { KitAutoShiftCarousel } from './KitAutoShiftCarousel';
 import { ProductDetailsTable } from './ProductDetailsTable';
 import { ProductMedia } from './ProductMedia';
 
-type KitGallerySlide = 'studio-front' | 'detail-crop' | 'back-press' | 'spin-360';
+type KitGallerySlide = 'studio-front' | 'back-photo' | 'detail-crop' | 'back-press' | 'spin-360';
 
 interface KitPdpViewProps {
   product: Product;
@@ -170,14 +170,29 @@ export function KitPdpView({ product }: KitPdpViewProps) {
     [catalog, product],
   );
 
+  // Real photos (from `npm run images`) take priority; drawn previews fill the gaps.
+  const backPhoto = product.media?.back;
+  const detailPhoto = product.media?.details?.[0];
   const slides: Array<{ id: KitGallerySlide; label: string }> = [
-    { id: 'studio-front', label: 'Front Studio' },
-    { id: 'detail-crop', label: 'Crest & Weave' },
+    { id: 'studio-front', label: 'Front' },
+    ...(backPhoto ? [{ id: 'back-photo' as const, label: 'Back' }] : []),
+    { id: 'detail-crop', label: 'Detail' },
     ...(product.jerseyTheme
-      ? [{ id: 'back-press' as const, label: 'Back Print Preview' }]
+      ? [{ id: 'back-press' as const, label: backPhoto ? 'Your print' : 'Back' }]
       : []),
-    { id: 'spin-360', label: '360° Studio' },
+    ...(backPhoto ? [] : [{ id: 'spin-360' as const, label: '360°' }]),
   ];
+
+  /** Which image a photo slide shows, and how it is cropped. */
+  const slideMedia = (id: KitGallerySlide) => {
+    if (id === 'back-photo' && backPhoto) {
+      return { media: { ...product, image: backPhoto, name: `${product.name} (back)` }, zoomClass: '' };
+    }
+    if (id === 'detail-crop' && detailPhoto) {
+      return { media: { ...product, image: detailPhoto, name: `${product.name} (detail)` }, zoomClass: '' };
+    }
+    return { media: product, zoomClass: id === 'detail-crop' ? 'scale-[1.45] object-center' : '' };
+  };
 
   const stepSlide = (delta: 1 | -1) => {
     const idx = slides.findIndex((s) => s.id === activeSlide);
@@ -310,25 +325,13 @@ export function KitPdpView({ product }: KitPdpViewProps) {
                       </div>
                     ) : (
                       <ProductMedia
-                        product={product}
+                        product={slideMedia(slide.id).media}
                         className="h-full w-full bg-[#F1EFEA]"
-                        imgClassName={
-                          slide.id === 'detail-crop'
-                            ? 'scale-[1.45] object-center'
-                            : slide.id === 'spin-360'
-                              ? 'scale-[0.92]'
-                              : ''
-                        }
+                        imgClassName={slide.id === 'spin-360' ? 'scale-[0.92]' : slideMedia(slide.id).zoomClass}
                       />
                     )}
                     <span className="absolute inset-x-0 bottom-0 bg-[#0E1113]/72 py-0.5 text-center font-mono text-[8.5px] uppercase tracking-[0.06em] text-white">
-                      {slide.id === 'studio-front'
-                        ? 'Front'
-                        : slide.id === 'detail-crop'
-                          ? 'Detail'
-                          : slide.id === 'back-press'
-                            ? 'Back'
-                            : '360°'}
+                      {slide.label}
                     </span>
                   </button>
                 );
@@ -460,14 +463,10 @@ export function KitPdpView({ product }: KitPdpViewProps) {
                     </div>
                   ) : (
                     <ProductMedia
-                      product={product}
+                      product={slideMedia(activeSlide).media}
                       loading="eager"
                       className="h-full w-full bg-[#F1EFEA]"
-                      imgClassName={
-                        activeSlide === 'detail-crop'
-                          ? 'scale-[1.48] object-center transition-transform duration-500'
-                          : 'transition-transform duration-500'
-                      }
+                      imgClassName={`transition-transform duration-500 ${slideMedia(activeSlide).zoomClass}`}
                     />
                   )}
                 </motion.div>
@@ -1121,7 +1120,7 @@ export function KitPdpView({ product }: KitPdpViewProps) {
               className="aspect-[3/4] h-[85vh] max-w-full overflow-hidden bg-[#F1EFEA]"
             >
               <ProductMedia
-                product={product}
+                product={slideMedia(activeSlide).media}
                 loading="eager"
                 className="h-full w-full bg-[#F1EFEA]"
               />

@@ -174,7 +174,12 @@ export function Footer() {
 
         {/* Bottom Legal & Crawler Links */}
         <div className="mt-12 flex flex-col gap-3 border-t border-white/10 pt-6 text-[11px] font-mono text-white/50 sm:flex-row sm:items-center sm:justify-between">
-          <p>© 2026 SPORT CASTLE CAMBODIA CO., LTD. ALL RIGHTS RESERVED.</p>
+          <div className="space-y-1">
+            <p>© 2026 SPORT CASTLE CAMBODIA CO., LTD. ALL RIGHTS RESERVED.</p>
+            <p className="font-sans text-xs text-white/60">
+              Product images © their respective brands. Portfolio demo, not a real store.
+            </p>
+          </div>
           <div className="flex flex-wrap items-center gap-4">
             <button
               type="button"
