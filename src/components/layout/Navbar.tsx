@@ -9,7 +9,11 @@ import {
   X,
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
-import { MegaMenuPanel, type MegaMenuKey } from './MegaMenuPanel';
+import { MegaMenuPanel, menuLinkHref, type MegaMenuKey } from './MegaMenuPanel';
+import { CATEGORY_MENU, MAIN_MENU } from '../../data/navigation';
+import { COLLECTION_BY_SLUG } from '../../data/editorial';
+import { categoryFromCollectionSlug } from '../../lib/shop-filters';
+import { routeToHash } from '../../utils/router';
 
 export function Navbar() {
   const {
@@ -28,6 +32,19 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openMegaMenu, setOpenMegaMenu] = useState<MegaMenuKey | null>(null);
   const closeTimerRef = useRef<number | null>(null);
+  const headerRef = useRef<HTMLElement>(null);
+
+  // Publish the header height so sticky bars below it (shop filters) never hide under it.
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const publish = () =>
+      document.documentElement.style.setProperty('--header-h', `${el.getBoundingClientRect().height}px`);
+    publish();
+    const observer = new ResizeObserver(publish);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -59,48 +76,40 @@ export function Navbar() {
     }
   };
 
+  const activeMenu = (() => {
+    if (route.page !== 'shop') return null;
+    const category =
+      categoryFromCollectionSlug(route.collectionSlug) ??
+      COLLECTION_BY_SLUG.get(route.collectionSlug ?? '')?.preset.category ??
+      'all';
+    return CATEGORY_MENU[category];
+  })();
+
   const navItems: Array<{
     label: string;
     active: boolean;
     megaKey?: MegaMenuKey;
+    href: string;
     onClick: () => void;
   }> = [
-    {
-      label: 'Collections',
-      active: route.page === 'shop' || route.page === 'brand',
-      megaKey: 'brands',
-      onClick: () => navigateToShop({ collectionSlug: 'all', category: 'all' }),
-    },
-    {
-      label: 'Boots',
-      active:
-        route.page === 'shop' &&
-        (route.collectionSlug === 'football-boots' || route.initialCategory === 'boots'),
-      megaKey: 'boots',
-      onClick: () => navigateToShop({ collectionSlug: 'football-boots', category: 'boots' }),
-    },
-    {
-      label: 'Jerseys & F1',
-      active:
-        route.page === 'shop' &&
-        (route.collectionSlug === 'jerseys-kits' || route.initialCategory === 'jerseys'),
-      megaKey: 'jerseys',
-      onClick: () => navigateToShop({ collectionSlug: 'jerseys-kits', category: 'jerseys' }),
-    },
-    {
-      label: 'Journal',
-      active: route.page === 'blog' || route.page === 'blog-post' || route.page === 'lookbooks',
-      onClick: () => navigate({ page: 'blog' }),
-    },
+    ...MAIN_MENU.map((section) => ({
+      label: section.label,
+      active: activeMenu === section.key,
+      megaKey: section.key,
+      href: menuLinkHref(section.all),
+      onClick: () => navigateToShop({ category: section.all.category }),
+    })),
     {
       label: 'Custom Studio',
       active: route.page === 'custom-studio',
+      href: routeToHash({ page: 'custom-studio' }),
       onClick: () => navigate({ page: 'custom-studio' }),
     },
   ];
 
   return (
     <header
+      ref={headerRef}
       className="sticky top-0 z-40 bg-[#FDFCF9]/96 backdrop-blur-md border-b border-[#0E1113]/12"
       onMouseLeave={scheduleCloseMega}
     >
@@ -147,7 +156,7 @@ export function Navbar() {
             onClick={() => navigate({ page: 'home' })}
             className="text-left cursor-pointer group"
           >
-            <span className="font-display text-2xl sm:text-[26px] font-extrabold uppercase tracking-[0.06em] text-[#0E1113] leading-none">
+            <span className="whitespace-nowrap font-display text-xl sm:text-[26px] font-extrabold uppercase tracking-[0.06em] text-[#0E1113] leading-none">
               SPORT CASTLE
             </span>
           </button>
@@ -161,9 +170,11 @@ export function Navbar() {
           {navItems.map((item) => {
             const isMenuOpen = item.megaKey && openMegaMenu === item.megaKey;
             return (
-              <button
+              <a
                 key={item.label}
-                type="button"
+                href={item.href}
+                aria-current={item.active ? 'page' : undefined}
+                {...(item.megaKey ? { 'aria-expanded': Boolean(isMenuOpen) } : {})}
                 onMouseEnter={() => {
                   cancelCloseMega();
                   if (item.megaKey) setOpenMegaMenu(item.megaKey);
@@ -173,11 +184,13 @@ export function Navbar() {
                   cancelCloseMega();
                   if (item.megaKey) setOpenMegaMenu(item.megaKey);
                 }}
-                onClick={() => {
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey) return;
+                  e.preventDefault();
                   setOpenMegaMenu(null);
                   item.onClick();
                 }}
-                className={`relative inline-flex items-center gap-1 py-2 text-[13px] font-semibold uppercase tracking-[0.09em] transition-colors cursor-pointer whitespace-nowrap ${
+                className={`relative inline-flex items-center gap-1 py-2 min-h-11 text-[13px] font-semibold uppercase tracking-[0.09em] transition-colors cursor-pointer whitespace-nowrap ${
                   item.active || isMenuOpen
                     ? 'text-[#0E1113]'
                     : 'text-[#5A5D57] hover:text-[#0E1113]'
@@ -197,7 +210,7 @@ export function Navbar() {
                     className="absolute inset-x-0 -bottom-[17px] h-[2px] bg-[#C8232C]"
                   />
                 )}
-              </button>
+              </a>
             );
           })}
         </nav>
@@ -269,39 +282,83 @@ export function Navbar() {
         </div>
       )}
 
-      {/* Mobile Navigation Drawer */}
+      {/* Mobile navigation: one expandable group per menu section */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-[#0E1113]/12 bg-[#FDFCF9] px-4 py-4 shadow-xl animate-mega-unfold">
-          <div className="flex flex-col divide-y divide-[#0E1113]/10">
-            {[
-              { label: 'Master Catalog (80 Items)', action: () => navigateToShop({ collectionSlug: 'all' }) },
-              { label: 'Football Boots & Cleats', action: () => navigateToShop({ collectionSlug: 'football-boots' }) },
-              { label: '2026/27 Jerseys & UCL Kits', action: () => navigateToShop({ collectionSlug: 'jerseys-kits' }) },
-              { label: 'F1 Paddock Collection', action: () => navigateToShop({ collectionSlug: 'f1-motorsport' }) },
-              { label: 'Matchday Lookbooks (-10%)', action: () => navigate({ page: 'lookbooks' }) },
-              { label: 'Editorial Journal & Guides', action: () => navigate({ page: 'blog' }) },
-              { label: 'Custom Printing Studio', action: () => navigate({ page: 'custom-studio' }) },
-              { label: 'Gift Cards (Digital & Metal)', action: () => navigate({ page: 'gift-card' }) },
-              { label: 'Full Shopping Cart', action: () => navigate({ page: 'cart' }) },
-              { label: 'Sport Castle Club Account', action: () => navigate({ page: 'account', section: 'overview' }) },
-              { label: 'Track Order & Returns', action: () => navigate({ page: 'orders' }) },
-              { label: 'Phnom Penh Store Locator', action: () => navigate({ page: 'branches' }) },
-            ].map((item) => (
-              <button
-                key={item.label}
-                type="button"
-                onClick={() => {
-                  item.action();
-                  setMobileMenuOpen(false);
-                }}
-                className="flex items-center justify-between py-3 text-left text-sm font-medium text-[#0E1113] hover:text-[#C8232C] cursor-pointer"
-              >
-                <span>{item.label}</span>
-                <span className="font-mono text-xs text-[#5A5D57]">→</span>
-              </button>
+        <nav
+          aria-label="Mobile navigation"
+          className="lg:hidden max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-[#1B1E1B]/10 bg-[#FAF9F5] px-4 pb-6 shadow-xl animate-mega-unfold"
+        >
+          <ul className="divide-y divide-[#1B1E1B]/10">
+            {MAIN_MENU.map((section) => (
+              <li key={section.key}>
+                <details className="group" open={activeMenu === section.key}>
+                  <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between text-base font-semibold text-[#1B1E1B] [&::-webkit-details-marker]:hidden">
+                    {section.label}
+                    <ChevronDown aria-hidden="true" className="h-4 w-4 transition-transform group-open:rotate-180 motion-reduce:transition-none" />
+                  </summary>
+                  <div className="pb-3">
+                    <a
+                      href={menuLinkHref(section.all)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setMobileMenuOpen(false);
+                        navigateToShop({ category: section.all.category });
+                      }}
+                      className="flex min-h-11 items-center text-sm font-semibold text-[#1B1E1B] underline decoration-[#A37B5C] decoration-2 underline-offset-4"
+                    >
+                      {section.all.label}
+                    </a>
+                    {section.columns.map((column) => (
+                      <div key={column.title} className="mt-2">
+                        <p className="text-xs font-medium text-[#5E625B]">{column.title}</p>
+                        <ul className="mt-1 flex flex-wrap gap-2">
+                          {column.links.map((link) => (
+                            <li key={link.label}>
+                              <a
+                                href={menuLinkHref(link)}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setMobileMenuOpen(false);
+                                  navigateToShop({ category: link.category, params: link.params });
+                                }}
+                                className="inline-flex min-h-11 items-center rounded-full border border-[#1B1E1B]/15 bg-white px-4 text-sm text-[#1B1E1B]"
+                              >
+                                {link.label}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              </li>
             ))}
-          </div>
-        </div>
+            {[
+              { label: 'Custom Studio', route: { page: 'custom-studio' } as const },
+              { label: 'Journal', route: { page: 'blog' } as const },
+              { label: 'Lookbooks', route: { page: 'lookbooks' } as const },
+              { label: 'Gift cards', route: { page: 'gift-card' } as const },
+              { label: 'Track an order', route: { page: 'orders' } as const },
+              { label: 'Stores in Phnom Penh', route: { page: 'branches' } as const },
+              { label: 'My account', route: { page: 'account', section: 'overview' } as const },
+            ].map((item) => (
+              <li key={item.label}>
+                <a
+                  href={routeToHash(item.route)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setMobileMenuOpen(false);
+                    navigate(item.route);
+                  }}
+                  className="flex min-h-12 items-center text-base font-medium text-[#1B1E1B]"
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
       )}
     </header>
   );
