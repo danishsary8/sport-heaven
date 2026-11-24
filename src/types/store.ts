@@ -33,13 +33,30 @@ export type NationalRegion = 'Europe' | 'South America' | 'Asia / ASEAN';
 
 export type F1GarmentType = 'jersey' | 'jacket';
 
-export type KitEditionType =
-  | 'Home'
-  | 'Away'
-  | 'Third'
-  | 'Retro'
-  | 'Special Edition'
-  | 'Limited Edition';
+export type KitEditionType = 'Home' | 'Away' | 'Third' | 'Goalkeeper' | 'Special';
+
+export type TeamType = 'club' | 'national';
+export type KitVersion = 'Fan' | 'Player';
+export type KitFit = 'Men' | 'Women' | 'Kids';
+export type SleeveLength = 'Short' | 'Long';
+
+/** Variant picked on the product page (version / fit / sleeve). */
+export interface KitVariant {
+  version: KitVersion;
+  fit: KitFit;
+  sleeve: SleeveLength;
+}
+
+/**
+ * Image set for one product. `front` is always present; `back`, `gallery`
+ * and `details` are filled in by `npm run images` when real photos exist.
+ */
+export interface ProductMediaSet {
+  front: string;
+  back?: string;
+  gallery?: string[];
+  details?: string[];
+}
 
 export type JerseyFontStyle = 'pro-condensed' | 'classic-block' | 'motorsport-aero';
 
@@ -87,6 +104,12 @@ export interface Product {
   nationalRegion?: NationalRegion;
   season?: string;
   kitType?: KitEditionType;
+  /** Club or national team (jerseys only). Derived from `league`. */
+  teamType?: TeamType;
+  /** Versions sold for this kit. The listed `price` is the Fan price. */
+  versions?: KitVersion[];
+  fits?: KitFit[];
+  sleeves?: SleeveLength[];
   garmentType?: F1GarmentType;
   isChampionsLeague?: boolean;
   isRetro?: boolean;
@@ -100,6 +123,8 @@ export interface Product {
   customizable?: boolean;
   sizes: string[];
   image: string;
+  /** Front/back/gallery images. Always set after catalog enrichment. */
+  media?: ProductMediaSet;
   imageCropClass?: string;
   imageFilterStyle?: string;
   galleryCaption?: string[];
@@ -215,6 +240,7 @@ export interface CartItem {
   unitPrice: number;
   quantity: number;
   customPrint?: CustomPrintConfig;
+  variant?: KitVariant;
   giftCardMeta?: {
     format: 'digital' | 'physical';
     recipientEmail: string;
@@ -439,6 +465,8 @@ export type PageRoute =
       initialCategory?: ProductCategory | 'all';
       collectionSlug?: string;
       sort?: SortOption;
+      /** Raw filter query string from the URL (without `sort`), e.g. `league=la-liga&kit=home`. */
+      params?: string;
     }
   | { page: 'brand'; slug: string }
   | { page: 'search'; query: string }

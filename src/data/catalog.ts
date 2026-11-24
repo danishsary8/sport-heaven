@@ -10,6 +10,8 @@ import {
   EXPANDED_CATALOG_IMAGES,
   EXPANDED_CATALOG_PRODUCTS,
 } from './expandedCatalog.ts';
+import { enrichProduct } from '../lib/product-attributes';
+import { PRODUCT_IMAGE_MANIFEST } from './product-images.generated';
 
 export const STUDIO_IMAGES = {
   ...NEW_BOOT_IMAGES,
@@ -142,7 +144,7 @@ export const PHNOM_PENH_KHANS = [
   'Khan Pou Senchey',
 ];
 
-export const PRODUCTS: Product[] = [
+const RAW_PRODUCTS: Product[] = [
   // ================= CATEGORY A: FOOTBALL BOOTS & SOCCER CLEATS =================
   ...EXPANDED_BOOTS,
   {
@@ -974,7 +976,7 @@ export const PRODUCTS: Product[] = [
     league: 'La Liga',
     club: 'Real Madrid',
     season: '2026/27',
-    kitType: 'Special Edition',
+    kitType: 'Special',
     isChampionsLeague: true,
     price: 115,
     colorway: 'Heritage Pure White / 1902 Navy / Gold',
@@ -2218,6 +2220,11 @@ export const PRODUCTS: Product[] = [
   },
   ...EXPANDED_CATALOG_PRODUCTS,
 ];
+
+/** All products with structured fields (team type, versions, fits, sleeves, media) filled in. */
+export const PRODUCTS: Product[] = RAW_PRODUCTS.map((product) =>
+  enrichProduct(product, PRODUCT_IMAGE_MANIFEST),
+);
 
 export const HERO_SPOTLIGHT_PRODUCTS = PRODUCTS.filter((p) => p.isHeroSpotlight);
 

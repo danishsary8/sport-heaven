@@ -190,7 +190,7 @@ function buildSku(product: Product): string {
 
 function inferSubcategory(product: Product): string {
   if (product.category === 'jerseys') {
-    if (product.isRetro || product.kitType === 'Retro') {
+    if (product.isRetro) {
       return `Retro Archive${product.nationalRegion ? ` · ${product.nationalRegion}` : ''}`;
     }
     if (product.nationalRegion) {
@@ -244,7 +244,7 @@ function buildSizeInventory(product: Product, variantSalt: string): SizeStockEnt
   const kitUnavailable =
     isKit && (product.kitType === 'Away' || product.kitType === 'Third')
       ? 'XXL'
-      : isKit && product.kitType === 'Special Edition'
+      : isKit && product.kitType === 'Special'
         ? 'S'
         : null;
 

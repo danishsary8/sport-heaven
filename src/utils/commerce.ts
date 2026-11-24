@@ -276,7 +276,7 @@ export function filterAndSortProducts(
 
     if (filters.season && filters.season !== 'all') {
       if (filters.season === 'retro-archive') {
-        if (!product.isRetro && product.kitType !== 'Retro') return false;
+        if (!product.isRetro) return false;
       } else if (product.season !== filters.season) {
         return false;
       }
@@ -286,15 +286,14 @@ export function filterAndSortProducts(
       return false;
     }
 
-    if (filters.retroOnly && !product.isRetro && product.kitType !== 'Retro') {
+    if (filters.retroOnly && !product.isRetro) {
       return false;
     }
 
     if (
       filters.limitedEditionOnly &&
       !product.isLimitedEdition &&
-      product.kitType !== 'Special Edition' &&
-      product.kitType !== 'Limited Edition'
+      product.kitType !== 'Special'
     ) {
       return false;
     }
@@ -983,7 +982,7 @@ export function getKitUnavailableSizes(product: Product): string[] {
     return ['XXL'];
   }
   if (
-    (product.kitType === 'Special Edition' || product.kitType === 'Limited Edition') &&
+    product.kitType === 'Special' &&
     product.sizes.includes('S')
   ) {
     return ['S'];
@@ -999,17 +998,6 @@ export function filterKitsByEdition(
   edition: 'all' | KitEditionType,
 ): Product[] {
   if (edition === 'all') return products;
-  if (edition === 'Retro') {
-    return products.filter((p) => p.kitType === 'Retro' || p.isRetro);
-  }
-  if (edition === 'Limited Edition') {
-    return products.filter(
-      (p) =>
-        p.kitType === 'Limited Edition' ||
-        p.kitType === 'Special Edition' ||
-        p.isLimitedEdition,
-    );
-  }
   return products.filter((p) => p.kitType === edition);
 }
 
