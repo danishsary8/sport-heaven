@@ -125,9 +125,15 @@ export function parseHashToRoute(rawHash: string): PageRoute {
     case 'collections': {
       const slug = s1 || 'all';
       const parsedSort = parseSortParam(params.get('sort'));
-      return parsedSort !== 'featured'
-        ? { page: 'shop', collectionSlug: slug, sort: parsedSort }
-        : { page: 'shop', collectionSlug: slug };
+      const filterParams = new URLSearchParams(params);
+      filterParams.delete('sort');
+      const serializedFilters = filterParams.toString().replace(/%2C/g, ',');
+      return {
+        page: 'shop',
+        collectionSlug: slug,
+        ...(parsedSort !== 'featured' ? { sort: parsedSort } : {}),
+        ...(serializedFilters ? { params: serializedFilters } : {}),
+      };
     }
     case 'shop': {
       const parsedSort = parseSortParam(params.get('sort'));
@@ -260,12 +266,12 @@ export function routeToHash(route: PageRoute): string {
     case 'home':
       return '#/';
     case 'shop': {
-      const sortSuffix =
-        route.sort && route.sort !== 'featured'
-          ? `?sort=${encodeURIComponent(route.sort)}`
-          : '';
+      const query = new URLSearchParams(route.params ?? '');
+      if (route.sort && route.sort !== 'featured') query.set('sort', route.sort);
+      const serialized = query.toString().replace(/%2C/g, ',');
+      const suffix = serialized ? `?${serialized}` : '';
       if (route.collectionSlug) {
-        return `#/collections/${route.collectionSlug}${sortSuffix}`;
+        return `#/collections/${route.collectionSlug}${suffix}`;
       }
       if (route.initialCategory && route.initialCategory !== 'all') {
         const slugMap: Record<ProductCategory, string> = {
@@ -275,9 +281,9 @@ export function routeToHash(route: PageRoute): string {
           balls: 'match-balls',
           essentials: 'gk-essentials',
         };
-        return `#/collections/${slugMap[route.initialCategory]}${sortSuffix}`;
+        return `#/collections/${slugMap[route.initialCategory]}${suffix}`;
       }
-      return `#/collections/all${sortSuffix}`;
+      return `#/collections/all${suffix}`;
     }
     case 'brand':
       return `#/brands/${route.slug}`;

@@ -1,7 +1,6 @@
 export { ProductCard } from './ProductCard';
 export { KitProductCard } from './KitProductCard';
 export { KitAutoShiftCarousel } from './KitAutoShiftCarousel';
-export { KitFilterBar } from './KitFilterBar';
 export { KitPdpView } from './KitPdpView';
 export { ProductDetailsTable } from './ProductDetailsTable';
 export { ProductMedia } from './ProductMedia';

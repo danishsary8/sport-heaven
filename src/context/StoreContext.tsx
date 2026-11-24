@@ -43,6 +43,7 @@ import type {
   CartItem,
   CookieConsent,
   CustomPrintConfig,
+  KitVariant,
   F1GarmentType,
   GridDensity,
   LeagueId,
@@ -52,7 +53,6 @@ import type {
   PageRoute,
   Product,
   ProductCategory,
-  ProductFilters,
   ProductQuestion,
   RmaRequest,
   SavedAddress,
@@ -68,11 +68,18 @@ import {
   updateRecentlyViewed,
 } from '../utils/commerce';
 import {
-  buildCollectionHashWithSort,
   parseHashToRoute,
   routeToHash,
 } from '../utils/router';
 import { getInitialMemberOrders } from '../utils/orderHistory';
+import { getVariantPrice } from '../lib/product-attributes';
+import {
+  CATEGORY_COLLECTION_SLUG,
+  countActiveFilters,
+  parseShopParams,
+  presetToShopQuery,
+  serializeShopParams,
+} from '../lib/shop-filters';
 import { runWithViewTransition } from '../hooks/useViewTransition';
 import {
   DEFAULT_WISHLIST_SEED,
@@ -239,33 +246,6 @@ export interface WishlistStore {
   has: (productId: string) => boolean;
 }
 
-export const DEFAULT_FILTERS: ProductFilters = {
-  category: 'all',
-  surfaces: [],
-  brands: [],
-  maxPrice: 300,
-  branch: 'all',
-  customizableOnly: false,
-  league: 'all',
-  nationalRegion: 'all',
-  season: 'all',
-  uclOnly: false,
-  retroOnly: false,
-  limitedEditionOnly: false,
-  bestSellersOnly: false,
-  newArrivalsOnly: false,
-  f1GarmentType: 'all',
-  f1Team: 'all',
-  ballSubcategory: 'all',
-  essentialsSubcategory: 'all',
-  signatureBootOnly: false,
-  searchQuery: '',
-  minRating: 0,
-  sizeFilter: '',
-  inStockOnly: false,
-  saleOnly: false,
-};
-
 interface StoreContextValue {
   // Structured Store Catalog (hydrated live from GET /api/catalog with static fallback)
   catalog: CatalogProduct[];
@@ -305,7 +285,11 @@ interface StoreContextValue {
     signatureBootOnly?: boolean;
     saleOnly?: boolean;
     sort?: SortOption;
+    /** Extra filters in URL form, e.g. `league=la-liga&kit=home`. */
+    params?: string;
   }) => void;
+  /** Updates shop filters/sort in the URL without scrolling (used by the filter UI). */
+  updateShopRoute: (next: { collectionSlug: string; params?: string; sort?: SortOption }) => void;
   cart: CartItem[];
   addToCart: (
     product: Product,
@@ -313,6 +297,7 @@ interface StoreContextValue {
     quantity?: number,
     customPrint?: CustomPrintConfig,
     openDrawer?: boolean,
+    variant?: KitVariant,
   ) => void;
   addGiftCardToCart: (config: {
     format: 'digital' | 'physical';
@@ -387,11 +372,6 @@ interface StoreContextValue {
   // Catalog filters & UI state
   gridDensity: GridDensity;
   setGridDensity: (density: GridDensity) => void;
-  filters: ProductFilters;
-  setFilters: React.Dispatch<React.SetStateAction<ProductFilters>>;
-  resetFilters: () => void;
-  sortBy: SortOption;
-  setSortBy: (sort: SortOption) => void;
   isCartOpen: boolean;
   setCartOpen: (open: boolean) => void;
   isWishlistOpen: boolean;
@@ -657,24 +637,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     loadStorage<string>(STORAGE_KEYS.promo, ''),
   );
 
-  const [filters, setFilters] = useState<ProductFilters>(() => {
-    const initial = parseHashToRoute(window.location.hash);
-    if (initial.page === 'shop') {
-      if (initial.collectionSlug) {
-        const col = COLLECTION_BY_SLUG.get(initial.collectionSlug);
-        if (col) return { ...DEFAULT_FILTERS, ...col.preset };
-      }
-      if (initial.initialCategory) {
-        return { ...DEFAULT_FILTERS, category: initial.initialCategory };
-      }
-    }
-    return DEFAULT_FILTERS;
-  });
-  const [sortBy, setSortByState] = useState<SortOption>(() => {
-    const initial = parseHashToRoute(window.location.hash);
-    return initial.page === 'shop' && initial.sort ? initial.sort : 'featured';
-  });
-
   const [isCartOpen, setCartOpen] = useState(false);
   const [isWishlistOpen, setWishlistOpen] = useState(false);
   const [isSearchOpen, setSearchOpen] = useState(false);
@@ -738,17 +700,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
         return parsed;
       });
-      if (parsed.page === 'shop') {
-        setSortByState(parsed.sort ?? 'featured');
-        if (parsed.collectionSlug) {
-          const col = COLLECTION_BY_SLUG.get(parsed.collectionSlug);
-          if (col) {
-            setFilters({ ...DEFAULT_FILTERS, ...col.preset });
-          }
-        } else if (parsed.initialCategory) {
-          setFilters((prev) => ({ ...prev, category: parsed.initialCategory ?? 'all' }));
-        }
-      }
     };
     window.addEventListener('hashchange', syncRouteFromLocation);
     window.addEventListener('popstate', syncRouteFromLocation);
@@ -757,25 +708,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener('popstate', syncRouteFromLocation);
     };
   }, []);
-
-  const setSortBy = (nextSort: SortOption) => {
-    setSortByState(nextSort);
-    if (route.page === 'shop') {
-      const nextHash = buildCollectionHashWithSort(
-        window.location.hash,
-        nextSort,
-        route.collectionSlug ?? 'all',
-      );
-      if (window.location.hash !== nextHash) {
-        window.history.pushState(null, '', nextHash);
-      }
-      setRoute((prev) =>
-        prev.page === 'shop'
-          ? { ...prev, sort: nextSort === 'featured' ? undefined : nextSort }
-          : prev,
-      );
-    }
-  };
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -940,62 +872,47 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         window.location.hash = targetHash;
       }
       setRoute(next);
-      if (next.page === 'shop') {
-        setSortByState(next.sort ?? 'featured');
-        if (next.collectionSlug) {
-          const col = COLLECTION_BY_SLUG.get(next.collectionSlug);
-          if (col) {
-            setFilters({ ...DEFAULT_FILTERS, ...col.preset });
-          }
-        } else if (next.initialCategory) {
-          setFilters((prev) => ({ ...prev, category: next.initialCategory ?? 'all' }));
-        }
-      }
       window.scrollTo({ top: 0, behavior: 'auto' });
     });
   };
 
-  const navigateToShop: StoreContextValue['navigateToShop'] = (preset) => {
-    const colPreset = preset?.collectionSlug
-      ? COLLECTION_BY_SLUG.get(preset.collectionSlug)?.preset
-      : undefined;
-    const effectiveSort: SortOption = preset?.sort ?? 'featured';
-    setFilters({
-      ...DEFAULT_FILTERS,
-      ...colPreset,
-      category: preset?.category ?? colPreset?.category ?? 'all',
-      surfaces: preset?.surface
-        ? [preset.surface]
-        : (colPreset?.surfaces ?? []),
-      brands: preset?.brand ? [preset.brand] : [],
-      branch: preset?.branch ?? 'all',
-      customizableOnly: Boolean(preset?.customizableOnly),
-      league: preset?.league ?? colPreset?.league ?? 'all',
-      nationalRegion: preset?.nationalRegion ?? colPreset?.nationalRegion ?? 'all',
-      season: preset?.season ?? colPreset?.season ?? 'all',
-      uclOnly: Boolean(preset?.uclOnly ?? colPreset?.uclOnly),
-      retroOnly: Boolean(preset?.retroOnly ?? colPreset?.retroOnly),
-      limitedEditionOnly: Boolean(
-        preset?.limitedEditionOnly ?? colPreset?.limitedEditionOnly,
-      ),
-      bestSellersOnly: Boolean(preset?.bestSellersOnly ?? colPreset?.bestSellersOnly),
-      newArrivalsOnly: Boolean(preset?.newArrivalsOnly ?? colPreset?.newArrivalsOnly),
-      f1GarmentType: preset?.f1GarmentType ?? colPreset?.f1GarmentType ?? 'all',
-      f1Team: preset?.f1Team ?? colPreset?.f1Team ?? 'all',
-      ballSubcategory: preset?.ballSubcategory ?? colPreset?.ballSubcategory ?? 'all',
-      essentialsSubcategory:
-        preset?.essentialsSubcategory ?? colPreset?.essentialsSubcategory ?? 'all',
-      signatureBootOnly: Boolean(
-        preset?.signatureBootOnly ?? colPreset?.signatureBootOnly,
-      ),
-      saleOnly: Boolean(preset?.saleOnly ?? colPreset?.saleOnly),
-    });
+  const navigateToShop: StoreContextValue['navigateToShop'] = (preset = {}) => {
+    const { collectionSlug, sort, params, ...filterPreset } = preset;
+    const sortOption = sort && sort !== 'featured' ? sort : undefined;
+    const extra = parseShopParams(params ?? '', presetToShopQuery(filterPreset));
+
+    // A plain collection link keeps its own URL (and editorial header).
+    if (collectionSlug && countActiveFilters(extra) === 0) {
+      navigate({ page: 'shop', collectionSlug, sort: sortOption });
+      return;
+    }
+
+    const base = presetToShopQuery(
+      collectionSlug ? COLLECTION_BY_SLUG.get(collectionSlug)?.preset : undefined,
+    );
+    const category = filterPreset.category ?? base.category;
+    const merged = parseShopParams(serializeShopParams(extra), { ...base, category });
+    const serialized = serializeShopParams(merged);
     navigate({
       page: 'shop',
-      collectionSlug: preset?.collectionSlug,
-      initialCategory: preset?.category ?? colPreset?.category ?? 'all',
-      sort: effectiveSort !== 'featured' ? effectiveSort : undefined,
+      collectionSlug: CATEGORY_COLLECTION_SLUG[category],
+      sort: sortOption,
+      ...(serialized ? { params: serialized } : {}),
     });
+  };
+
+  const updateShopRoute: StoreContextValue['updateShopRoute'] = (next) => {
+    const nextRoute: PageRoute = {
+      page: 'shop',
+      collectionSlug: next.collectionSlug,
+      ...(next.params ? { params: next.params } : {}),
+      ...(next.sort && next.sort !== 'featured' ? { sort: next.sort } : {}),
+    };
+    const hash = routeToHash(nextRoute);
+    if (window.location.hash !== hash) {
+      window.history.pushState(null, '', hash);
+    }
+    setRoute(nextRoute);
   };
 
   const addToCart: StoreContextValue['addToCart'] = (
@@ -1004,6 +921,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     quantity = 1,
     customPrint,
     openDrawer = false,
+    variant,
   ) => {
     const normalizedPrint = customPrint?.enabled
       ? {
@@ -1015,8 +933,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
       : undefined;
 
-    const lineId = getCartLineId(product.id, size, normalizedPrint);
-    const unitPrice = getCartItemUnitPrice(product.price, normalizedPrint);
+    const variantKey = variant ? `::${variant.version}-${variant.fit}-${variant.sleeve}` : '';
+    const lineId = `${getCartLineId(product.id, size, normalizedPrint)}${variantKey}`;
+    const basePrice = getVariantPrice(product, variant);
+    const unitPrice = getCartItemUnitPrice(basePrice, normalizedPrint);
 
     setCart((prev) => {
       const existing = prev.find((item) => item.lineId === lineId);
@@ -1041,10 +961,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           imageCropClass: product.imageCropClass,
           imageFilterStyle: product.imageFilterStyle,
           size,
-          basePrice: product.price,
+          basePrice,
           unitPrice,
           quantity,
           customPrint: normalizedPrint,
+          ...(variant ? { variant } : {}),
         },
       ];
     });
@@ -1730,7 +1651,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     pushToast('Cookie & privacy preferences saved');
   };
 
-  const resetFilters = () => setFilters(DEFAULT_FILTERS);
 
   const openSizeGuide = (tab: 'boots' | 'jerseys' = 'boots') => {
     setSizeGuideTab(tab);
@@ -1841,11 +1761,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       saveCookieConsent,
       gridDensity,
       setGridDensity,
-      filters,
-      setFilters,
-      resetFilters,
-      sortBy,
-      setSortBy,
+      updateShopRoute,
       isCartOpen,
       setCartOpen,
       isWishlistOpen,
@@ -1892,8 +1808,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       productQuestions,
       cookieConsent,
       gridDensity,
-      filters,
-      sortBy,
       isCartOpen,
       isWishlistOpen,
       isSearchOpen,
