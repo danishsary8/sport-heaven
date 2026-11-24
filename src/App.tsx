@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState, type ComponentType } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { StoreProvider, useStore } from './context/StoreContext';
 import { Footer, Navbar } from './components/layout';
@@ -12,37 +12,51 @@ import {
   WishlistDrawer,
 } from './components/overlays';
 import { HomePage } from './pages/HomePage';
-import { ShopPage } from './pages/ShopPage';
-import { BrandPage } from './pages/BrandPage';
-import { SearchResultsPage } from './pages/SearchResultsPage';
-import { ProductDetailPage } from './pages/ProductDetailPage';
-import { GiftCardPage } from './pages/GiftCardPage';
-import { CartPage } from './pages/CartPage';
-import { CheckoutPage } from './pages/CheckoutPage';
-import { OrderConfirmationPage } from './pages/OrderConfirmationPage';
-import { LoginPage, RecoverPasswordPage, RegisterPage } from './pages/AuthPages';
-import { AccountPage } from './pages/AccountPage';
-import { TrackOrderPage } from './pages/TrackOrderPage';
-import { ReturnsPortalPage } from './pages/ReturnsPortalPage';
-import { ContactPage, FaqPage } from './pages/SupportPages';
-import { BranchesPage } from './pages/BranchesPage';
-import {
-  AboutPage,
-  BlogHubPage,
-  BlogPostPage,
-  CampaignPage,
-} from './pages/EditorialPages';
-import { LookbookPage } from './pages/LookbookPage';
-import { CustomStudioPage } from './pages/CustomStudioPage';
-import { BootFinderPage } from './pages/BootFinderPage';
-import {
-  MaintenancePage,
-  NotFoundPage,
-  PolicyPage,
-  SitemapPage,
-} from './pages/PolicyAndSystemPages';
-import { SystemHealthDashboard } from '../backend/components/SystemHealthDashboard';
-import { AdminDashboardPage } from './pages/AdminDashboardPage';
+// Every page except Home loads on first visit, so the first download stays small.
+function page<M extends Record<K, ComponentType<any>>, K extends keyof M>(load: () => Promise<M>, name: K) {
+  return lazy(() => load().then((m) => ({ default: m[name] })));
+}
+
+const ShopPage = page(() => import('./pages/ShopPage'), 'ShopPage');
+const BrandPage = page(() => import('./pages/BrandPage'), 'BrandPage');
+const SearchResultsPage = page(() => import('./pages/SearchResultsPage'), 'SearchResultsPage');
+const ProductDetailPage = page(() => import('./pages/ProductDetailPage'), 'ProductDetailPage');
+const GiftCardPage = page(() => import('./pages/GiftCardPage'), 'GiftCardPage');
+const CartPage = page(() => import('./pages/CartPage'), 'CartPage');
+const CheckoutPage = page(() => import('./pages/CheckoutPage'), 'CheckoutPage');
+const OrderConfirmationPage = page(() => import('./pages/OrderConfirmationPage'), 'OrderConfirmationPage');
+const LoginPage = page(() => import('./pages/AuthPages'), 'LoginPage');
+const RecoverPasswordPage = page(() => import('./pages/AuthPages'), 'RecoverPasswordPage');
+const RegisterPage = page(() => import('./pages/AuthPages'), 'RegisterPage');
+const AccountPage = page(() => import('./pages/AccountPage'), 'AccountPage');
+const TrackOrderPage = page(() => import('./pages/TrackOrderPage'), 'TrackOrderPage');
+const ReturnsPortalPage = page(() => import('./pages/ReturnsPortalPage'), 'ReturnsPortalPage');
+const ContactPage = page(() => import('./pages/SupportPages'), 'ContactPage');
+const FaqPage = page(() => import('./pages/SupportPages'), 'FaqPage');
+const BranchesPage = page(() => import('./pages/BranchesPage'), 'BranchesPage');
+const AboutPage = page(() => import('./pages/EditorialPages'), 'AboutPage');
+const BlogHubPage = page(() => import('./pages/EditorialPages'), 'BlogHubPage');
+const BlogPostPage = page(() => import('./pages/EditorialPages'), 'BlogPostPage');
+const CampaignPage = page(() => import('./pages/EditorialPages'), 'CampaignPage');
+const LookbookPage = page(() => import('./pages/LookbookPage'), 'LookbookPage');
+const CustomStudioPage = page(() => import('./pages/CustomStudioPage'), 'CustomStudioPage');
+const BootFinderPage = page(() => import('./pages/BootFinderPage'), 'BootFinderPage');
+const MaintenancePage = page(() => import('./pages/PolicyAndSystemPages'), 'MaintenancePage');
+const NotFoundPage = page(() => import('./pages/PolicyAndSystemPages'), 'NotFoundPage');
+const PolicyPage = page(() => import('./pages/PolicyAndSystemPages'), 'PolicyPage');
+const SitemapPage = page(() => import('./pages/PolicyAndSystemPages'), 'SitemapPage');
+const SystemHealthDashboard = page(() => import('../backend/components/SystemHealthDashboard'), 'SystemHealthDashboard');
+const AdminDashboardPage = page(() => import('./pages/AdminDashboardPage'), 'AdminDashboardPage');
+
+/** Shown for the moment a page's code is downloading. */
+function PageLoading() {
+  return (
+    <div role="status" className="mx-auto flex min-h-[60vh] max-w-[1440px] items-center justify-center px-4">
+      <span className="h-8 w-8 animate-spin rounded-full border-2 border-[#1B1E1B]/15 border-t-[#1B1E1B] motion-reduce:animate-none" />
+      <span className="sr-only">Loading page</span>
+    </div>
+  );
+}
 
 function getRouteTransitionKey(route: ReturnType<typeof useStore>['route']): string {
   switch (route.page) {
@@ -114,6 +128,7 @@ function StoreRouter() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
         >
+          <Suspense fallback={<PageLoading />}>
           {/* 1. Storefront & Discovery */}
           {route.page === 'home' && <HomePage />}
           {route.page === 'shop' && <ShopPage collectionSlug={route.collectionSlug} />}
@@ -171,6 +186,7 @@ function StoreRouter() {
             <SystemHealthDashboard onBackToStore={() => navigate({ page: 'home' })} />
           )}
           {route.page === 'admin' && <AdminDashboardPage initialTab={route.tab} />}
+          </Suspense>
         </motion.div>
       </main>
       <Footer />
