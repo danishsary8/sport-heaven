@@ -141,13 +141,6 @@ function InteractiveCheckoutMapInner({
         setSuggestions(parsed);
       } catch (err) {
         const msg = String(err);
-        if (
-          msg.includes('RESOURCE_EXHAUSTED') ||
-          msg.includes('OVER_QUERY_LIMIT') ||
-          msg.includes('429')
-        ) {
-          window.dispatchEvent(new CustomEvent('gmp-quota-exceeded'));
-        }
         setSuggestions([]);
       } finally {
         setSearching(false);
@@ -191,13 +184,6 @@ function InteractiveCheckoutMapInner({
       }
     } catch (err) {
       const msg = String(err);
-      if (
-        msg.includes('RESOURCE_EXHAUSTED') ||
-        msg.includes('OVER_QUERY_LIMIT') ||
-        msg.includes('429')
-      ) {
-        window.dispatchEvent(new CustomEvent('gmp-quota-exceeded'));
-      }
       setStatusError('Could not load details for that place. Try dropping a pin on the map.');
     }
   };
@@ -361,7 +347,6 @@ function InteractiveCheckoutMapInner({
           gestureHandling="greedy"
           mapTypeControl={false}
           streetViewControl={false}
-          internalUsageAttributionIds={['gmp_mcp_codeassist_v1_aistudio']}
           onClick={(ev) => {
             const latLng = ev.detail?.latLng;
             if (!latLng) return;
@@ -441,9 +426,6 @@ export function CheckoutLocationPicker({
   const [pinPosition, setPinPosition] = useState<{ lat: number; lng: number }>(
     value ?? DEFAULT_CENTER,
   );
-  const [fallbackGeoLoading, setFallbackGeoLoading] = useState(false);
-  const [fallbackMessage, setFallbackMessage] = useState<string | null>(null);
-  const [fallbackError, setFallbackError] = useState<string | null>(null);
 
   const matchInfo: PhnomPenhCoordinateMatch = resolvePhnomPenhLocationFromCoords(
     pinPosition.lat,
@@ -486,37 +468,7 @@ export function CheckoutLocationPicker({
     [onLocationSelect],
   );
 
-  const handleFallbackGeolocation = () => {
-    setFallbackError(null);
-    setFallbackMessage(null);
-    if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      setFallbackError('Browser geolocation is unavailable. Select your Khan below.');
-      return;
-    }
-    setFallbackGeoLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setFallbackGeoLoading(false);
-        const coords = {
-          lat: Number(pos.coords.latitude.toFixed(6)),
-          lng: Number(pos.coords.longitude.toFixed(6)),
-        };
-        handlePinMove(coords, 'geolocation');
-        setFallbackMessage(
-          `Current location pinned (${coords.lat.toFixed(4)}° N, ${coords.lng.toFixed(4)}° E)`,
-        );
-      },
-      (err) => {
-        setFallbackGeoLoading(false);
-        setFallbackError(
-          err.code === err.PERMISSION_DENIED
-            ? 'Location permission declined. Please allow access or enter your address manually.'
-            : 'Unable to fetch GPS right now. Please enter your Phnom Penh address below.',
-        );
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 },
-    );
-  };
+  if (!apiKey) return null;
 
   return (
     <div className="border border-[#0E1113]/12 bg-[#F4F2EC]/70 p-4 sm:p-5 space-y-3">
@@ -534,63 +486,18 @@ export function CheckoutLocationPicker({
         </span>
       </div>
 
-      {apiKey ? (
-        <APIProvider
-          apiKey={apiKey}
-          libraries={['marker', 'places']}
-          language="en"
-          region="KH"
-        >
-          <InteractiveCheckoutMapInner
-            pinPosition={pinPosition}
-            onPinMove={handlePinMove}
-            onPlaceChosen={handlePlaceChosen}
-          />
-        </APIProvider>
-      ) : (
-        <div className="border border-[#0E1113]/12 bg-[#FDFCF9] p-4 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="text-xs text-[#5A5D57]">
-              <p className="font-semibold text-[#0E1113]">
-                Pinned: {matchInfo.khan} · {matchInfo.sangkat}
-              </p>
-              <p className="font-mono text-[11px] tabular-nums">
-                {pinPosition.lat.toFixed(4)}° N, {pinPosition.lng.toFixed(4)}° E
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleFallbackGeolocation}
-              disabled={fallbackGeoLoading}
-              className="inline-flex h-10 items-center gap-2 bg-[#0E1113] px-4 font-mono text-xs font-semibold uppercase text-[#FDFCF9] hover:bg-[#032EA1] cursor-pointer disabled:opacity-60 whitespace-nowrap"
-            >
-              {fallbackGeoLoading ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Crosshair className="h-3.5 w-3.5" />
-              )}
-              <span>Use My Current Location</span>
-            </button>
-          </div>
-          {fallbackMessage && (
-            <p className="text-xs font-medium text-[#032EA1]">{fallbackMessage}</p>
-          )}
-          {fallbackError && (
-            <p role="alert" className="text-xs font-medium text-[#C8232C]">
-              {fallbackError}
-            </p>
-          )}
-          <a
-            href={`https://www.google.com/maps/search/?api=1&query=${pinPosition.lat},${pinPosition.lng}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#032EA1] underline underline-offset-4"
-          >
-            <span>Verify Pin in Google Maps</span>
-            <ExternalLink className="h-3.5 w-3.5" />
-          </a>
-        </div>
-      )}
+      <APIProvider
+        apiKey={apiKey}
+        libraries={['marker', 'places']}
+        language="en"
+        region="KH"
+      >
+        <InteractiveCheckoutMapInner
+          pinPosition={pinPosition}
+          onPinMove={handlePinMove}
+          onPlaceChosen={handlePlaceChosen}
+        />
+      </APIProvider>
     </div>
   );
 }

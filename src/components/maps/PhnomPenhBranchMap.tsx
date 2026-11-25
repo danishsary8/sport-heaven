@@ -177,13 +177,6 @@ function MapCameraSync({
       }
     } catch (err) {
       const msg = String(err);
-      if (
-        msg.includes('RESOURCE_EXHAUSTED') ||
-        msg.includes('OVER_QUERY_LIMIT') ||
-        msg.includes('429')
-      ) {
-        window.dispatchEvent(new CustomEvent('gmp-quota-exceeded'));
-      }
       setSearchError('Unable to fetch nearby pitches right now.');
     } finally {
       setSearching(false);
@@ -288,63 +281,7 @@ export function PhnomPenhBranchMap({
     );
   }, [onSelectBranch]);
 
-  if (!apiKey) {
-    return (
-      <div className="flex min-h-[360px] sm:h-[420px] w-full flex-col items-center justify-center border border-[#0E1113]/12 bg-[#FAF9F6] p-6 text-center">
-        <Compass className="h-8 w-8 text-[#0E1113]/45" strokeWidth={1.5} />
-        <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.16em] text-[#5F625C]">
-          GOOGLE MAPS PLATFORM · PHNOM PENH STORE LOCATOR
-        </p>
-        <h3 className="mt-1 font-display text-xl font-bold text-[#0E1113]">
-          {selectedBranch.name} ({selectedPosition.lat.toFixed(4)}° N,{' '}
-          {selectedPosition.lng.toFixed(4)}° E)
-        </h3>
-        <p className="mt-1.5 max-w-md text-xs text-[#5F625C]">
-          {selectedBranch.address}, {selectedBranch.district}
-        </p>
-        {locationBanner && (
-          <p className="mt-2 font-mono text-xs font-semibold text-[#032EA1]">
-            {locationBanner}
-          </p>
-        )}
-        <div className="mt-4 flex flex-wrap justify-center gap-2">
-          <button
-            type="button"
-            onClick={handleLocateUser}
-            disabled={locatingUser}
-            className="inline-flex h-10 items-center gap-1.5 bg-[#032EA1] px-3.5 text-xs font-semibold text-white cursor-pointer disabled:opacity-60"
-          >
-            <Crosshair className="h-3.5 w-3.5" />
-            <span>{locatingUser ? 'Locating...' : 'Find Closest Branch'}</span>
-          </button>
-          {branches.map((b) => (
-            <button
-              key={b.id}
-              type="button"
-              onClick={() => onSelectBranch(b.id)}
-              className={`inline-flex h-10 items-center gap-1.5 border px-3 text-xs font-semibold cursor-pointer ${
-                b.id === selectedBranchId
-                  ? 'border-[#0E1113] bg-[#0E1113] text-white'
-                  : 'border-[#0E1113]/20 bg-white text-[#0E1113] hover:border-[#0E1113]'
-              }`}
-            >
-              <MapPin className="h-3.5 w-3.5" />
-              <span>{b.shortName}</span>
-            </button>
-          ))}
-        </div>
-        <a
-          href={`https://www.google.com/maps/search/?api=1&query=${selectedPosition.lat},${selectedPosition.lng}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#032EA1] underline underline-offset-4"
-        >
-          <span>Open {selectedBranch.shortName} in Google Maps</span>
-          <ExternalLink className="h-3.5 w-3.5" />
-        </a>
-      </div>
-    );
-  }
+  if (!apiKey) return null;
 
   return (
     <div className="relative h-[380px] sm:h-[440px] w-full overflow-hidden border border-[#0E1113]/12 bg-[#EAE7DF]">
@@ -361,7 +298,6 @@ export function PhnomPenhBranchMap({
           gestureHandling="cooperative"
           mapTypeControl={false}
           streetViewControl={false}
-          internalUsageAttributionIds={['gmp_mcp_codeassist_v1_aistudio']}
           className="h-full w-full"
         >
           <MapCameraSync

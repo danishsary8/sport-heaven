@@ -1,6 +1,0 @@
-{
-  "name": "Sport Castle — Phnom Penh Football & Motorsport Store",
-  "description": "Cambodia's premier specialty football, futsal, and F1 motorsport e-commerce destination in Phnom Penh featuring same-day custom jersey printing, surface-matched boots, and 3 local branches.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
