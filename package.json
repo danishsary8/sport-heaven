@@ -13,7 +13,8 @@
     "lint": "tsc --noEmit",
     "test": "tsx --test src/lib/shop-filters.test.ts src/data/kit-details.test.ts src/utils/commerce.test.ts",
     "images": "tsx scripts/images.ts",
-    "images:docs": "tsx scripts/product-docs.ts"
+    "images:docs": "tsx scripts/product-docs.ts",
+    "export:catalog": "tsx scripts/export-catalog.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
