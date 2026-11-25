@@ -425,12 +425,13 @@ export async function sendAdminTestNotificationApi(payload: {
   return data.deliveries;
 }
 
+// TODO(api): /v1/admin/system-health/* — legacy endpoint, to be replaced by the new API.
 export async function fetchSystemHealthMetricsApi(params?: {
   limit?: number;
   thresholdMs?: number;
   probe?: boolean;
 }): Promise<
-  import('../../backend/health/systemHealthTypes').SystemHealthMetricsResponse
+  import('../types/systemHealth').SystemHealthMetricsResponse
 > {
   const query = new URLSearchParams();
   if (params?.limit !== undefined) {
@@ -444,7 +445,7 @@ export async function fetchSystemHealthMetricsApi(params?: {
   }
   const suffix = query.toString() ? `?${query.toString()}` : '';
   return apiRequest<
-    import('../../backend/health/systemHealthTypes').SystemHealthMetricsResponse
+    import('../types/systemHealth').SystemHealthMetricsResponse
   >(`/system-health/metrics${suffix}`, {
     method: 'GET',
     requireAuth: false,

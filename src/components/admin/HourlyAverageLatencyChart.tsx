@@ -26,7 +26,7 @@ import {
   type HealthCheckSample,
   type HourlyLatencySeries,
   type LatencyMinuteBucket,
-} from '../../../backend/health/systemHealthTypes';
+} from '../../types/systemHealth';
 
 export interface HourlyAverageLatencyChartProps {
   /** Pre-aggregated 60-minute average latency series from GET /api/system-health */

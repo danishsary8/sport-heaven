@@ -41,7 +41,7 @@ import {
   PolicyPage,
   SitemapPage,
 } from './pages/PolicyAndSystemPages';
-import { SystemHealthDashboard } from '../backend/components/SystemHealthDashboard';
+import { SystemHealthDashboard } from './components/admin/SystemHealthDashboard';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 
 function getRouteTransitionKey(route: ReturnType<typeof useStore>['route']): string {

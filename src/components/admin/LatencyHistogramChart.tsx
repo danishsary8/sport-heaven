@@ -26,7 +26,7 @@ import {
   type LatencyHistogramBand,
   type LatencyHistogramBucket,
   type LatencyHistogramSeries,
-} from '../../../backend/health/systemHealthTypes';
+} from '../../types/systemHealth';
 
 export interface LatencyHistogramChartProps {
   /** Pre-aggregated 1-hour latency distribution buckets from GET /api/system-health */

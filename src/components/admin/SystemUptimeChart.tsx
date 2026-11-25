@@ -26,7 +26,7 @@ import {
   type HealthCheckSample,
   type Uptime24hSeries,
   type UptimeHourlyBucket,
-} from '../../../backend/health/systemHealthTypes';
+} from '../../types/systemHealth';
 
 export interface SystemUptimeChartProps {
   /** Pre-aggregated 24-hour hourly uptime telemetry from GET /api/system-health */

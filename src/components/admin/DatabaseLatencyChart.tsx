@@ -30,7 +30,7 @@ import {
   LATENCY_THRESHOLD_PRESETS_MS,
   type LatencyTrendPointWithAnomaly,
   type SystemHealthMetricsResponse,
-} from '../../../backend/health/systemHealthTypes';
+} from '../../types/systemHealth';
 import { fetchSystemHealthMetricsApi } from '../../lib/apiClient';
 
 export type PollIntervalSeconds = 0 | 5 | 15 | 30;
