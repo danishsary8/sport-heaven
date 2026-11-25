@@ -1304,7 +1304,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         },
       );
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wishlist, wishlistSnapshots, liveCatalogById, deliveredAlertKeys]);
 
   const applyCatalogUpdate: WishlistAlertsApi['applyCatalogUpdate'] = (

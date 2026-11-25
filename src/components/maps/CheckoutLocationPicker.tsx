@@ -9,7 +9,6 @@ import {
 } from '@vis.gl/react-google-maps';
 import {
   Crosshair,
-  ExternalLink,
   Loader2,
   MapPin,
   Navigation,
@@ -139,8 +138,7 @@ function InteractiveCheckoutMapInner({
             };
           });
         setSuggestions(parsed);
-      } catch (err) {
-        const msg = String(err);
+      } catch {
         setSuggestions([]);
       } finally {
         setSearching(false);
@@ -182,8 +180,7 @@ function InteractiveCheckoutMapInner({
           `Pinned ${place.displayName ?? item.mainText} · ${resolved.distanceKm} km from ${resolved.nearestBranchName}`,
         );
       }
-    } catch (err) {
-      const msg = String(err);
+    } catch {
       setStatusError('Could not load details for that place. Try dropping a pin on the map.');
     }
   };

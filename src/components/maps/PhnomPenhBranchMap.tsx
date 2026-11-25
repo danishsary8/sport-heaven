@@ -10,11 +10,8 @@ import {
   useMapsLibrary,
 } from '@vis.gl/react-google-maps';
 import {
-  Compass,
   Crosshair,
-  ExternalLink,
   Loader2,
-  MapPin,
   Navigation,
   Search,
 } from 'lucide-react';
@@ -175,8 +172,7 @@ function MapCameraSync({
       if (found.length === 0) {
         setSearchError('No nearby pitches returned in this radius.');
       }
-    } catch (err) {
-      const msg = String(err);
+    } catch {
       setSearchError('Unable to fetch nearby pitches right now.');
     } finally {
       setSearching(false);
@@ -244,9 +240,6 @@ export function PhnomPenhBranchMap({
     () => BRANCH_POSITIONS[selectedBranchId] ?? PHNOM_PENH_CENTER,
     [selectedBranchId],
   );
-
-  const selectedBranch =
-    branches.find((b) => b.id === selectedBranchId) ?? branches[0];
 
   const handleLocateUser = useCallback(() => {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {

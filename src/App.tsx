@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { StoreProvider, useStore } from './context/StoreContext';
 import { Footer, Navbar } from './components/layout';

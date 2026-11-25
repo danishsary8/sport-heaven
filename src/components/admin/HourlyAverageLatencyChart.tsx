@@ -193,18 +193,12 @@ export function HourlyAverageLatencyChart({
           );
 
     // Re-evaluate threshold breach flags dynamically against the active admin threshold
-    let breachedMinutes = 0;
-    const buckets = base.buckets.map((bucket) => {
-      const exceedsThreshold =
-        bucket.avgLatencyMs !== null && bucket.avgLatencyMs > thresholdMs;
-      if (exceedsThreshold) {
-        breachedMinutes += 1;
-      }
-      return {
-        ...bucket,
-        exceedsThreshold,
-      };
-    });
+    const buckets = base.buckets.map((bucket) => ({
+      ...bucket,
+      exceedsThreshold:
+        bucket.avgLatencyMs !== null && bucket.avgLatencyMs > thresholdMs,
+    }));
+    const breachedMinutes = buckets.filter((b) => b.exceedsThreshold).length;
 
     return {
       ...base,
