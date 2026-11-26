@@ -35,6 +35,8 @@ const PayPage = lazy(() => import('../features/payment/PayPage').then((m) => ({ 
 const OrderPage = lazy(() => import('../features/orders/OrderPage').then((m) => ({ default: m.OrderPage })));
 const TrackPage = lazy(() => import('../features/orders/TrackPage').then((m) => ({ default: m.TrackPage })));
 
+const SignInPage = lazy(() => import('../features/account/SignInPage').then((m) => ({ default: m.SignInPage })));
+
 const page = (path: string, title: string): RouteObject => ({ path, element: <Placeholder title={title} /> });
 
 export const routes: RouteObject[] = [
@@ -56,7 +58,7 @@ export const routes: RouteObject[] = [
           { path: 'bag', element: <BagPage /> },
           { path: 'order/:number', element: <OrderPage /> },
           { path: 'track', element: <TrackPage /> },
-          page('sign-in', 'Sign in'),
+          { path: 'sign-in', element: <SignInPage /> },
           page('account/*', 'Your account'),
           { path: 'stores', element: <StoresPage /> },
           { path: 'help', element: <HelpIndexPage /> },

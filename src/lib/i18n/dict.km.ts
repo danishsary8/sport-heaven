@@ -4,6 +4,7 @@ import { cartKm } from '../../features/cart/i18n';
 import { checkoutKm } from '../../features/checkout/i18n';
 import { payKm } from '../../features/payment/i18n';
 import { ordersKm } from '../../features/orders/i18n';
+import { accountKm } from '../../features/account/i18n';
 import type { Dict } from './dict.en';
 
 /** Khmer copy. Every English key must exist here (the type enforces it). */
@@ -14,6 +15,7 @@ export const km: Dict = {
   ...checkoutKm,
   ...payKm,
   ...ordersKm,
+  ...accountKm,
   'brand.name': 'Sport Castle',
   'nav.menu': 'ម៉ឺនុយ',
   'nav.home': 'ទំព័រដើម Sport Castle',

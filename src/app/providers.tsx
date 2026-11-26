@@ -4,6 +4,7 @@ import { configureApi } from '../lib/api';
 import { AuthProvider, type AuthAdapter } from '../lib/auth';
 import { I18nProvider, useI18n, type Lang } from '../lib/i18n';
 import { ToastProvider } from '../ui';
+import { MergeNotice } from '../features/account/MergeNotice';
 
 /** Tells the API client which language to ask for. */
 function LangBridge() {
@@ -18,7 +19,10 @@ export function AppProviders({ adapter, queryClient, initialLang, children }: { 
       <I18nProvider initial={initialLang}>
         <LangBridge />
         <AuthProvider adapter={adapter}>
-          <ToastProvider>{children}</ToastProvider>
+          <ToastProvider>
+            {children}
+            <MergeNotice />
+          </ToastProvider>
         </AuthProvider>
       </I18nProvider>
     </QueryClientProvider>
