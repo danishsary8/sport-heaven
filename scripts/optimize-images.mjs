@@ -2,7 +2,7 @@
 /**
  * Image optimisation pipeline. See docs/images.md.
  *
- * Inputs:  every .jpg/.jpeg/.png under src/assets/images and public/assets
+ * Inputs:  every .jpg/.jpeg/.png under originals/ (git-ignored, full-size photos) and public/assets
  *          (skipping the generated public/assets/catalog and public/assets/site).
  * Outputs: public/assets/catalog/<name>.jpg + <name>-{480,960,1440}.{webp,avif}
  *          for product images (those referenced as `image` in the backend seed
@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const INPUT_DIRS = ['src/assets/images', 'public/assets'].map((d) => path.join(ROOT, d));
+const INPUT_DIRS = ['originals', 'public/assets'].map((d) => path.join(ROOT, d));
 const SKIP_DIRS = ['public/assets/catalog', 'public/assets/site'].map((d) => path.join(ROOT, d));
 const OUT_CATALOG = path.join(ROOT, 'public/assets/catalog');
 const OUT_SITE = path.join(ROOT, 'public/assets/site');

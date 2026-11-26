@@ -5,7 +5,7 @@ idempotent: an output that is newer than its source is skipped.
 
 ## Inputs
 
-Every `.jpg`, `.jpeg` and `.png` under `src/assets/images/` and `public/assets/`
+Every `.jpg`, `.jpeg` and `.png` under `originals/` (full-size photos, not committed) and `public/assets/`
 (recursively; the generated `public/assets/catalog/` and `public/assets/site/`
 are skipped). The original files are kept for now because the current mock data
 still imports them.
