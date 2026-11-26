@@ -14,3 +14,4 @@ Plan: docs/superpowers/plans/2026-11-26-fe2-5-rebuild.md. Base: 38aa126 (FE1 tas
 | C2 checkout | done | 19fdd85 | 7 tests; focus moves to first invalid field (closes FE3 deferred minor) |
 | C3 pay | done | bc25c99 | 5 tests; real flow checked (order, KHQR, dev approve, confirmation); stale-order bug found and fixed test-first |
 | C4 order + track | done | bc25c99 | 6 tests (FE3 complete) |
+| D1 sign-in | done | 85b314a | 5 tests; real sign-in against backend ok |
