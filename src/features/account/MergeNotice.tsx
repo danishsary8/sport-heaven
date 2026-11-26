@@ -9,7 +9,7 @@ export function MergeNotice() {
   const [shown, setShown] = useState<string | null>(null);
   useEffect(() => {
     if (!cartMerged) return;
-    setShown(cartMerged.cappedLines > 0 ? t('signIn.mergedCapped', { n: cartMerged.mergedLines }) : t('signIn.merged', { n: cartMerged.mergedLines }));
+    setShown(cartMerged.cappedLines > 0 ? t('signIn.mergedCapped', { n: cartMerged.mergedLines }) : cartMerged.mergedLines === 1 ? t('signIn.mergedOne') : t('signIn.merged', { n: cartMerged.mergedLines }));
     clearCartMerged();
   }, [cartMerged, clearCartMerged, t]);
   useEffect(() => {

@@ -51,3 +51,29 @@ export async function latestTranId(number: string): Promise<string> {
 
 /** A unique Cambodian test phone per run so reruns don't hit per-phone limits. */
 export const testPhone = (prefix = '012') => `${prefix} ${String(Math.floor(100 + Math.random() * 900))} ${String(Math.floor(100 + Math.random() * 900))}`;
+
+/** In-app navigation (a full page load would forget the in-memory test sign-in). */
+export async function nav(page: Page, path: string): Promise<void> {
+  await page.evaluate((to) => {
+    window.history.pushState({}, '', to);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  }, path);
+  await page.waitForURL(`**${path.split('?')[0]}*`);
+}
+
+/** Signs in, gives the account a role, and signs in again so the new role is in the session. */
+export async function signInAs(page: Page, phone: string, role: 'staff' | 'admin', branch: string | null = null): Promise<void> {
+  await page.goto('/sign-in');
+  await page.getByLabel('Phone number').fill(phone);
+  await page.getByRole('button', { name: 'Send code' }).click();
+  await page.getByLabel('6-digit code').fill('123456');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page).toHaveURL(/\/account$/);
+  await makeRole(phone, role, branch);
+  await page.goto('/sign-in'); // a reload ends the in-memory test sign-in
+  await page.getByLabel('Phone number').fill(phone);
+  await page.getByRole('button', { name: 'Send code' }).click();
+  await page.getByLabel('6-digit code').fill('123456');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page).toHaveURL(/\/account$/);
+}
