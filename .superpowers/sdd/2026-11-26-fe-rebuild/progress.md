@@ -10,3 +10,4 @@ Plan: docs/superpowers/plans/2026-11-26-fe2-5-rebuild.md. Base: 38aa126 (FE1 tas
 | B4 product | done | 1dff083 | 6 tests; screens en/km |
 | B5 print studio | done | 3bd51ce | 3 tests; removed invented policy copy; screens |
 | B6 stores + help | done | fc2322e | 4 tests; terms/privacy draft; about/size/terms/privacy English-only in km |
+| C1 bag | done | 72cc3a7 | 8 tests; km overflow fixed (grid minmax + select w-full) |
