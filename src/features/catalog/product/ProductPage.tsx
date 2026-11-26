@@ -12,7 +12,7 @@ import { QuestionsSection } from './Questions';
 import { SizeGuideButton } from './SizeGuide';
 import { StoreAvailability } from './StoreAvailability';
 import { WishlistButton } from './WishlistButton';
-import { PrintStudio, type PrintChoice } from '../print/PrintStudio';
+import { EMPTY_PRINT, PrintStudio, printChoice, type PrintState } from '../print/PrintStudio';
 
 export function ProductPage() {
   const { slug = '' } = useParams();
@@ -68,7 +68,8 @@ function ProductView({ product }: { product: ProductDetail }) {
   const [params, setParams] = useSearchParams();
   const color = initialColor(product, params.get('color'));
   const [size, setSize] = useState<string | null>(null);
-  const [print, setPrint] = useState<PrintChoice | null>(null);
+  const [print, setPrint] = useState<PrintState>(EMPTY_PRINT);
+  const customPrint = printChoice(print);
   const add = useAddToCart();
 
   const variants = product.variants.filter((v) => v.color === color);
@@ -86,9 +87,9 @@ function ProductView({ product }: { product: ProductDetail }) {
   };
 
   const addToBag = () => {
-    if (!chosen) return;
+    if (!chosen || customPrint === 'invalid') return;
     add.mutate(
-      { variantId: chosen.id, qty: 1, ...(print ? { customPrint: print } : {}) },
+      { variantId: chosen.id, qty: 1, ...(customPrint ? { customPrint } : {}) },
       {
         onSuccess: () => toast.success(t('product.added')),
         onError: (e) => toast.error(isApiError(e) ? e.message : t('common.error')),
@@ -97,7 +98,7 @@ function ProductView({ product }: { product: ProductDetail }) {
   };
 
   const buy = (
-    <Button variant="buy" size="lg" block disabled={!chosen || chosen.availability === 'out'} loading={add.isPending} onClick={addToBag}>
+    <Button variant="buy" size="lg" block disabled={!chosen || chosen.availability === 'out' || customPrint === 'invalid'} loading={add.isPending} onClick={addToBag}>
       {t('product.add')}
     </Button>
   );
@@ -199,7 +200,7 @@ function ProductView({ product }: { product: ProductDetail }) {
             </div>
           </div>
 
-          {product.isCustomizable && <PrintStudio value={print} onChange={setPrint} productName={product.shortName ?? product.name} />}
+          {product.isCustomizable && <PrintStudio value={print} onChange={setPrint} swatch={product.colors.find((c) => c.name === color)?.swatchHex} />}
 
           <div className="mt-6 hidden lg:block">{buy}</div>
           <p className="mt-3 text-sm text-graphite">{t('product.pickupNote')}</p>

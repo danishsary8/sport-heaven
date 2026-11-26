@@ -19,6 +19,8 @@ const SearchPage = lazy(() => import('../features/catalog/search/SearchPage').th
 
 const ProductPage = lazy(() => import('../features/catalog/product/ProductPage').then((m) => ({ default: m.ProductPage })));
 
+const CustomPage = lazy(() => import('../features/catalog/print/CustomPage').then((m) => ({ default: m.CustomPage })));
+
 const page = (path: string, title: string): RouteObject => ({ path, element: <Placeholder title={title} /> });
 
 export const routes: RouteObject[] = [
@@ -34,7 +36,7 @@ export const routes: RouteObject[] = [
           { path: 'c/:category', element: <CategoryPage /> },
           { path: 'collections/:slug', element: <CollectionPage /> },
           { path: 'brands/:slug', element: <BrandPage /> },
-          page('custom', 'Print your shirt'),
+          { path: 'custom', element: <CustomPage /> },
           { path: 'search', element: <SearchPage /> },
           { path: 'p/:slug', element: <ProductPage /> },
           page('bag', 'Your bag'),
