@@ -147,6 +147,7 @@ export function ListingView({
           >
             {() => (
               <>
+                <h2 className="sr-only">{t('listing.products')}</h2>
                 <ul className="grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 lg:grid-cols-3 lg:gap-x-5 xl:grid-cols-4">
                   {items.map((p, i) => (
                     <li key={p.id}>

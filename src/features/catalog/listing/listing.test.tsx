@@ -31,6 +31,11 @@ beforeEach(() => {
 });
 
 describe('product listing', () => {
+  it('heads the product grid with an h2 so card titles (h3) follow in order on phones', async () => {
+    renderRoutes(routes, '/c/boots');
+    expect(await screen.findByRole('heading', { level: 2, name: 'Products' })).toBeTruthy();
+  });
+
   it('reads filters and sort from the URL and shows the products with the count', async () => {
     renderRoutes(routes, '/c/boots?brand=nike&brand=puma&sort=price_asc');
     expect(await screen.findByRole('heading', { level: 1, name: 'Boots' })).toBeTruthy();

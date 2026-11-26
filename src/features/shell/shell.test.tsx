@@ -72,5 +72,7 @@ describe('app shell', () => {
     const dialog = await screen.findByRole('dialog', { name: 'Menu' });
     expect(await within(dialog).findByRole('link', { name: 'Jerseys' })).toBeTruthy();
     expect(within(dialog).getByRole('button', { name: 'ខ្មែរ' })).toBeTruthy();
+    // The name matches the visible label (WCAG 2.5.3, label in name).
+    expect(within(dialog).getByRole('button', { name: 'EN' })).toBeTruthy();
   });
 });
