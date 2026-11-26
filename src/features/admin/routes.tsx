@@ -16,6 +16,9 @@ const NewProductPage = page('NewProductPage');
 const PromotionsPage = page('PromotionsPage');
 const DeliveryPage = page('DeliveryPage');
 const SettingsPage = page('SettingsPage');
+const UsersPage = page('UsersPage');
+const QuestionsPage = page('QuestionsPage');
+const ReturnsPage = page('ReturnsPage');
 
 /** /admin and its pages. The layout and pages are one lazy chunk, loaded only by staff. */
 export const adminRoutes: RouteObject = {
@@ -32,6 +35,9 @@ export const adminRoutes: RouteObject = {
     { path: 'promotions', element: <PromotionsPage /> },
     { path: 'delivery', element: <DeliveryPage /> },
     { path: 'settings', element: <SettingsPage /> },
+    { path: 'users', element: <UsersPage /> },
+    { path: 'questions', element: <QuestionsPage /> },
+    { path: 'returns', element: <ReturnsPage /> },
     { path: '*', element: <NotFoundPage /> },
   ],
 };
