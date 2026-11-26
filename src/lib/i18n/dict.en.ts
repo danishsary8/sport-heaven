@@ -1,6 +1,7 @@
 import { catalogEn } from '../../features/catalog/i18n';
 import { pagesEn } from '../../features/pages/i18n';
 import { cartEn } from '../../features/cart/i18n';
+import { checkoutEn } from '../../features/checkout/i18n';
 
 /** English copy: the source of every key. Sentence case; buttons name the action. */
 const base = {
@@ -57,7 +58,7 @@ const base = {
   'price.was': 'Was {price}',
 } as const;
 
-export const en = { ...base, ...catalogEn, ...pagesEn, ...cartEn } as const;
+export const en = { ...base, ...catalogEn, ...pagesEn, ...cartEn, ...checkoutEn } as const;
 
 export type DictKey = keyof typeof en;
 export type Dict = Record<DictKey, string>;

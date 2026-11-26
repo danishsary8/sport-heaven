@@ -28,6 +28,8 @@ const StoresPage = lazy(() => import('../features/pages/StoresPage').then((m) =>
 
 const BagPage = lazy(() => import('../features/cart/BagPage').then((m) => ({ default: m.BagPage })));
 
+const CheckoutPage = lazy(() => import('../features/checkout/CheckoutPage').then((m) => ({ default: m.CheckoutPage })));
+
 const page = (path: string, title: string): RouteObject => ({ path, element: <Placeholder title={title} /> });
 
 export const routes: RouteObject[] = [
@@ -59,7 +61,7 @@ export const routes: RouteObject[] = [
       },
       {
         element: <CheckoutLayout />,
-        children: [page('checkout', 'Checkout'), page('pay/:number', 'Pay')],
+        children: [{ path: 'checkout', element: <CheckoutPage /> }, page('pay/:number', 'Pay')],
       },
       page('admin/*', 'Admin'),
     ],

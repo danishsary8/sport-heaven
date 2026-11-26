@@ -1,0 +1,90 @@
+import { useI18n } from '../../lib/i18n';
+import { Field, Select } from '../../ui';
+import { placeName, useCommunes, useDistricts, useProvinces } from '../geo/api';
+
+export interface AddressDraft {
+  recipientName: string;
+  phone: string;
+  provinceCode: string;
+  districtCode: string;
+  communeCode: string;
+  street: string;
+  landmark: string;
+}
+
+export const EMPTY_ADDRESS: AddressDraft = { recipientName: '', phone: '', provinceCode: '', districtCode: '', communeCode: '', street: '', landmark: '' };
+
+/** Province → district → commune from the gazetteer, then street and an optional landmark. */
+export function AddressFields({
+  value,
+  onChange,
+  errors,
+  prefix = 'address',
+  withRecipient = true,
+}: {
+  value: AddressDraft;
+  onChange(v: AddressDraft): void;
+  errors: Record<string, string | undefined>;
+  prefix?: string;
+  withRecipient?: boolean;
+}) {
+  const { t, lang } = useI18n();
+  const provinces = useProvinces();
+  const districts = useDistricts(value.provinceCode || undefined);
+  const communes = useCommunes(value.districtCode || undefined);
+  const set = (patch: Partial<AddressDraft>) => onChange({ ...value, ...patch });
+  const err = (k: string) => errors[`${prefix}.${k}`];
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      {withRecipient && (
+        <>
+          <Field id={`${prefix}.recipientName`} label={t('co.recipient')} value={value.recipientName} onChange={(e) => set({ recipientName: e.target.value })} error={err('recipientName')} autoComplete="name" maxLength={120} />
+          <Field
+            id={`${prefix}.phone`}
+            label={t('co.recipientPhone')}
+            value={value.phone}
+            onChange={(e) => set({ phone: e.target.value })}
+            error={err('phone')}
+            hint={t('co.recipientPhoneHint')}
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            maxLength={40}
+          />
+        </>
+      )}
+      <Select id={`${prefix}.provinceCode`} label={t('co.province')} value={value.provinceCode} onChange={(e) => set({ provinceCode: e.target.value, districtCode: '', communeCode: '' })} error={err('provinceCode')}>
+        <option value="">{t('co.choose')}</option>
+        {(provinces.data?.provinces ?? []).map((p) => (
+          <option key={p.code} value={p.code}>
+            {placeName(p, lang)}
+          </option>
+        ))}
+      </Select>
+      <Select id={`${prefix}.districtCode`} label={t('co.district')} value={value.districtCode} onChange={(e) => set({ districtCode: e.target.value, communeCode: '' })} error={err('districtCode')} disabled={!value.provinceCode}>
+        <option value="">{t('co.choose')}</option>
+        {(districts.data?.districts ?? []).map((p) => (
+          <option key={p.code} value={p.code}>
+            {placeName(p, lang)}
+          </option>
+        ))}
+      </Select>
+      <Select id={`${prefix}.communeCode`} label={t('co.commune')} value={value.communeCode} onChange={(e) => set({ communeCode: e.target.value })} error={err('communeCode')} disabled={!value.districtCode}>
+        <option value="">{t('co.choose')}</option>
+        {(communes.data?.communes ?? []).map((p) => (
+          <option key={p.code} value={p.code}>
+            {placeName(p, lang)}
+          </option>
+        ))}
+      </Select>
+      <Field id={`${prefix}.street`} label={t('co.street')} value={value.street} onChange={(e) => set({ street: e.target.value })} error={err('street')} autoComplete="street-address" maxLength={240} className="sm:col-span-2" />
+      <Field id={`${prefix}.landmark`} label={t('co.landmark')} value={value.landmark} onChange={(e) => set({ landmark: e.target.value })} error={err('landmark')} hint={t('co.landmarkHint')} maxLength={240} className="sm:col-span-2" />
+    </div>
+  );
+}
+
+/** Cambodian numbers: 0XX XXX XXX(X) or +855 XX XXX XXX(X). The server is the authority; this catches typos early. */
+export function looksLikePhone(v: string): boolean {
+  const d = v.replace(/[\s()-]/g, '');
+  return /^(\+855|855|0)\d{8,9}$/.test(d) || /^\+\d{8,15}$/.test(d);
+}

@@ -117,3 +117,75 @@ export function cart(lines: ReturnType<typeof cartLine>[], over: { totalCents?: 
 }
 
 export const EMPTY_CART = cart([]);
+
+export const MEMBER = {
+  id: 'u1',
+  phone: '+85512345678',
+  email: null,
+  fullName: 'Dara Sok',
+  role: 'customer',
+  staffBranchId: null,
+  phoneVerified: true,
+};
+
+export const sessionFor = (user: Record<string, unknown> = MEMBER) => ({ user, cartMerged: null });
+
+export const ADDRESS = {
+  id: 'a1a1a1a1-1111-4111-8111-111111111111',
+  label: 'Home',
+  recipientName: 'Dara Sok',
+  phone: '+85512345678',
+  province: { code: '12', nameEn: 'Phnom Penh', nameKm: 'ភ្នំពេញ' },
+  district: { code: '1201', nameEn: 'Chamkar Mon', nameKm: 'ចំការមន' },
+  commune: { code: '120101', nameEn: 'Tonle Bassac', nameKm: 'ទន្លេបាសាក់' },
+  street: 'St 51, house 12',
+  landmark: null,
+  lat: null,
+  lng: null,
+  isDefault: true,
+  createdAt: '2026-11-01T00:00:00Z',
+};
+
+export const GEO = {
+  provinces: { provinces: [{ code: '12', nameEn: 'Phnom Penh', nameKm: 'ភ្នំពេញ' }, { code: '02', nameEn: 'Battambang', nameKm: 'បាត់ដំបង' }] },
+  districts: { districts: [{ code: '1201', nameEn: 'Chamkar Mon', nameKm: 'ចំការមន' }] },
+  communes: { communes: [{ code: '120101', nameEn: 'Tonle Bassac', nameKm: 'ទន្លេបាសាក់' }] },
+};
+
+/** An order as POST /v1/orders and GET /v1/orders/:number return it. */
+export function order(over: Record<string, unknown> = {}) {
+  return {
+    number: 'SC-260001',
+    status: 'pending_payment',
+    paymentStatus: 'unpaid',
+    paymentMethod: 'aba_khqr',
+    fulfillment: 'delivery',
+    shippingMethodId: 'pp_rider',
+    pickupBranch: null,
+    items: [{ id: 'i1', productSlug: 'product-1', name: 'Product 1', brand: 'Nike', size: 'EU 41', color: 'Black', imageUrl: null, qty: 1, unitPriceCents: 9500, compareAtCents: null, printFeeCents: 0, discountCents: 0, lineTotalCents: 9500, customPrint: null, returnableQty: 0 }],
+    pricing: { merchandiseCents: 9500, discountCents: 0, shippingCents: 250, totalCents: 9750, totalKhr: 399750, discounts: [], promoCode: null },
+    note: null,
+    reservedUntil: new Date(Date.now() + 20 * 60_000).toISOString(),
+    paidAt: null,
+    deliveredAt: null,
+    returnWindow: null,
+    createdAt: '2026-11-26T08:00:00Z',
+    timeline: [{ at: '2026-11-26T08:00:00Z', from: null, to: 'pending_payment' }],
+    contact: { name: 'Dara Sok', phoneE164: '+85512345678', email: null, channel: 'phone' },
+    shipAddress: {
+      recipientName: 'Dara Sok',
+      phoneE164: '+85512345678',
+      provinceCode: '12',
+      provinceName: { en: 'Phnom Penh', km: 'ភ្នំពេញ' },
+      districtCode: '1201',
+      districtName: { en: 'Chamkar Mon' },
+      communeCode: '120101',
+      communeName: { en: 'Tonle Bassac' },
+      street: 'St 51',
+      landmark: null,
+      lat: null,
+      lng: null,
+    },
+    ...over,
+  };
+}
