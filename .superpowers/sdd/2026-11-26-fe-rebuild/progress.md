@@ -11,3 +11,4 @@ Plan: docs/superpowers/plans/2026-11-26-fe2-5-rebuild.md. Base: 38aa126 (FE1 tas
 | B5 print studio | done | 3bd51ce | 3 tests; removed invented policy copy; screens |
 | B6 stores + help | done | fc2322e | 4 tests; terms/privacy draft; about/size/terms/privacy English-only in km |
 | C1 bag | done | 72cc3a7 | 8 tests; km overflow fixed (grid minmax + select w-full) |
+| C2 checkout | done | 19fdd85 | 7 tests; focus moves to first invalid field (closes FE3 deferred minor) |
