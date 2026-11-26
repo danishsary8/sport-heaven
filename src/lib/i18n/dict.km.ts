@@ -1,7 +1,9 @@
+import { catalogKm } from '../../features/catalog/i18n';
 import type { Dict } from './dict.en';
 
 /** Khmer copy. Every English key must exist here (the type enforces it). */
 export const km: Dict = {
+  ...catalogKm,
   'brand.name': 'Sport Castle',
   'nav.menu': 'ម៉ឺនុយ',
   'nav.home': 'ទំព័រដើម Sport Castle',
@@ -44,6 +46,10 @@ export const km: Dict = {
   'notFound.body': 'តំណនេះអាចចាស់ ឬទំនិញនេះអស់ហើយ។',
   'notFound.search': 'ស្វែងរកក្នុងហាង',
   'notFound.home': 'ទៅទំព័រដើម',
+  'routeError.title': 'ទំព័រនេះមិនបានផ្ទុកទេ',
+  'routeError.body': 'ហាងអាចទើបតែបានធ្វើបច្ចុប្បន្នភាព។ សូមផ្ទុកឡើងវិញដើម្បីទទួលបានកំណែចុងក្រោយ។',
+  'routeError.reload': 'ផ្ទុកទំព័រឡើងវិញ',
+  'checkout.backToBag': 'ត្រឡប់ទៅកាបូប',
   'placeholder.title': 'ទំព័រនេះកំពុងរៀបចំ',
   'availability.ok': 'មានក្នុងស្តុក',
   'availability.low': 'នៅសល់តែ {n}',

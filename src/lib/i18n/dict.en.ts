@@ -1,5 +1,7 @@
+import { catalogEn } from '../../features/catalog/i18n';
+
 /** English copy: the source of every key. Sentence case; buttons name the action. */
-export const en = {
+const base = {
   'brand.name': 'Sport Castle',
   'nav.menu': 'Menu',
   'nav.home': 'Sport Castle home',
@@ -42,12 +44,18 @@ export const en = {
   'notFound.body': 'The link may be old, or the product may have sold out for good.',
   'notFound.search': 'Search the shop',
   'notFound.home': 'Go to the home page',
+  'routeError.title': "This page didn't load",
+  'routeError.body': 'The shop may have just been updated. Reload to get the latest version.',
+  'routeError.reload': 'Reload the page',
+  'checkout.backToBag': 'Back to bag',
   'placeholder.title': 'This page is being built',
   'availability.ok': 'In stock',
   'availability.low': 'Only {n} left',
   'availability.out': 'Sold out',
   'price.was': 'Was {price}',
 } as const;
+
+export const en = { ...base, ...catalogEn } as const;
 
 export type DictKey = keyof typeof en;
 export type Dict = Record<DictKey, string>;
