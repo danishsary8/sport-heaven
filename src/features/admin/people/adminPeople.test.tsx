@@ -47,10 +47,11 @@ beforeEach(() => {
 
 describe('admin users', () => {
   it('finds a user and makes them staff at a store', async () => {
-    renderRoutes(routes, '/admin/users', { signedIn: true });
+    const { router } = renderRoutes(routes, '/admin/users', { signedIn: true });
     fireEvent.change(await screen.findByLabelText('Search users'), { target: { value: '012345678' } });
     fireEvent.submit(screen.getByRole('search'));
     await waitFor(() => expect(queries.some((q) => q.get('q') === '012345678')).toBe(true));
+    expect(router.state.location.search).not.toContain('012345678');
     const row = await screen.findByRole('listitem', { name: /Dara Sok/ });
     fireEvent.change(within(row).getByLabelText('Role'), { target: { value: 'staff' } });
     await within(row).findByRole('option', { name: 'Sen Sok' });

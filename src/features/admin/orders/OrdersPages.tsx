@@ -38,9 +38,11 @@ export function AdminOrdersPage() {
   const admin = useIsAdmin();
   const branches = useBranches();
   const [params, setParams] = useSearchParams();
-  const [q, setQ] = useState(params.get('q') ?? '');
+  // The search text can be a customer's phone or name: it stays in this page, never in the URL.
+  const [q, setQ] = useState('');
+  const [search, setSearch] = useState('');
   const query = {
-    q: params.get('q') ?? undefined,
+    q: search || undefined,
     status: params.get('status') ?? undefined,
     branch: params.get('branch') ?? undefined,
     needsRefund: params.get('needsRefund') ?? undefined,
@@ -62,7 +64,8 @@ export function AdminOrdersPage() {
           className="flex min-w-[220px] flex-1 gap-2"
           onSubmit={(e) => {
             e.preventDefault();
-            setParam('q', q.trim());
+            setSearch(q.trim());
+            setParam('page', '');
           }}
         >
           <Field label="Search orders" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Order number, phone or name" className="flex-1" />
@@ -175,12 +178,12 @@ function OrderDetail({ d }: { d: AdminOrderDetail }) {
         {NEXT[o.status]
           .filter((to) => !(cashDue && to === 'completed'))
           .map((to) => (
-            <Button key={to} variant="primary" loading={act.isPending && act.variables?.path === 'status'} onClick={() => run('status', { to }, `Marked ${human(to).toLowerCase()}`)}>
+            <Button key={to} variant="primary" disabled={act.isPending} loading={act.isPending && act.variables?.path === 'status'} onClick={() => run('status', { to }, `Marked ${human(to).toLowerCase()}`)}>
               Mark {human(to).toLowerCase()}
             </Button>
           ))}
         {d.needsRefund && (
-          <Button variant="secondary" onClick={() => run('refunded', {}, 'Marked refunded')}>
+          <Button variant="secondary" disabled={act.isPending} onClick={() => run('refunded', {}, 'Marked refunded')}>
             Mark refunded
           </Button>
         )}
@@ -294,12 +297,20 @@ function OrderDetail({ d }: { d: AdminOrderDetail }) {
           </section>
         </aside>
       </div>
-      <CancelDialog open={cancelOpen} number={o.number} busy={act.isPending} onClose={() => setCancelOpen(false)} onCancel={(reason) => act.mutate({ path: 'cancel', body: { reason } }, { onSuccess: () => (setCancelOpen(false), toast.success('Order cancelled')) })} />
+      <CancelDialog
+        open={cancelOpen}
+        number={o.number}
+        busy={act.isPending}
+        onClose={() => setCancelOpen(false)}
+        onCancel={(reason, onError) =>
+          act.mutate({ path: 'cancel', body: { reason } }, { onSuccess: () => (setCancelOpen(false), toast.success('Order cancelled')), onError: (e) => onError(isApiError(e) ? e.message : 'Something went wrong.') })
+        }
+      />
     </AdminPage>
   );
 }
 
-function CancelDialog({ open, number, busy, onClose, onCancel }: { open: boolean; number: string; busy: boolean; onClose(): void; onCancel(reason: string): void }) {
+function CancelDialog({ open, number, busy, onClose, onCancel }: { open: boolean; number: string; busy: boolean; onClose(): void; onCancel(reason: string, onError: (message: string) => void): void }) {
   const [reason, setReason] = useState('');
   const [error, setError] = useState<string | null>(null);
   return (
@@ -313,7 +324,7 @@ function CancelDialog({ open, number, busy, onClose, onCancel }: { open: boolean
           onClick={() => {
             if (!reason.trim()) return setError('Write why the order is cancelled.');
             setError(null);
-            onCancel(reason.trim());
+            onCancel(reason.trim(), setError);
           }}
         >
           Cancel the order

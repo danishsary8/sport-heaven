@@ -36,8 +36,17 @@ export function AddressFields({
   const communes = useCommunes(value.districtCode || undefined);
   const set = (patch: Partial<AddressDraft>) => onChange({ ...value, ...patch });
   const err = (k: string) => errors[`${prefix}.${k}`];
+  const failed = [provinces, districts, communes].find((q) => q.isError);
   return (
     <div className="grid gap-4 sm:grid-cols-2">
+      {failed && (
+        <p role="alert" className="flex flex-wrap items-center gap-3 text-[15px] text-vermilion sm:col-span-2">
+          {t('co.geoError')}
+          <button type="button" className="font-semibold text-obsidian underline underline-offset-4" onClick={() => void failed.refetch()}>
+            {t('co.geoRetry')}
+          </button>
+        </p>
+      )}
       {withRecipient && (
         <>
           <Field id={`${prefix}.recipientName`} label={t('co.recipient')} value={value.recipientName} onChange={(e) => set({ recipientName: e.target.value })} error={err('recipientName')} autoComplete="name" maxLength={120} />

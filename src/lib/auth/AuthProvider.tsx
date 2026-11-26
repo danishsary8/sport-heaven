@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { apiFetch, configureApi } from '../api';
+import { apiFetch, configureApi, isApiError } from '../api';
 import type { AuthAdapter, SessionResponse, SessionUser } from './types';
 
 type Status = 'loading' | 'guest' | 'member';
@@ -28,6 +28,7 @@ export function AuthProvider({ adapter, children }: { adapter: AuthAdapter; chil
   const [user, setUser] = useState<SessionUser | null>(null);
   const [cartMerged, setCartMerged] = useState<CartMerged | null>(null);
   const syncing = useRef(0);
+  const wasSignedIn = useRef(false);
 
   const dropPrivate = useCallback(() => {
     queryClient.removeQueries({ predicate: (q) => !PUBLIC_KEYS.has(String(q.queryKey[0])) });
@@ -42,19 +43,26 @@ export function AuthProvider({ adapter, children }: { adapter: AuthAdapter; chil
 
   const sync = useCallback(async () => {
     const id = ++syncing.current;
-    try {
-      const session = await apiFetch<SessionResponse>('/v1/auth/session', { method: 'POST' });
+    // A lost connection or a 5xx is retried (the person is still signed in); a refusal is final.
+    for (const wait of [0, 400, 1200]) {
+      if (wait) await new Promise((r) => setTimeout(r, wait));
       if (id !== syncing.current) return;
-      setUser(session.user);
-      setStatus('member');
-      if (session.cartMerged && session.cartMerged.mergedLines > 0) setCartMerged(session.cartMerged);
-      await queryClient.invalidateQueries({ queryKey: ['cart'] });
-    } catch {
-      if (id !== syncing.current) return;
-      // The API refused the account (or is down): browse as a guest rather than show a half signed-in shop.
-      setUser(null);
-      setStatus('guest');
+      try {
+        const session = await apiFetch<SessionResponse>('/v1/auth/session', { method: 'POST' });
+        if (id !== syncing.current) return;
+        setUser(session.user);
+        setStatus('member');
+        if (session.cartMerged && session.cartMerged.mergedLines > 0) setCartMerged(session.cartMerged);
+        await queryClient.invalidateQueries({ queryKey: ['cart'] });
+        return;
+      } catch (e) {
+        if (isApiError(e) && e.status > 0 && e.status < 500) break;
+      }
     }
+    if (id !== syncing.current) return;
+    // The API refused the account (or stayed down): browse as a guest rather than show a half signed-in shop.
+    setUser(null);
+    setStatus('guest');
   }, [queryClient]);
 
   useEffect(() => {
@@ -64,14 +72,19 @@ export function AuthProvider({ adapter, children }: { adapter: AuthAdapter; chil
   useEffect(
     () =>
       adapter.onChange((signedIn) => {
-        if (signedIn) void sync();
-        else {
+        if (signedIn) {
+          wasSignedIn.current = true;
+          void sync();
+        } else {
           syncing.current++;
           setUser(null);
           setStatus('guest');
+          // Signed out elsewhere (another tab, expired session): nothing private stays in this tab's cache.
+          if (wasSignedIn.current) dropPrivate();
+          wasSignedIn.current = false;
         }
       }),
-    [adapter, sync],
+    [adapter, sync, dropPrivate],
   );
 
   const value = useMemo<AuthValue>(

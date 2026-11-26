@@ -10,6 +10,7 @@ import { useAddresses } from '../account/api';
 import { useCart, type Cart } from '../cart/api';
 import { PromoField, lineDetails } from '../cart/BagContents';
 import { EmptyBag } from '../cart/BagPage';
+import { placeName } from '../geo/api';
 import { AddressFields, EMPTY_ADDRESS, looksLikePhone, type AddressDraft } from './AddressFields';
 import { usePlaceOrder, useQuote, type OrderBody, type Quote, type QuoteBody } from './api';
 import { saveOrderAccess } from './orderAccess';
@@ -43,13 +44,15 @@ export function CheckoutPage() {
 }
 
 function CheckoutForm({ cart }: { cart: Cart }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { status, user } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const addresses = useAddresses();
   const place = usePlaceOrder();
   const key = useRef(newKey());
+  // The key may only be reused for the very same order (a retry after a lost answer).
+  const keyBody = useRef<string | null>(null);
 
   const [contact, setContact] = useState({ name: '', phone: '', email: '', channel: 'phone' as Channel });
   const [fulfillment, setFulfillment] = useState<'delivery' | 'pickup'>('delivery');
@@ -155,6 +158,9 @@ function CheckoutForm({ cart }: { cart: Cart }) {
           ...(address.landmark.trim() ? { landmark: address.landmark.trim() } : {}),
         };
     }
+    const fingerprint = JSON.stringify(body);
+    if (keyBody.current !== null && keyBody.current !== fingerprint) key.current = newKey();
+    keyBody.current = fingerprint;
     place.mutate(
       { body, key: key.current },
       {
@@ -236,7 +242,7 @@ function CheckoutForm({ cart }: { cart: Cart }) {
                           <span className="font-semibold">{a.label}</span>
                           <span className="block">{a.street}</span>
                           <span className="block text-graphite">
-                            {[a.commune.nameEn, a.district.nameEn, a.province.nameEn].join(', ')}
+                            {[placeName(a.commune, lang), placeName(a.district, lang), placeName(a.province, lang)].join(', ')}
                           </span>
                         </span>
                       </label>

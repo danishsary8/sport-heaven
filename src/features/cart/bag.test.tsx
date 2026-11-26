@@ -110,6 +110,26 @@ describe('bag', () => {
     expect(within(drawer).getByRole('link', { name: 'View bag' })).toHaveAttribute('href', '/bag');
   });
 
+  it('applies quick removals in order, so a slow answer never brings a line back', async () => {
+    server.use(
+      http.delete(`${API}/v1/cart/items/:id`, async ({ params }) => {
+        if (params.id === 'line1') {
+          await new Promise((r) => setTimeout(r, 150));
+          return HttpResponse.json(cart([cartLine(2)]));
+        }
+        return HttpResponse.json(cart([]));
+      }),
+    );
+    renderRoutes(routes, '/bag');
+    const one = (await screen.findByRole('link', { name: 'Product 1' })).closest('li')!;
+    const two = screen.getByRole('link', { name: 'Product 2' }).closest('li')!;
+    fireEvent.click(within(one).getByRole('button', { name: 'Remove Product 1' }));
+    fireEvent.click(within(two).getByRole('button', { name: 'Remove Product 2' }));
+    expect(await screen.findByRole('heading', { name: 'Your bag is empty' })).toBeTruthy();
+    await new Promise((r) => setTimeout(r, 300));
+    expect(screen.queryByRole('link', { name: 'Product 2' })).toBeNull();
+  });
+
   it('says when the bag is empty', async () => {
     server.use(http.get(`${API}/v1/cart`, () => HttpResponse.json(cart([]))));
     renderRoutes(routes, '/bag');

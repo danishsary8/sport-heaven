@@ -26,8 +26,10 @@ function useParam(key: string, fallback = '') {
 
 export function UsersPage() {
   const [params, setParams] = useSearchParams();
-  const [q, setQ] = useState(params.get('q') ?? '');
-  const query = { q: params.get('q') ?? undefined, role: params.get('role') ?? undefined, page: Number(params.get('page') ?? 1) };
+  // Phone, name or email: kept in the page, never in the URL.
+  const [q, setQ] = useState('');
+  const [search, setSearch] = useState('');
+  const query = { q: search || undefined, role: params.get('role') ?? undefined, page: Number(params.get('page') ?? 1) };
   const users = useAdminQuery<{ users: AdminUser[]; total: number; page: number; pageSize: number }>(['users'], '/v1/admin/users', query);
   const set = (k: string, v: string) => {
     const n = new URLSearchParams(params);
@@ -45,7 +47,8 @@ export function UsersPage() {
             className="flex min-w-[220px] flex-1 gap-2"
             onSubmit={(e) => {
               e.preventDefault();
-              set('q', q.trim());
+              setSearch(q.trim());
+              set('page', '');
             }}
           >
             <Field label="Search users" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Phone, name or email" className="flex-1" />

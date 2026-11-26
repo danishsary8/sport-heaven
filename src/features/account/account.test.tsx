@@ -55,7 +55,9 @@ beforeEach(() => {
     }),
     http.get(`${API}/v1/me/loyalty`, () => HttpResponse.json(LOYALTY)),
     http.get(`${API}/v1/me/orders`, () => HttpResponse.json({ orders: [SUMMARY], total: 1, page: 1, pageSize: 20 })),
-    http.get(`${API}/v1/me/orders/SC-2611-AAAAA`, () => HttpResponse.json({ order: DELIVERED, payment: null })),
+    http.get(`${API}/v1/me/orders/SC-2611-AAAAA`, () =>
+      HttpResponse.json({ order: calls.some((c) => c.path === '/me/returns') ? { ...DELIVERED, items: DELIVERED.items.map((i) => ({ ...i, returnableQty: 0 })) } : DELIVERED, payment: null }),
+    ),
     http.get(`${API}/v1/me/addresses`, () => HttpResponse.json({ addresses: [ADDRESS] })),
     http.post(`${API}/v1/me/addresses`, async ({ request }) => {
       await record(request, '/me/addresses');
@@ -152,6 +154,22 @@ describe('account', () => {
       expect(calls).toContainEqual({ method: 'POST', path: '/me/returns', body: { orderNumber: 'SC-2611-AAAAA', resolution: 'refund', items: [{ orderItemId: '9b9b9b9b-1111-4111-8111-111111111111', qty: 1, reason: 'Too small' }] } }),
     );
     expect(await screen.findByText(/We got your return request/)).toBeTruthy();
+  });
+
+  it('cancels an unpaid order from the account and shows it cancelled', async () => {
+    let cancelled = false;
+    server.use(
+      http.get(`${API}/v1/me/orders/SC-2611-BBBBB`, () => HttpResponse.json({ order: order({ number: 'SC-2611-BBBBB', status: cancelled ? 'cancelled' : 'pending_payment' }), payment: null })),
+      http.post(`${API}/v1/orders/SC-2611-BBBBB/cancel`, () => {
+        cancelled = true;
+        return HttpResponse.json({ order: order({ number: 'SC-2611-BBBBB', status: 'cancelled' }), payment: null });
+      }),
+    );
+    renderRoutes(routes, '/account/orders/SC-2611-BBBBB', { signedIn: true, staleTime: 30_000 });
+    fireEvent.click(await screen.findByRole('button', { name: 'Cancel order' }));
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'Cancel this order?' })).getByRole('button', { name: 'Yes, cancel it' }));
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Cancel order' })).toBeNull());
+    expect(screen.getAllByText('Cancelled').length).toBeGreaterThan(0);
   });
 
   it('lists the wishlist and removes an item', async () => {

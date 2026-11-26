@@ -60,6 +60,15 @@ describe('search', () => {
     expect(await screen.findByRole('link', { name: /Messi boot/ })).toBeTruthy();
   });
 
+  it('says when quick suggestions fail and keeps Search working', async () => {
+    server.use(http.get(`${API}/v1/search/suggest`, () => HttpResponse.json({ error: { code: 'internal', message: 'x' } }, { status: 500 })));
+    renderRoutes(routes, '/');
+    fireEvent.click(await screen.findByRole('button', { name: 'Search' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Search' });
+    fireEvent.change(within(dialog).getByRole('searchbox'), { target: { value: 'messi' } });
+    expect(await within(dialog).findByText('Quick results are not available. Press Search to see all results.')).toBeTruthy();
+  });
+
   it('says when nothing was found and suggests where to look', async () => {
     renderRoutes(routes, '/search?q=zzz');
     expect(await screen.findByRole('heading', { name: 'No results for “zzz”' })).toBeTruthy();

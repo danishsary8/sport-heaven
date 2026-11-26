@@ -11,27 +11,29 @@ export const wishlistKey = ['me', 'wishlist'] as const;
 
 export function useWishlist(enabled = true) {
   const { status } = useAuth();
-  return useQuery({ queryKey: wishlistKey, queryFn: ({ signal }) => apiFetch<Wishlist>('/v1/me/wishlist', { withLang: true, signal }), enabled: enabled && status === 'member' });
+  const { lang } = useI18n();
+  return useQuery({ queryKey: [...wishlistKey, lang], queryFn: ({ signal }) => apiFetch<Wishlist>('/v1/me/wishlist', { withLang: true, signal }), enabled: enabled && status === 'member' });
 }
 
 /** Optimistic heart: flips at once, rolls back with a message if the server refuses. */
 export function useToggleWishlist() {
   const qc = useQueryClient();
   const toast = useToast();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   return useMutation({
     mutationFn: ({ slug, on }: { slug: string; on: boolean }) => apiFetch(`/v1/me/wishlist/${encodeURIComponent(slug)}`, { method: on ? 'PUT' : 'DELETE' }),
     onMutate: async ({ slug, on }) => {
+      const key = [...wishlistKey, lang];
       await qc.cancelQueries({ queryKey: wishlistKey });
-      const before = qc.getQueryData<Wishlist>(wishlistKey);
+      const before = qc.getQueryData<Wishlist>(key);
       if (before) {
         const products = on ? [...before.products, { slug } as Wishlist['products'][number]] : before.products.filter((p) => p.slug !== slug);
-        qc.setQueryData<Wishlist>(wishlistKey, { ...before, products });
+        qc.setQueryData<Wishlist>(key, { ...before, products });
       }
-      return { before };
+      return { before, key };
     },
     onError: (e, _v, ctx) => {
-      if (ctx?.before) qc.setQueryData(wishlistKey, ctx.before);
+      if (ctx?.before) qc.setQueryData(ctx.key, ctx.before);
       toast.error(e instanceof Error ? e.message : t('common.error'));
     },
     onSettled: () => void qc.invalidateQueries({ queryKey: wishlistKey }),

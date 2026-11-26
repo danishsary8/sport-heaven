@@ -6,7 +6,7 @@ import { isApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { formatDate, formatKhr, formatUsd, useI18n } from '../../lib/i18n';
 import { Button, EmptyState, ErrorState, QueryView, Seo, Skeleton } from '../../ui';
-import { orderKey, useOrder, usePaymentStatus, useSwitchPayment, type OrderView, type Payment, type PayMethod } from '../orders/api';
+import { invalidateOrder, useOrder, usePaymentStatus, useSwitchPayment, type OrderView, type Payment, type PayMethod } from '../orders/api';
 
 const METHODS: PayMethod[] = ['aba_khqr', 'card'];
 
@@ -51,7 +51,9 @@ function PayView({ order, initialPayment }: { order: OrderView; initialPayment: 
   const [choosing, setChoosing] = useState(false);
 
   const current = status.data;
-  const payment: Payment | null = switchPay.data?.payment ?? current?.latestPayment ?? initialPayment;
+  // The newest attempt wins, whether it came from switching method or from polling.
+  const candidates = [switchPay.data?.payment, current?.latestPayment, initialPayment].filter((p): p is Payment => !!p);
+  const payment: Payment | null = candidates.sort((a, b) => b.attempt - a.attempt)[0] ?? null;
   const orderStatus = current?.status ?? order.status;
   const paid = (current?.paymentStatus ?? order.paymentStatus) === 'paid';
   const reservedUntil = current?.reservedUntil ?? order.reservedUntil;
@@ -59,7 +61,7 @@ function PayView({ order, initialPayment }: { order: OrderView; initialPayment: 
   useEffect(() => {
     if (!paid) return;
     // The order page must not show the cached unpaid order.
-    void qc.invalidateQueries({ queryKey: orderKey(order.number) }).then(() => navigate(`/order/${order.number}`, { replace: true }));
+    void invalidateOrder(qc, order.number).then(() => navigate(`/order/${order.number}`, { replace: true }));
   }, [paid, navigate, order.number, qc]);
 
   if (orderStatus === 'expired' || orderStatus === 'cancelled') {

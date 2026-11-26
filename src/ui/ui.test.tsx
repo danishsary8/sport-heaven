@@ -59,6 +59,20 @@ describe('QueryView', () => {
   });
 });
 
+describe('QueryView keeps loaded data', () => {
+  it('shows the loaded data when only a background refetch failed', () => {
+    render(
+      <I18nProvider initial="en">
+        <QueryView query={{ isPending: false, isError: true, error: new ApiError('network', 502, 'Down'), data: ['a'], refetch: () => {} }} skeleton={<p>skeleton</p>}>
+          {(d) => <p>items {d.length}</p>}
+        </QueryView>
+      </I18nProvider>,
+    );
+    expect(screen.getByText('items 1')).toBeTruthy();
+    expect(screen.queryByText('Down')).toBeNull();
+  });
+});
+
 describe('Price and Availability', () => {
   it('shows a sale price with the struck compare-at price', () => {
     withI18n(<Price cents={7600} compareAtCents={9500} />);

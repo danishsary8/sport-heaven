@@ -148,6 +148,30 @@ describe('checkout', () => {
     expect(orders[2]!.key).not.toBe(orders[1]!.key);
   });
 
+  it('uses a new key when the shopper changes the order after a failed attempt', async () => {
+    server.use(
+      http.post(`${API}/v1/orders`, ({ request }) => {
+        orders.push({ body: {}, key: request.headers.get('idempotency-key') });
+        return HttpResponse.json({ error: { code: 'internal', message: 'Busy' } }, { status: 503 });
+      }),
+    );
+    renderRoutes(routes, '/checkout');
+    await fillGuestDelivery();
+    fireEvent.click(screen.getByRole('button', { name: 'Place order' }));
+    await screen.findByText('Busy');
+    fireEvent.change(screen.getByLabelText('Note for the shop (optional)'), { target: { value: 'Call first' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Place order' }));
+    await waitFor(() => expect(orders.length).toBe(2));
+    expect(orders[1]!.key).not.toBe(orders[0]!.key);
+  });
+
+  it('says when the province list cannot load and offers a retry', async () => {
+    server.use(http.get(`${API}/v1/geo/provinces`, () => HttpResponse.json({ error: { code: 'internal', message: 'x' } }, { status: 500 })));
+    renderRoutes(routes, '/checkout');
+    expect(await screen.findByText("The list of places didn't load.")).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Load the places again' })).toBeTruthy();
+  });
+
   it('lets a member pick a saved address', async () => {
     server.use(
       http.post(`${API}/v1/auth/session`, () => HttpResponse.json(sessionFor())),
@@ -162,6 +186,26 @@ describe('checkout', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Place order' }));
     await waitFor(() => expect(orders.length).toBe(1));
     expect(orders[0]!.body).toMatchObject({ addressId: ADDRESS.id, contact: { name: 'Dara Sok', phone: '+85512345678' } });
+  });
+
+  it('updates the totals when a promo code is applied at checkout', async () => {
+    let promoOn = false;
+    server.use(
+      http.put(`${API}/v1/cart/promo`, () => {
+        promoOn = true;
+        return HttpResponse.json(cart([cartLine(1)], { totalCents: 8500, promo: { code: 'SAVE10', applied: true, message: '$10 off' }, discounts: [{ kind: 'promo', label: 'SAVE10', amountCents: 1000 }] }));
+      }),
+      http.post(`${API}/v1/checkout/quote`, () => {
+        const c = promoOn ? cart([cartLine(1)], { totalCents: 8500, promo: { code: 'SAVE10', applied: true, message: '$10 off' }, discounts: [{ kind: 'promo', label: 'SAVE10', amountCents: 1000 }] }) : cart([cartLine(1)]);
+        return HttpResponse.json({ ...c, ...QUOTE_EXTRA });
+      }),
+    );
+    renderRoutes(routes, '/checkout', { staleTime: 30_000 });
+    const summary = await screen.findByRole('complementary', { name: 'Order summary' });
+    fireEvent.change(within(summary).getByLabelText('Promo code'), { target: { value: 'SAVE10' } });
+    fireEvent.click(within(summary).getByRole('button', { name: 'Apply code' }));
+    expect(await within(summary).findByText('Code SAVE10 applied')).toBeTruthy();
+    expect(await within(summary).findByText('−$10.00')).toBeTruthy();
   });
 
   it('sends people with an empty bag back to the bag', async () => {

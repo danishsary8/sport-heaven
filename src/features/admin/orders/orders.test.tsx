@@ -51,12 +51,13 @@ beforeEach(() => {
 
 describe('admin orders', () => {
   it('filters by the status in the link and searches', async () => {
-    renderRoutes(routes, '/admin/orders?status=confirmed', { signedIn: true });
+    const { router } = renderRoutes(routes, '/admin/orders?status=confirmed', { signedIn: true });
     expect(await screen.findByRole('link', { name: /SC-2611-AAAAA/ })).toHaveAttribute('href', '/admin/orders/SC-2611-AAAAA');
     expect(listQueries[0]!.get('status')).toBe('confirmed');
     fireEvent.change(screen.getByLabelText('Search orders'), { target: { value: '012345678' } });
     fireEvent.submit(screen.getByRole('search'));
     await waitFor(() => expect(listQueries.some((q) => q.get('q') === '012345678')).toBe(true));
+    expect(router.state.location.search).not.toContain('012345678');
   });
 
   it('shows the pick list and payments, and moves the order on', async () => {
@@ -78,6 +79,16 @@ describe('admin orders', () => {
     fireEvent.change(within(dialog).getByLabelText('Reason'), { target: { value: 'Customer asked' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel the order' }));
     await waitFor(() => expect(posts).toEqual([{ path: 'cancel', body: { reason: 'Customer asked' } }]));
+  });
+
+  it('shows why a cancel was refused', async () => {
+    server.use(http.post(`${API}/v1/admin/orders/SC-2611-AAAAA/cancel`, () => HttpResponse.json({ error: { code: 'invalid_transition', message: "An order can't go from delivered to cancelled" } }, { status: 409 })));
+    renderRoutes(routes, '/admin/orders/SC-2611-AAAAA', { signedIn: true });
+    fireEvent.click(await screen.findByRole('button', { name: 'Cancel order' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Cancel order SC-2611-AAAAA' });
+    fireEvent.change(within(dialog).getByLabelText('Reason'), { target: { value: 'Customer asked' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel the order' }));
+    expect(await within(dialog).findByText("An order can't go from delivered to cancelled")).toBeTruthy();
   });
 
   it('takes cash at the counter for a pickup order', async () => {

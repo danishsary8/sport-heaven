@@ -27,9 +27,14 @@ function useCartMutation<V>(send: (v: V) => Promise<CartResponse>) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: send,
-    onSuccess: (data) => {
+    // One bag change at a time, so a slower answer can never overwrite a newer bag.
+    scope: { id: 'cart' },
+    onSuccess: async (data) => {
+      await qc.cancelQueries({ queryKey: cartKey(lang) });
       qc.setQueryData(cartKey(lang), data);
       void qc.invalidateQueries({ queryKey: ['cart'], predicate: (q) => q.queryKey[1] !== lang });
+      // Checkout totals and the bag's delivery estimate are quotes for this bag.
+      void qc.invalidateQueries({ queryKey: ['checkout', 'quote'] });
     },
   });
 }

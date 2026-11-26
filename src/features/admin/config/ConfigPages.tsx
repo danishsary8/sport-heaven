@@ -20,7 +20,16 @@ function Card({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
+/** The queries live inside the admin gate, so staff never send them. */
 export function PromotionsPage() {
+  return (
+    <AdminOnly>
+      <PromotionsPageBody />
+    </AdminOnly>
+  );
+}
+
+function PromotionsPageBody() {
   const toast = useToast();
   const list = useAdminQuery<{ promotions: Promotion[] }>(['promotions'], '/v1/admin/promotions');
   const toggle = useAdminMutation(({ id, active }: { id: string; active: boolean }) => patch(`/v1/admin/promotions/${id}`, { active }), [['promotions']]);
@@ -52,7 +61,7 @@ export function PromotionsPage() {
   };
 
   return (
-    <AdminOnly>
+    <>
       <AdminPage title="Promotions">
         <QueryView query={list} skeleton={<Skeleton className="h-40 w-full" />}>
           {(d) => (
@@ -98,16 +107,25 @@ export function PromotionsPage() {
           </form>
         </Card>
       </AdminPage>
-    </AdminOnly>
+    </>
   );
 }
 
 const METHOD_NAME: Record<string, string> = { pp_rider: 'Phnom Penh rider', province_courier: 'Province courier', pickup: 'Store pickup' };
 
+/** The queries live inside the admin gate, so staff never send them. */
 export function DeliveryPage() {
-  const rates = useAdminQuery<{ rates: ShippingRate[] }>(['rates'], '/v1/admin/shipping-rates');
   return (
     <AdminOnly>
+      <DeliveryPageBody />
+    </AdminOnly>
+  );
+}
+
+function DeliveryPageBody() {
+  const rates = useAdminQuery<{ rates: ShippingRate[] }>(['rates'], '/v1/admin/shipping-rates');
+  return (
+    <>
       <AdminPage title="Delivery">
         <p className="text-graphite">Fees customers pay at checkout. Remember to update the delivery help page when they change.</p>
         <QueryView query={rates} skeleton={<Skeleton className="h-40 w-full" />}>
@@ -120,7 +138,7 @@ export function DeliveryPage() {
           )}
         </QueryView>
       </AdminPage>
-    </AdminOnly>
+    </>
   );
 }
 
@@ -173,18 +191,27 @@ const PAY: [string, string][] = [
   ['cash_on_pickup', 'Cash on pickup'],
 ];
 
+/** The queries live inside the admin gate, so staff never send them. */
 export function SettingsPage() {
+  return (
+    <AdminOnly>
+      <SettingsPageBody />
+    </AdminOnly>
+  );
+}
+
+function SettingsPageBody() {
   const settings = useAdminQuery<{ settings: Settings }>(['settings'], '/v1/admin/settings');
   const pricing = useAdminQuery<{ settings: { khr_rate?: { rate: number } } }>(['settings', 'pricing'], '/v1/admin/settings/pricing');
   return (
-    <AdminOnly>
+    <>
       <AdminPage title="Settings">
         <QueryView query={settings} skeleton={<Skeleton className="h-64 w-full" />}>
           {(d) => <OperationalSettings s={d.settings} />}
         </QueryView>
         {pricing.data && <RateCard rate={pricing.data.settings.khr_rate?.rate ?? 4100} />}
       </AdminPage>
-    </AdminOnly>
+    </>
   );
 }
 

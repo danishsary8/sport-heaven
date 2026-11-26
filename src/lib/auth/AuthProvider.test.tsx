@@ -112,3 +112,35 @@ describe('createAuthAdapter', () => {
     await expect(adapter.google()).rejects.toThrow(/not set up/);
   });
 });
+
+describe('AuthProvider resilience', () => {
+  it('retries the session after a server blip instead of showing a guest', async () => {
+    let n = 0;
+    server.use(
+      http.post(`${API}/v1/auth/session`, () => {
+        n++;
+        return n <= 2 ? HttpResponse.json({ error: { code: 'internal', message: 'busy' } }, { status: 503 }) : HttpResponse.json({ user: USER, created: false, cartMerged: null });
+      }),
+    );
+    const adapter = createTestAdapter();
+    render(wrap(<AuthProvider adapter={adapter}><Probe /></AuthProvider>));
+    await act(() => adapter.testSignIn!('test:u1:+85512345678:-'));
+    await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('member'), { timeout: 8000 });
+    expect(n).toBeGreaterThanOrEqual(3);
+  });
+
+  it('drops member data when the sign-in ends elsewhere (another tab)', async () => {
+    server.use(http.post(`${API}/v1/auth/session`, () => HttpResponse.json({ user: USER, created: false, cartMerged: null })));
+    const client = new QueryClient();
+    const adapter = createTestAdapter();
+    render(wrap(<AuthProvider adapter={adapter}><Probe /></AuthProvider>, client));
+    await act(() => adapter.testSignIn!('test:u1:+85512345678:-'));
+    await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('member'));
+    client.setQueryData(['me', 'addresses'], { addresses: [{ street: 'secret' }] });
+    client.setQueryData(['catalog', 'menu', 'en'], { categories: [] });
+    await act(() => adapter.signOut());
+    await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('guest'));
+    expect(client.getQueryData(['me', 'addresses'])).toBeUndefined();
+    expect(client.getQueryData(['catalog', 'menu', 'en'])).toBeDefined();
+  });
+});

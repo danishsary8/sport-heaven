@@ -81,6 +81,10 @@ function SearchBody({ onClose }: { onClose(): void }) {
               ))}
             </ul>
           </div>
+        ) : suggest.isError && !data ? (
+          <p role="status" className="text-graphite">{t('search.suggestError')}</p>
+        ) : !data ? (
+          <p role="status" className="text-graphite">{t('common.loading')}</p>
         ) : data ? (
           <div className="grid gap-5 sm:grid-cols-[1fr_200px]" aria-live="polite">
             <div>

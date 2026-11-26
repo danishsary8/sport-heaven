@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vitest/config';
 
+// Backend API (sport-backend). /assets/catalog is served from public/.
+const proxy = { '/v1': { target: `http://localhost:${process.env.E2E_API_PORT ?? '3000'}`, changeOrigin: false } };
+
 export default defineConfig(() => {
   return {
     plugins: [
@@ -20,14 +23,8 @@ export default defineConfig(() => {
       include: ['src/**/*.test.{ts,tsx}'],
       css: false,
     },
-    server: {
-      proxy: {
-        // Backend API (sport-backend). /assets/catalog is served from public/.
-        '/v1': {
-          target: 'http://localhost:3000',
-          changeOrigin: false,
-        },
-      },
-    },
+    server: { proxy },
+    // `vite preview` (e2e) proxies the same way; E2E_API_PORT points it at the e2e backend.
+    preview: { proxy },
   };
 });

@@ -13,6 +13,15 @@ export type Tracked = ResponseOf<'/v1/orders/track', 'post'>;
 
 export const orderKey = (number: string) => ['order', number] as const;
 
+/** Every cached view of one order: the shop's, the member's, and the member's order list. */
+export function invalidateOrder(qc: ReturnType<typeof useQueryClient>, number: string) {
+  return Promise.all([
+    qc.invalidateQueries({ queryKey: orderKey(number) }),
+    qc.invalidateQueries({ queryKey: ['me', 'order', number] }),
+    qc.invalidateQueries({ queryKey: ['me', 'orders'] }),
+  ]);
+}
+
 /** The token header for a guest's order (members are recognised by their sign-in). */
 function accessHeaders(number: string): Record<string, string> {
   const access = readOrderAccess(number);
@@ -35,7 +44,8 @@ export function usePaymentStatus(number: string, enabled: boolean) {
     queryKey: [...orderKey(number), 'payment-status'],
     queryFn: ({ signal }) => apiFetch<PaymentStatus>(`/v1/orders/${encodeURIComponent(number)}/payment-status`, { headers: accessHeaders(number), signal }),
     enabled,
-    refetchInterval: 3000,
+    // Stop once the order is paid, expired or cancelled.
+    refetchInterval: (q) => (!q.state.data || (q.state.data.status === 'pending_payment' && q.state.data.paymentStatus === 'unpaid') ? 3000 : false),
     refetchIntervalInBackground: false,
     staleTime: 0,
   });
@@ -51,7 +61,7 @@ export function useSwitchPayment(number: string) {
         body: { method, ...(access ? { contactPhone: access.phone, orderAccessToken: access.token } : {}) },
       });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: orderKey(number) }),
+    onSuccess: () => invalidateOrder(qc, number),
   });
 }
 
@@ -62,7 +72,7 @@ export function useCancelOrder(number: string) {
       const access = readOrderAccess(number);
       return apiFetch(`/v1/orders/${encodeURIComponent(number)}/cancel`, { method: 'POST', body: access ? { contactPhone: access.phone, orderAccessToken: access.token } : {} });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: orderKey(number) }),
+    onSuccess: () => invalidateOrder(qc, number),
   });
 }
 

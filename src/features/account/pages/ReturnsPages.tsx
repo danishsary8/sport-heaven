@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 import { isApiError } from '../../../lib/api';
 import { formatDate, formatUsd, useI18n, type DictKey } from '../../../lib/i18n';
-import { Button, EmptyState, ErrorState, QueryView, Select, Seo, Skeleton, TextArea, cx } from '../../../ui';
+import { Button, EmptyState, ErrorState, QueryView, Select, Seo, Skeleton, TextArea, cx, useToast } from '../../../ui';
 import { useProduct } from '../../catalog/api';
 import { useCreateReturn, useMyOrder, useMyReturns, type MyOrder, type ReturnBody } from '../api';
 import { canReturn } from './OrdersPages';
@@ -87,6 +87,8 @@ interface Choice {
 
 function ReturnForm({ order }: { order: MyOrder['order'] }) {
   const { t } = useI18n();
+  const toast = useToast();
+  const navigate = useNavigate();
   const create = useCreateReturn();
   const items = order.items.filter((i) => i.returnableQty > 0);
   const [choices, setChoices] = useState<Record<string, Choice>>({});
@@ -98,17 +100,6 @@ function ReturnForm({ order }: { order: MyOrder['order'] }) {
   const refundOpen = !!order.returnWindow && new Date(order.returnWindow.refundUntil).getTime() > now;
   const set = (id: string, patch: Partial<Choice>) => setChoices((c) => ({ ...c, [id]: { ...(c[id] ?? { on: false, qty: 1, exchangeVariantId: '' }), ...patch } }));
   const chosen = items.filter((i) => choices[i.id]?.on);
-
-  if (create.isSuccess) {
-    return (
-      <div role="status" className="rounded-[8px] bg-cobalt/[0.06] p-5">
-        <p className="font-semibold text-cobalt">{t('ret.sent')}</p>
-        <Link to="/account/returns" className="mt-3 inline-block font-semibold underline underline-offset-4">
-          {t('acc.nav.returns')}
-        </Link>
-      </div>
-    );
-  }
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -128,7 +119,14 @@ function ReturnForm({ order }: { order: MyOrder['order'] }) {
       })),
       ...(note.trim() ? { note: note.trim() } : {}),
     };
-    create.mutate(body, { onError: (err) => setError(isApiError(err) ? err.message : t('common.error')) });
+    create.mutate(body, {
+      // Go to the returns list: the order may have nothing left to return, which would replace this form.
+      onSuccess: () => {
+        toast.success(t('ret.sent'));
+        void navigate('/account/returns', { replace: true });
+      },
+      onError: (err) => setError(isApiError(err) ? err.message : t('common.error')),
+    });
   };
 
   return (

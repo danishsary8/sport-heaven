@@ -79,7 +79,8 @@ export function QueryView<T>({
       </div>
     );
   }
-  if (query.isError || query.data === undefined) {
+  // A failed background refetch keeps the data it already has on screen.
+  if (query.data === undefined) {
     const message = isApiError(query.error) ? query.error.message : undefined;
     return <ErrorState message={message} onRetry={() => void query.refetch()} />;
   }

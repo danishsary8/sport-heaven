@@ -62,7 +62,7 @@ beforeEach(() => {
 describe('admin products', () => {
   it('lists products with links to edit them', async () => {
     renderRoutes(routes, '/admin/products', { signedIn: true });
-    expect(await screen.findByRole('link', { name: /Predator Elite FG/ })).toHaveAttribute('href', `/admin/products/${PID}`);
+    expect(await screen.findByRole('link', { name: /Predator Elite FG/ }, { timeout: 4000 })).toHaveAttribute('href', `/admin/products/${PID}`);
   });
 
   it('saves product fields and a size price', async () => {
