@@ -20,3 +20,4 @@ Plan: docs/superpowers/plans/2026-11-26-fe2-5-rebuild.md. Base: 38aa126 (FE1 tas
 | E1 admin layout + overview | done | 408d338 | 4 tests; staff vs admin nav; overview overflow at 390 fixed |
 | E2 admin orders | done | 408d338 | 5 tests; pick list, status buttons from the machine, cancel with reason, cash, notes |
 | E3 stock counter | done | 3e36bcf | 6 tests; phone layout as stacked rows; real lookup checked |
+| E4 products | done | c43500c | 5 tests + client text bodies test; CSV preview then apply |
