@@ -42,14 +42,15 @@ export function HomePage() {
         }
       >
         {(data) => (
-          <div className="flex flex-col gap-14 pb-16 lg:gap-20">
+          <div className="flex flex-col gap-14 lg:gap-20">
             {data.sections.map((s, i) => (
               <Section key={s.id} section={s} first={i === 0} />
             ))}
+            {/* Rendered with the sections (not below the skeleton) so the page doesn't jump when they arrive. */}
+            <StoreStrip />
           </div>
         )}
       </QueryView>
-      <StoreStrip />
     </>
   );
 }

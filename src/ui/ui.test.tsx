@@ -116,3 +116,11 @@ describe('Sheet', () => {
     expect(document.activeElement).toBe(opener);
   });
 });
+
+describe('Seo', () => {
+  it('writes an absolute canonical URL', async () => {
+    const { Seo } = await import('./Seo');
+    render(<Seo title="Boots" canonical="/c/boots" />);
+    expect(document.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe(`${window.location.origin}/c/boots`);
+  });
+});
