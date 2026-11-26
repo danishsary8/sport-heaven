@@ -15,14 +15,14 @@ export function StoresPage() {
   return (
     <section className="mx-auto max-w-[1320px] px-4 pb-16 pt-8 lg:px-8 lg:pt-12">
       <Seo title={t('stores.title')} description={t('stores.body')} canonical="/stores" />
-      <h1 className="font-display text-5xl font-bold">{t('stores.title')}</h1>
+      <h1 className="font-display text-[44px] font-bold leading-[0.9] tracking-[-0.01em] lg:text-[64px]">{t('stores.title')}</h1>
       <p className="mt-2 max-w-prose text-graphite">{t('stores.body')}</p>
       <QueryView query={branches} skeleton={<Skeleton className="mt-8 h-48 w-full" />}>
         {(d) => (
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {d.branches.map((b) => (
-              <article key={b.id} className="flex flex-col gap-3 rounded-[8px] border border-stone p-5">
-                <h2 className="text-xl font-semibold">{b.name}</h2>
+              <article key={b.id} className="flex flex-col gap-3 rounded-[8px] border border-stone bg-chalk/60 p-5 lg:p-6">
+                <h2 className="font-display text-[28px] font-bold leading-none">{b.name}</h2>
                 <p className="flex gap-2 text-[15px]">
                   <MapPin className="mt-0.5 size-4 shrink-0 text-cobalt" aria-hidden />
                   <span>

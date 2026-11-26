@@ -60,6 +60,27 @@
   .tabular {
     font-variant-numeric: tabular-nums;
   }
+
+  h1,
+  h2 {
+    text-wrap: balance;
+  }
+}
+
+/* The Cambodian flag's bands (blue, red twice as tall, blue) as a thin rule: the shop's one brand mark beyond the wordmark. */
+.flag-rule {
+  background: linear-gradient(
+    to bottom,
+    var(--color-cobalt) 0 25%,
+    var(--color-vermilion) 25% 75%,
+    var(--color-cobalt) 75% 100%
+  );
+}
+
+/* Photo stages: a soft floor of light under the product, so white boots and white kits still read against the stone. */
+.stage {
+  background-color: var(--color-stone);
+  background-image: radial-gradient(120% 70% at 50% 100%, rgb(255 255 255 / 0.45), transparent 70%);
 }
 
 @keyframes skeletonShimmer {

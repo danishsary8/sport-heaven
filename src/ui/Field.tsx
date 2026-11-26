@@ -2,7 +2,7 @@ import { forwardRef, useId, type InputHTMLAttributes, type ReactNode, type Selec
 import { cx } from './cx';
 
 const control =
-  'w-full rounded-[6px] border border-[#C9C5BB] bg-paper px-3 py-2.5 text-[16px] text-obsidian placeholder:text-graphite focus:border-obsidian aria-[invalid=true]:border-vermilion';
+  'w-full rounded-[6px] border border-[#C9C5BB] bg-paper px-3 py-2.5 text-[16px] text-obsidian transition-colors placeholder:text-graphite hover:border-[#A29E94] focus:border-obsidian aria-[invalid=true]:border-vermilion';
 
 interface Wrap {
   label: ReactNode;

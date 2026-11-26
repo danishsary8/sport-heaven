@@ -320,7 +320,7 @@ function CheckoutForm({ cart }: { cart: Cart }) {
         </Step>
       </div>
 
-      <aside aria-label={t('bag.summary')} className="flex h-fit flex-col gap-4 rounded-[8px] border border-stone p-5 lg:sticky lg:top-6">
+      <aside aria-label={t('bag.summary')} className="flex h-fit flex-col gap-4 rounded-[8px] border border-stone bg-chalk p-5 lg:sticky lg:top-6 lg:p-6">
         <h2 className="font-display text-2xl font-bold">{t('bag.summary')}</h2>
         <ul className="flex flex-col gap-2 text-[15px]">
           {cart.lines.map((l) => (

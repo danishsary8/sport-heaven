@@ -4,10 +4,10 @@ import { cx } from './cx';
 export type ButtonVariant = 'buy' | 'primary' | 'secondary' | 'ghost';
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  buy: 'bg-vermilion text-paper hover:bg-[#A91D25] active:bg-[#931920]',
-  primary: 'bg-obsidian text-paper hover:bg-[#2A2E31]',
-  secondary: 'border border-obsidian text-obsidian hover:bg-stone',
-  ghost: 'text-obsidian hover:bg-stone',
+  buy: 'bg-vermilion text-paper hover:bg-[#A91D25] active:bg-[#931920] disabled:bg-stone disabled:text-graphite',
+  primary: 'bg-obsidian text-paper hover:bg-[#2A2E31] active:bg-black disabled:opacity-50',
+  secondary: 'border border-obsidian text-obsidian hover:bg-stone disabled:opacity-50',
+  ghost: 'text-obsidian hover:bg-stone disabled:opacity-50',
 };
 
 const SIZES = { sm: 'h-9 px-3 text-sm', md: 'h-11 px-5 text-[15px]', lg: 'h-13 px-6 text-base' } as const;
@@ -31,7 +31,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       className={cx(
-        'inline-flex items-center justify-center gap-2 rounded-[6px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50',
+        'inline-flex items-center justify-center gap-2 rounded-[6px] font-semibold transition-[background-color,color,border-color,transform] active:scale-[0.985] disabled:cursor-not-allowed disabled:active:scale-100',
         VARIANTS[variant],
         SIZES[size],
         block && 'w-full',

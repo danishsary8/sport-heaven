@@ -13,23 +13,40 @@ export function ProductCard({ product, priority = false, className, hash }: { pr
   const tag = sale ?? (product.badges.includes('new') ? t('badge.new') : null);
   return (
     <article className={cx('group relative flex flex-col', className)}>
-      <div className="relative aspect-[3/4] overflow-hidden rounded-[6px] bg-stone">
-        <Picture src={product.imageUrl} alt="" sizes={CARD_SIZES} priority={priority} imgClassName="transition-transform duration-300 group-hover:scale-[1.03]" className="block h-full w-full" />
+      <div className="stage relative aspect-[3/4] overflow-hidden rounded-[6px]">
+        <Picture
+          src={product.imageUrl}
+          alt=""
+          sizes={CARD_SIZES}
+          priority={priority}
+          imgClassName={cx('transition-[transform,opacity] duration-500 ease-out group-hover:scale-[1.035]', product.availability === 'out' && 'opacity-70')}
+          className="block h-full w-full"
+        />
+        {product.hoverImageUrl && (
+          <Picture src={product.hoverImageUrl} alt="" sizes={CARD_SIZES} className="absolute inset-0 hidden opacity-0 transition-opacity duration-300 group-hover:opacity-100 [@media(hover:hover)]:block" />
+        )}
         {tag && (
-          <span className={cx('absolute left-2 top-2 rounded-[4px] px-1.5 py-0.5 text-xs font-bold', sale ? 'bg-vermilion text-paper' : 'bg-paper text-obsidian')}>{tag}</span>
+          <span
+            className={cx(
+              'absolute left-2 top-2 rounded-[3px] px-1.5 py-[3px] text-xs font-semibold leading-none tracking-[0.01em]',
+              sale ? 'bg-vermilion text-paper' : 'bg-paper text-obsidian shadow-[0_0_0_1px_rgb(14_17_19/0.06)]',
+            )}
+          >
+            {tag}
+          </span>
         )}
         {product.availability === 'out' && (
-          <span className="absolute inset-x-0 bottom-0 bg-paper/90 px-2 py-1 text-center text-xs font-semibold text-graphite">{t('availability.out')}</span>
+          <span className="absolute inset-x-2 bottom-2 rounded-[4px] bg-paper/95 px-2 py-1.5 text-center text-xs font-semibold text-graphite">{t('availability.out')}</span>
         )}
       </div>
-      <div className="mt-2 flex flex-col gap-0.5">
-        <p className="text-[13px] text-graphite">{product.brand.name}</p>
+      <div className="mt-3 flex flex-col gap-0.5">
+        <p className="text-[13px] leading-tight text-graphite">{product.brand.name}</p>
         <h3 className="line-clamp-2 text-[15px] font-medium leading-snug">
-          <Link to={`/p/${product.slug}${hash ? `#${hash}` : ''}`} className="after:absolute after:inset-0">
+          <Link to={`/p/${product.slug}${hash ? `#${hash}` : ''}`} className="decoration-obsidian/30 underline-offset-[3px] after:absolute after:inset-0 group-hover:underline">
             {product.name}
           </Link>
         </h3>
-        <Price cents={product.priceCents} compareAtCents={product.compareAtCents} size="sm" className="mt-0.5 flex-wrap" />
+        <Price cents={product.priceCents} compareAtCents={product.compareAtCents} size="md" className="mt-1 flex-wrap" />
         {product.availability === 'low' && product.lowStockCount ? (
           <p className="text-[13px] font-medium text-vermilion">{t('availability.low', { n: product.lowStockCount })}</p>
         ) : product.colors.length > 1 ? (

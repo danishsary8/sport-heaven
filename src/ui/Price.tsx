@@ -5,7 +5,7 @@ import { cx } from './cx';
 export function Price({ cents, compareAtCents, size = 'md', className }: { cents: number; compareAtCents?: number | null; size?: 'sm' | 'md' | 'lg'; className?: string }) {
   const { t } = useI18n();
   const onSale = compareAtCents != null && compareAtCents > cents;
-  const text = { sm: 'text-sm', md: 'text-base', lg: 'text-2xl' }[size];
+  const text = { sm: 'text-sm', md: 'text-base', lg: 'text-[28px] leading-none tracking-[-0.01em]' }[size];
   return (
     <span className={cx('tabular inline-flex items-baseline gap-2 font-semibold', text, className)}>
       <span className={onSale ? 'text-vermilion' : undefined}>{formatUsd(cents)}</span>

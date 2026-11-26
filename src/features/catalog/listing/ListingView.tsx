@@ -79,7 +79,7 @@ export function ListingView({
     <section className="mx-auto max-w-[1320px] px-4 pb-16 pt-6 lg:px-8 lg:pt-10">
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
         <div>
-          <h1 className="font-display text-4xl font-bold leading-none lg:text-5xl">{title}</h1>
+          <h1 className="font-display text-[44px] font-bold leading-[0.9] tracking-[-0.01em] lg:text-[64px]">{title}</h1>
           {intro && <div className="mt-2 max-w-prose text-graphite">{intro}</div>}
         </div>
         {total != null && <p className="text-graphite tabular">{total === 1 ? t('listing.countOne') : t('listing.count', { n: total })}</p>}
@@ -114,7 +114,7 @@ export function ListingView({
       </div>
 
       <div className="mt-6 lg:grid lg:grid-cols-[240px_1fr] lg:gap-10">
-        <aside aria-label={t('listing.filters')} className="hidden lg:block">
+        <aside aria-label={t('listing.filters')} className="hidden lg:sticky lg:top-20 lg:block lg:max-h-[calc(100dvh-6rem)] lg:self-start lg:overflow-y-auto lg:overscroll-contain lg:-ml-1 lg:pl-1 lg:pr-3 lg:[scrollbar-width:thin]">
           <h2 className="sr-only">{t('listing.filters')}</h2>
           <FilterPanel facets={facets} hidden={['category', ...hidden]} />
           {filtered && (
@@ -148,7 +148,7 @@ export function ListingView({
             {() => (
               <>
                 <h2 className="sr-only">{t('listing.products')}</h2>
-                <ul className="grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 lg:grid-cols-3 lg:gap-x-5 xl:grid-cols-4">
+                <ul className="grid grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-3 lg:grid-cols-3 lg:gap-x-5 lg:gap-y-10 xl:grid-cols-4">
                   {items.map((p, i) => (
                     <li key={p.id}>
                       <ProductCard product={p} priority={i < 4} />

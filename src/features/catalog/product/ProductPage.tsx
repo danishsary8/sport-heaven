@@ -126,7 +126,10 @@ function ProductView({ product }: { product: ProductDetail }) {
       <Seo title={product.name} description={product.description ?? undefined} canonical={`/p/${product.slug}`} image={product.imageUrl ?? undefined} />
       <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       <div className="mx-auto max-w-[1320px] lg:grid lg:grid-cols-[1.3fr_1fr] lg:gap-12 lg:px-8 lg:pt-8">
-        <Gallery images={product.images} color={color} name={product.name} />
+        {/* On desktop the photos stay in view while the buy box and details scroll past. */}
+        <div className="lg:sticky lg:top-24 lg:self-start">
+          <Gallery images={product.images} color={color} name={product.name} />
+        </div>
 
         <div className="px-4 pt-5 lg:px-0 lg:pt-0">
           <div className="flex items-start justify-between gap-3">
@@ -134,14 +137,14 @@ function ProductView({ product }: { product: ProductDetail }) {
               <Link to={`/brands/${product.brand.slug}`} className="text-[15px] text-graphite hover:underline">
                 {product.brand.name}
               </Link>
-              <h1 className="mt-1 text-2xl font-semibold leading-tight lg:text-[28px]">{product.name}</h1>
+              <h1 className="mt-1 text-[26px] font-semibold leading-[1.15] tracking-[-0.015em] lg:text-[32px]">{product.name}</h1>
             </div>
             <WishlistButton slug={product.slug} />
           </div>
-          <Price cents={priceCents} compareAtCents={compareAt} size="lg" className="mt-3" />
+          <Price cents={priceCents} compareAtCents={compareAt} size="lg" className="mt-4" />
 
           {product.colors.length > 0 && (
-            <div className="mt-6">
+            <div className="mt-7 border-t border-stone pt-6">
               <p id="color-label" className="text-sm font-semibold">
                 {t('product.colour')}: <span className="font-normal text-graphite">{color}</span>
               </p>
@@ -175,9 +178,9 @@ function ProductView({ product }: { product: ProductDetail }) {
                   <label
                     key={s}
                     className={
-                      'relative flex h-12 cursor-pointer items-center justify-center rounded-[6px] border text-[15px] font-semibold has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-obsidian ' +
+                      'relative flex h-12 cursor-pointer items-center justify-center rounded-[6px] border font-display text-lg font-bold tracking-[0.01em] transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-obsidian ' +
                       (out
-                        ? 'cursor-not-allowed border-stone text-graphite/70 line-through'
+                        ? 'cursor-not-allowed border-stone bg-stone/40 text-graphite/70 line-through decoration-1'
                         : size === s
                           ? 'border-obsidian bg-obsidian text-paper'
                           : 'border-[#C9C5BB] hover:border-obsidian')
@@ -211,8 +214,8 @@ function ProductView({ product }: { product: ProductDetail }) {
       </div>
 
       {product.related.length > 0 && (
-        <section aria-labelledby="related" className="mx-auto mt-14 max-w-[1320px] px-4 lg:px-8">
-          <h2 id="related" className="mb-5 font-display text-3xl font-bold">
+        <section aria-labelledby="related" className="mx-auto mt-16 max-w-[1320px] border-t border-stone px-4 pt-12 lg:mt-24 lg:px-8 lg:pt-16">
+          <h2 id="related" className="mb-6 font-display text-[34px] font-bold leading-[0.95] lg:text-5xl">
             {t('product.related')}
           </h2>
           <ul className="grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 lg:grid-cols-4 lg:gap-x-5">
@@ -227,7 +230,7 @@ function ProductView({ product }: { product: ProductDetail }) {
 
       <QuestionsSection slug={product.slug} />
 
-      <div className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-3 border-t border-stone bg-paper/95 px-4 py-3 backdrop-blur lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-3 border-t border-stone bg-paper/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_-12px_rgb(14_17_19/0.18)] backdrop-blur lg:hidden">
         <div className="min-w-0">
           <Price cents={priceCents} compareAtCents={compareAt} />
           <p className="truncate text-xs text-graphite">{size ?? t('product.chooseSizeShort')}</p>
