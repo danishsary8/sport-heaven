@@ -25,7 +25,9 @@ export const human = (s: string) => {
   return t.charAt(0).toUpperCase() + t.slice(1);
 };
 
-export const dateTime = (iso: string) => new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Phnom_Penh' }).format(new Date(iso));
+/** Accepts ISO strings and Postgres text timestamps ("2026-11-26 15:38:53.88+00"). */
+export const parseTs = (s: string) => new Date(s.replace(' ', 'T').replace(/([+-]\d\d)$/, '$1:00'));
+export const dateTime = (iso: string) => new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Phnom_Penh' }).format(parseTs(iso));
 
 export function Pager({ page, pageSize, total, onPage }: { page: number; pageSize: number; total: number; onPage(p: number): void }) {
   const pages = Math.max(1, Math.ceil(total / pageSize));

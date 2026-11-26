@@ -9,6 +9,7 @@ const page = <K extends keyof Awaited<ReturnType<typeof pages>>>(name: K) => laz
 const OverviewPage = page('OverviewPage');
 const AdminOrdersPage = page('AdminOrdersPage');
 const AdminOrderPage = page('AdminOrderPage');
+const StockPage = page('StockPage');
 
 /** /admin and its pages. The layout and pages are one lazy chunk, loaded only by staff. */
 export const adminRoutes: RouteObject = {
@@ -18,6 +19,7 @@ export const adminRoutes: RouteObject = {
     { index: true, element: <OverviewPage /> },
     { path: 'orders', element: <AdminOrdersPage /> },
     { path: 'orders/:number', element: <AdminOrderPage /> },
+    { path: 'stock', element: <StockPage /> },
     { path: '*', element: <NotFoundPage /> },
   ],
 };
