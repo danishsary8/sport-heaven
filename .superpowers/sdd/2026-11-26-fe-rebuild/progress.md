@@ -8,3 +8,4 @@ Plan: docs/superpowers/plans/2026-11-26-fe2-5-rebuild.md. Base: 38aa126 (FE1 tas
 | B2 home | done | 1f76fe7 | 3 tests; rail width fix (w-full on mx-auto flex child); en/km screens |
 | B3 search | done | b2257e2 | 3 tests; overlay + results screens 390/1366 |
 | B4 product | done | 1dff083 | 6 tests; screens en/km |
+| B5 print studio | done | 3bd51ce | 3 tests; removed invented policy copy; screens |
