@@ -143,3 +143,20 @@ describe('apiFetch', () => {
     await expect(apiFetch('/v1/cart/items/x', { method: 'DELETE' })).resolves.toBeUndefined();
   });
 });
+
+describe('text bodies', () => {
+  it('sends a CSV body as text and reads a text response', async () => {
+    let seen: { type: string | null; body: string } | null = null;
+    server.use(
+      http.post(`${API}/v1/csv`, async ({ request }) => {
+        seen = { type: request.headers.get('content-type'), body: await request.text() };
+        return HttpResponse.json({ ok: true });
+      }),
+      http.get(`${API}/v1/csv`, () => new HttpResponse('a,b\n1,2', { headers: { 'content-type': 'text/csv' } })),
+    );
+    configureApi({ baseUrl: API, getToken: async () => null });
+    await apiFetch('/v1/csv', { method: 'POST', text: 'sku,price\nA,1', headers: { 'content-type': 'text/csv' } });
+    expect(seen).toEqual({ type: 'text/csv', body: 'sku,price\nA,1' });
+    expect(await apiFetch<string>('/v1/csv', { as: 'text' })).toBe('a,b\n1,2');
+  });
+});

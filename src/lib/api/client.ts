@@ -16,6 +16,10 @@ export interface FetchOptions {
   headers?: Record<string, string>;
   signal?: AbortSignal;
   withLang?: boolean;
+  /** A raw text body (e.g. CSV); set the content-type in `headers`. */
+  text?: string;
+  /** Read the response as text instead of JSON. */
+  as?: 'json' | 'text';
 }
 
 let config: ClientConfig = {
@@ -43,14 +47,14 @@ export function buildUrl(path: string, query?: Record<string, QueryValue>, lang?
 
 async function send(url: string, opts: FetchOptions, token: string | null): Promise<Response> {
   const headers: Record<string, string> = { accept: 'application/json', ...opts.headers };
-  if (opts.body !== undefined) headers['content-type'] = 'application/json';
+  if (opts.body !== undefined && !headers['content-type']) headers['content-type'] = 'application/json';
   if (token) headers.authorization = `Bearer ${token}`;
   try {
     return await fetch(url, {
       method: opts.method ?? 'GET',
       credentials: 'include',
       headers,
-      body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
+      body: opts.text !== undefined ? opts.text : opts.body === undefined ? undefined : JSON.stringify(opts.body),
       signal: opts.signal,
     });
   } catch (e) {
@@ -89,5 +93,6 @@ export async function apiFetch<T>(path: string, opts: FetchOptions = {}): Promis
   if (!res.ok) throw await toError(res);
   if (res.status === 204) return undefined as T;
   const text = await res.text();
+  if (opts.as === 'text') return text as T;
   return (text ? JSON.parse(text) : undefined) as T;
 }
