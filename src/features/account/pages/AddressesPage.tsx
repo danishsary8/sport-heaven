@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { isApiError } from '../../../lib/api';
 import { useI18n } from '../../../lib/i18n';
-import { Button, EmptyState, Field, QueryView, Seo, Sheet, Skeleton, useToast } from '../../../ui';
+import { Button, EmptyState, Field, PageTitle, QueryView, Seo, Sheet, Skeleton, useToast } from '../../../ui';
 import { AddressFields, EMPTY_ADDRESS, looksLikePhone, type AddressDraft } from '../../checkout/AddressFields';
 import { placeName } from '../../geo/api';
 import { useAddresses, useCreateAddress, useDefaultAddress, useDeleteAddress, useUpdateAddress, type Address, type AddressBody } from '../api';
@@ -18,7 +18,7 @@ export function AddressesPage() {
     <div className="flex flex-col gap-6">
       <Seo title={t('acc.nav.addresses')} noindex />
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="font-display text-5xl font-bold">{t('acc.nav.addresses')}</h1>
+        <PageTitle>{t('acc.nav.addresses')}</PageTitle>
         <Button variant="primary" onClick={() => setEditing('new')}>
           {t('acc.addAddress')}
         </Button>

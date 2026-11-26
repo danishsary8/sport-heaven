@@ -2,6 +2,7 @@ export { Availability, type AvailabilityValue } from './Availability';
 export { Button, type ButtonProps, type ButtonVariant } from './Button';
 export { cx } from './cx';
 export { Field, Select, TextArea } from './Field';
+export { CONTAINER, PageTitle, SectionTitle, type PageTitleSize } from './Heading';
 export { Picture } from './Picture';
 export { Price } from './Price';
 export { Seo } from './Seo';

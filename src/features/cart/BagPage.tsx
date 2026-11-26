@@ -1,6 +1,6 @@
 import { Link } from 'react-router';
 import { useI18n } from '../../lib/i18n';
-import { EmptyState, QueryView, Seo, Skeleton } from '../../ui';
+import { EmptyState, PageTitle, QueryView, Seo, Skeleton } from '../../ui';
 import { useCart } from './api';
 import { BagLines, BagTotals, CheckoutButton, PromoField } from './BagContents';
 import { DeliveryEstimate } from './DeliveryEstimate';
@@ -26,7 +26,7 @@ export function BagPage() {
   return (
     <section className="mx-auto max-w-[1120px] px-4 pb-16 pt-6 lg:px-8 lg:pt-10">
       <Seo title={t('bag.title')} noindex />
-      <h1 className="font-display text-5xl font-bold">{t('bag.title')}</h1>
+      <PageTitle size="page">{t('bag.title')}</PageTitle>
       <QueryView query={cart} skeleton={<Skeleton className="mt-6 h-64 w-full" />} isEmpty={(d) => d.cart.lines.length === 0} empty={<EmptyBag />}>
         {({ cart: c }) => (
           <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-[minmax(0,1fr)_360px]">

@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router';
 import { isApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { formatKhr, formatUsd, useI18n, type DictKey } from '../../lib/i18n';
-import { Button, Field, QueryView, Seo, Skeleton, TextArea, cx } from '../../ui';
+import { Button, Field, PageTitle, QueryView, Seo, Skeleton, TextArea, cx } from '../../ui';
 import { useAddresses } from '../account/api';
 import { useCart, type Cart } from '../cart/api';
 import { PromoField, lineDetails } from '../cart/BagContents';
@@ -35,7 +35,7 @@ export function CheckoutPage() {
   return (
     <div className="mx-auto max-w-[1120px] px-4 pb-16 pt-6 lg:px-8 lg:pt-10">
       <Seo title={t('co.title')} noindex />
-      <h1 className="font-display text-5xl font-bold">{t('co.title')}</h1>
+      <PageTitle>{t('co.title')}</PageTitle>
       <QueryView query={cart} skeleton={<Skeleton className="mt-6 h-96 w-full" />} isEmpty={(d) => d.cart.lines.length === 0} empty={<EmptyBag />}>
         {({ cart: c }) => <CheckoutForm cart={c} />}
       </QueryView>

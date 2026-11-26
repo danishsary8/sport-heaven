@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
 import { isApiError } from '../../lib/api';
 import { useI18n } from '../../lib/i18n';
-import { Button, Field, Seo } from '../../ui';
+import { Button, Field, PageTitle, Seo } from '../../ui';
 import { looksLikePhone } from '../checkout/AddressFields';
 import { saveOrderAccess } from '../checkout/orderAccess';
 import { useTrackOrder } from './api';
@@ -32,7 +32,7 @@ export function TrackPage() {
   return (
     <section className="mx-auto max-w-[1120px] px-4 pb-16 pt-8 lg:px-8 lg:pt-12">
       <Seo title={t('nav.track')} noindex />
-      <h1 className="font-display text-5xl font-bold">{t('nav.track')}</h1>
+      <PageTitle>{t('nav.track')}</PageTitle>
       <form onSubmit={submit} noValidate className="mt-6 grid max-w-[720px] gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-start">
         <Field label={t('track.number')} value={number} onChange={(e) => setNumber(e.target.value)} error={errors.number} autoCapitalize="characters" autoComplete="off" maxLength={40} hint={t('track.numberHint')} />
         <Field label={t('track.phone')} value={phone} onChange={(e) => setPhone(e.target.value)} error={errors.phone} type="tel" inputMode="tel" autoComplete="tel" maxLength={40} />

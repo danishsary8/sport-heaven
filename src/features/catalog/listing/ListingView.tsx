@@ -2,7 +2,7 @@ import { SlidersHorizontal, X } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router';
 import { useI18n, type DictKey } from '../../../lib/i18n';
-import { Button, EmptyState, ErrorState, QueryView, Sheet, cx } from '../../../ui';
+import { Button, EmptyState, ErrorState, PageTitle, QueryView, Sheet, cx } from '../../../ui';
 import { isApiError } from '../../../lib/api';
 import { useFilters, useProducts, type Facet, type ListingQuery } from '../api';
 import { ProductCard, ProductCardSkeleton } from '../ProductCard';
@@ -79,7 +79,7 @@ export function ListingView({
     <section className="mx-auto max-w-[1320px] px-4 pb-16 pt-6 lg:px-8 lg:pt-10">
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
         <div>
-          <h1 className="font-display text-[44px] font-bold leading-[0.9] tracking-[-0.01em] lg:text-[64px]">{title}</h1>
+          <PageTitle size="page">{title}</PageTitle>
           {intro && <div className="mt-2 max-w-prose text-graphite">{intro}</div>}
         </div>
         {total != null && <p className="text-graphite tabular">{total === 1 ? t('listing.countOne') : t('listing.count', { n: total })}</p>}

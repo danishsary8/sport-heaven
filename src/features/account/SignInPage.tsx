@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router';
 import { useAuth, type PhoneConfirmation } from '../../lib/auth';
 import { useI18n } from '../../lib/i18n';
-import { Button, Field, Seo } from '../../ui';
+import { Button, Field, PageTitle, Seo } from '../../ui';
 
 /** "012 345 678" → "+85512345678"; numbers starting with + are kept as they are. */
 export function toE164(input: string): string | null {
@@ -92,7 +92,7 @@ export function SignInPage() {
   return (
     <section className="mx-auto max-w-[440px] px-4 pb-16 pt-8 lg:pt-14">
       <Seo title={t('signIn.title')} noindex />
-      <h1 className="font-display text-5xl font-bold">{t('signIn.title')}</h1>
+      <PageTitle>{t('signIn.title')}</PageTitle>
       <p className="mt-2 text-graphite">{t('signIn.body')}</p>
 
       {error && (

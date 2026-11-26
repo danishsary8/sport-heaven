@@ -1,20 +1,19 @@
-import { ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
-import { formatDate, formatUsd, useI18n } from '../../../lib/i18n';
-import { Button, EmptyState, Picture, QueryView, Seo, Skeleton } from '../../../ui';
+import { formatDate, useI18n } from '../../../lib/i18n';
+import { Button, EmptyState, PageTitle, QueryView, Seo, Skeleton } from '../../../ui';
 import { OrderDetailView } from '../../orders/OrderPage';
-import { StatusBadge } from '../../orders/OrderParts';
+import { OrderList } from '../OrderRow';
 import { useMyOrder, useMyOrders, type MyOrder } from '../api';
 
 export function MyOrdersPage() {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   const [page, setPage] = useState(1);
   const orders = useMyOrders(page);
   return (
     <div className="flex flex-col gap-6">
       <Seo title={t('acc.nav.orders')} noindex />
-      <h1 className="font-display text-5xl font-bold">{t('acc.nav.orders')}</h1>
+      <PageTitle>{t('acc.nav.orders')}</PageTitle>
       <QueryView
         query={orders}
         skeleton={<Skeleton className="h-48 w-full" />}
@@ -23,24 +22,7 @@ export function MyOrdersPage() {
       >
         {(d) => (
           <>
-            <ul className="divide-y divide-stone rounded-[8px] border border-stone">
-              {d.orders.map((o) => (
-                <li key={o.number}>
-                  <Link to={`/account/orders/${o.number}`} className="flex items-center gap-3 p-4 hover:bg-chalk">
-                    <Picture src={o.firstItem?.imageUrl} alt="" sizes="48px" width={48} height={64} className="block h-16 w-12 shrink-0 overflow-hidden rounded bg-stone" />
-                    <span className="min-w-0 flex-1">
-                      <span className="block font-semibold">{o.number}</span>
-                      <span className="block truncate text-sm text-graphite">{o.itemCount > 1 ? t('acc.orderItems', { name: o.firstItem?.name ?? '', n: o.itemCount - 1 }) : (o.firstItem?.name ?? '')}</span>
-                      <span className="block text-sm text-graphite">
-                        {formatDate(o.createdAt, lang)}, {formatUsd(o.totalCents)}
-                      </span>
-                    </span>
-                    <StatusBadge status={o.status} />
-                    <ChevronRight className="size-4 shrink-0 text-graphite" aria-hidden />
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <OrderList orders={d.orders} />
             <div className="flex gap-3">
               {page > 1 && (
                 <Button variant="secondary" onClick={() => setPage(page - 1)}>

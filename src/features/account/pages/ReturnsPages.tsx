@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { isApiError } from '../../../lib/api';
 import { formatDate, formatUsd, useI18n, type DictKey } from '../../../lib/i18n';
-import { Button, EmptyState, ErrorState, QueryView, Select, Seo, Skeleton, TextArea, cx, useToast } from '../../../ui';
+import { Button, EmptyState, ErrorState, PageTitle, QueryView, Select, Seo, Skeleton, TextArea, cx, useToast } from '../../../ui';
 import { useProduct } from '../../catalog/api';
 import { useCreateReturn, useMyOrder, useMyReturns, type MyOrder, type ReturnBody } from '../api';
 import { canReturn } from './OrdersPages';
@@ -24,7 +24,7 @@ export function MyReturnsPage() {
   return (
     <div className="flex flex-col gap-6">
       <Seo title={t('acc.nav.returns')} noindex />
-      <h1 className="font-display text-5xl font-bold">{t('acc.nav.returns')}</h1>
+      <PageTitle>{t('acc.nav.returns')}</PageTitle>
       <QueryView query={returns} skeleton={<Skeleton className="h-40 w-full" />} isEmpty={(d) => d.returns.length === 0} empty={<EmptyState title={t('ret.none')} body={t('ret.noneBody')} />}>
         {(d) => (
           <ul className="flex flex-col gap-3">
@@ -66,7 +66,7 @@ export function NewReturnPage() {
   return (
     <div className="flex flex-col gap-6">
       <Seo title={t('ret.title')} noindex />
-      <h1 className="font-display text-5xl font-bold">{t('ret.title')}</h1>
+      <PageTitle>{t('ret.title')}</PageTitle>
       {!number ? (
         <EmptyState title={t('ret.chooseOrder')} action={<Link to="/account/orders" className="font-semibold underline underline-offset-4">{t('acc.nav.orders')}</Link>} />
       ) : (

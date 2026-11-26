@@ -1,5 +1,5 @@
 import { formatDate, formatUsd, useI18n, type DictKey } from '../../../lib/i18n';
-import { QueryView, Seo, Skeleton, cx } from '../../../ui';
+import { PageTitle, QueryView, Seo, Skeleton, cx } from '../../../ui';
 import { useLoyalty, type Loyalty } from '../api';
 
 const fmt = new Intl.NumberFormat('en-US');
@@ -43,7 +43,7 @@ export function PointsPage() {
   return (
     <div className="flex flex-col gap-6">
       <Seo title={t('acc.nav.points')} noindex />
-      <h1 className="font-display text-5xl font-bold">{t('acc.nav.points')}</h1>
+      <PageTitle>{t('acc.nav.points')}</PageTitle>
       <QueryView query={loyalty} skeleton={<Skeleton className="h-40 w-full" />}>
         {(l) => (
           <>

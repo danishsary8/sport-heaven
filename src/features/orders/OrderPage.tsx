@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { isApiError } from '../../lib/api';
 import { useI18n } from '../../lib/i18n';
-import { Button, EmptyState, QueryView, Seo, Sheet, Skeleton, useToast } from '../../ui';
+import { Button, EmptyState, PageTitle, QueryView, Seo, Sheet, Skeleton, useToast } from '../../ui';
 import { useCancelOrder, useOrder, type OrderView } from './api';
 import { Fulfilment, OrderItems, OrderTotals, StatusBadge, Timeline } from './OrderParts';
 
@@ -60,7 +60,7 @@ export function OrderDetailView({ order, backTo }: { order: OrderView; backTo?: 
           </Link>
         )}
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="font-display text-5xl font-bold leading-none">{t('order.title', { number: order.number })}</h1>
+          <PageTitle>{t('order.title', { number: order.number })}</PageTitle>
           <StatusBadge status={order.status} />
         </div>
         {thanks && <p className="mt-3 rounded-[8px] bg-cobalt/[0.06] px-4 py-3 text-[17px] font-semibold text-cobalt">{thanks}</p>}

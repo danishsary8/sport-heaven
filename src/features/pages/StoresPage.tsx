@@ -1,6 +1,6 @@
 import { Clock, MapPin, Phone, Send } from 'lucide-react';
 import { useI18n } from '../../lib/i18n';
-import { QueryView, Seo, Skeleton } from '../../ui';
+import { PageTitle, QueryView, Seo, Skeleton } from '../../ui';
 import { useBranches, type Branch } from '../catalog/api';
 
 export function mapsUrl(b: Branch): string {
@@ -15,7 +15,7 @@ export function StoresPage() {
   return (
     <section className="mx-auto max-w-[1320px] px-4 pb-16 pt-8 lg:px-8 lg:pt-12">
       <Seo title={t('stores.title')} description={t('stores.body')} canonical="/stores" />
-      <h1 className="font-display text-[44px] font-bold leading-[0.9] tracking-[-0.01em] lg:text-[64px]">{t('stores.title')}</h1>
+      <PageTitle size="page">{t('stores.title')}</PageTitle>
       <p className="mt-2 max-w-prose text-graphite">{t('stores.body')}</p>
       <QueryView query={branches} skeleton={<Skeleton className="mt-8 h-48 w-full" />}>
         {(d) => (

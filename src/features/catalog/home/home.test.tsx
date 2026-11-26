@@ -51,6 +51,25 @@ describe('home page', () => {
     expect(await within(strip).findByText('Sonthormuk')).toBeTruthy();
   });
 
+  it('still renders when a section payload is malformed or of an unknown type', async () => {
+    server.use(
+      http.get(`${API}/v1/catalog/home`, () =>
+        HttpResponse.json({
+          sections: [
+            { id: 'h', type: 'hero', payload: { title: 'Matchday gear', link: 'not-an-object' } },
+            { id: 'g', type: 'category_grid', payload: { title: 'Shop by category', categories: 'boots' } },
+            { id: 'x', type: 'video_wall', payload: {} },
+          ],
+        }),
+      ),
+    );
+    renderRoutes(routes, '/');
+    expect(await screen.findByRole('heading', { level: 1, name: 'Matchday gear' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Shop now' })).toHaveAttribute('href', '/shop');
+    expect(screen.queryByRole('region', { name: 'Shop by category' })).toBeNull();
+    expect(await screen.findByRole('region', { name: 'Pick up from our stores' })).toBeTruthy();
+  });
+
   it('offers a retry when the home sections cannot load', async () => {
     server.use(http.get(`${API}/v1/catalog/home`, () => HttpResponse.json({ error: { code: 'internal', message: 'Busy' } }, { status: 500 })));
     renderRoutes(routes, '/');

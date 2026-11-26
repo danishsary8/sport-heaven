@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 import { isApiError } from '../../../lib/api';
 import { useAuth, type PhoneConfirmation } from '../../../lib/auth';
 import { useI18n } from '../../../lib/i18n';
-import { Button, Field, QueryView, Select, Seo, Sheet, Skeleton, useToast } from '../../../ui';
+import { Button, Field, PageTitle, QueryView, Select, Seo, Sheet, Skeleton, useToast } from '../../../ui';
 import { useBranches } from '../../catalog/api';
 import { toE164 } from '../SignInPage';
 import { useDeleteMe, useMe, useUpdateMe, type Me, type MeBody } from '../api';
@@ -17,7 +17,7 @@ export function ProfilePage() {
   return (
     <div className="flex flex-col gap-8">
       <Seo title={t('acc.nav.profile')} noindex />
-      <h1 className="font-display text-5xl font-bold">{t('acc.nav.profile')}</h1>
+      <PageTitle>{t('acc.nav.profile')}</PageTitle>
       <QueryView query={me} skeleton={<Skeleton className="h-80 w-full" />}>
         {(d) => (
           <>

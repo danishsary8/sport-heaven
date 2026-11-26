@@ -1,7 +1,7 @@
 import { X } from 'lucide-react';
 import { Link } from 'react-router';
 import { useI18n } from '../../../lib/i18n';
-import { EmptyState, QueryView, Seo } from '../../../ui';
+import { EmptyState, PageTitle, QueryView, Seo } from '../../../ui';
 import { GridSkeleton } from '../../catalog/listing/ListingView';
 import { ProductCard } from '../../catalog/ProductCard';
 import { useToggleWishlist, useWishlist } from '../../catalog/product/WishlistButton';
@@ -13,7 +13,7 @@ export function WishlistPage() {
   return (
     <div className="flex flex-col gap-6">
       <Seo title={t('acc.nav.wishlist')} noindex />
-      <h1 className="font-display text-5xl font-bold">{t('acc.nav.wishlist')}</h1>
+      <PageTitle>{t('acc.nav.wishlist')}</PageTitle>
       <QueryView
         query={list}
         skeleton={<GridSkeleton n={3} />}

@@ -5,7 +5,7 @@ import { Link, useNavigate, useParams } from 'react-router';
 import { isApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { formatDate, formatKhr, formatUsd, useI18n } from '../../lib/i18n';
-import { Button, EmptyState, ErrorState, QueryView, Seo, Skeleton } from '../../ui';
+import { Button, EmptyState, ErrorState, PageTitle, QueryView, Seo, Skeleton } from '../../ui';
 import { rememberCardReturn } from '../checkout/orderAccess';
 import { invalidateOrder, useOrder, usePaymentStatus, useSwitchPayment, type OrderView, type Payment, type PayMethod } from '../orders/api';
 
@@ -99,7 +99,7 @@ function PayView({ order, initialPayment }: { order: OrderView; initialPayment: 
     <div className="flex flex-col gap-6">
       <div>
         <p className="text-sm text-graphite">{t('pay.orderNumber', { number: order.number })}</p>
-        <h1 className="mt-1 font-display text-5xl font-bold leading-none">{instructions?.kind === 'redirect' && !showChooser ? t('pay.cardTitle') : t('pay.title')}</h1>
+        <PageTitle className="mt-1">{instructions?.kind === 'redirect' && !showChooser ? t('pay.cardTitle') : t('pay.title')}</PageTitle>
       </div>
 
       <div className="rounded-[10px] border border-cobalt/30 bg-cobalt/[0.04] p-5">

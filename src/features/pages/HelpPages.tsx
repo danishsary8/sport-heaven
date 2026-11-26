@@ -1,6 +1,6 @@
 import { Link, useParams } from 'react-router';
 import { useI18n } from '../../lib/i18n';
-import { Seo } from '../../ui';
+import { PageTitle, Seo } from '../../ui';
 import { NotFoundPage } from '../shell/NotFoundPage';
 import { TOPICS, helpTopic, type TopicId } from './helpContent';
 
@@ -11,7 +11,7 @@ export function HelpIndexPage() {
   return (
     <section className={container}>
       <Seo title={t('help.title')} canonical="/help" />
-      <h1 className="font-display text-5xl font-bold">{t('help.title')}</h1>
+      <PageTitle>{t('help.title')}</PageTitle>
       <ul className="mt-8 divide-y divide-stone border-y border-stone">
         {TOPICS.map((id) => {
           const { topic } = helpTopic(id, lang);
@@ -45,7 +45,7 @@ export function HelpTopicPage() {
       <Link to="/help" className="text-sm font-semibold text-graphite hover:underline">
         {t('help.title')}
       </Link>
-      <h1 className="mt-2 font-display text-5xl font-bold leading-none">{topic.title}</h1>
+      <PageTitle className="mt-2">{topic.title}</PageTitle>
       {topic.draft && <p className="mt-4 rounded-[6px] bg-brass/15 px-3 py-2 text-sm font-medium">{t('help.draft')}</p>}
       {englishOnly && (
         <p lang="km" className="mt-4 rounded-[6px] bg-stone px-3 py-2 text-sm">

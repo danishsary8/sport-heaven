@@ -1,6 +1,6 @@
 import { Link } from 'react-router';
 import { useI18n } from '../../../lib/i18n';
-import { QueryView, Seo } from '../../../ui';
+import { PageTitle, QueryView, Seo } from '../../../ui';
 import { useProducts } from '../api';
 import { GridSkeleton } from '../listing/ListingView';
 import { ProductCard } from '../ProductCard';
@@ -11,7 +11,7 @@ export function CustomPage() {
   return (
     <section className="mx-auto max-w-[1320px] px-4 pb-16 pt-6 lg:px-8 lg:pt-10">
       <Seo title={t('custom.title')} canonical="/custom" />
-      <h1 className="font-display text-4xl font-bold leading-none lg:text-5xl">{t('custom.title')}</h1>
+      <PageTitle size="page">{t('custom.title')}</PageTitle>
       <p className="mt-2 max-w-prose text-graphite">{t('custom.body')}</p>
       <CustomRail category="jerseys" title={t('custom.jerseys')} />
       <CustomRail category="f1" title={t('custom.f1')} />
