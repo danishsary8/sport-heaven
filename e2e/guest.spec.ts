@@ -11,8 +11,10 @@ test('a guest finds boots, pays with KHQR and tracks the order', async ({ page, 
   // Filter by a brand on the phone sheet; the URL keeps it.
   await page.getByRole('button', { name: 'Filter' }).click();
   const sheet = page.getByRole('dialog', { name: 'Filters' });
-  await sheet.getByRole('checkbox', { name: /Adidas/ }).check();
+  // Filters apply through the URL, so the box ticks after the navigation: click, then assert.
+  await sheet.getByRole('checkbox', { name: /Adidas/ }).click();
   await expect(page).toHaveURL(/brand=adidas/);
+  await expect(sheet.getByRole('checkbox', { name: /Adidas/ })).toBeChecked();
   await sheet.getByRole('button', { name: /^Show \d+ items$/ }).click();
 
   await page.locator('main article a').first().click();
