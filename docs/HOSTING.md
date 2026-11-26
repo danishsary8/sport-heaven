@@ -5,11 +5,12 @@
 The fallback is already configured for:
 
 - **Netlify and Cloudflare Pages:** `public/_redirects` (copied into `dist/`).
-- **Vercel:** `vercel.json` (also sets a one-year cache on `/assets/`, whose names change with every build).
+- **Vercel:** `vercel.json` (sets a one-year cache on the build files directly in `/assets/`, whose names change with every build, and a one-day cache on the photos in `/assets/catalog/` and `/assets/site/`, which keep their names).
 - **nginx:**
 
   ```nginx
   location /assets/ { try_files $uri =404; add_header Cache-Control "public, max-age=31536000, immutable"; }
+  location ~ ^/assets/(catalog|site)/ { try_files $uri =404; add_header Cache-Control "public, max-age=86400"; }
   location / { try_files $uri /index.html; }
   ```
 

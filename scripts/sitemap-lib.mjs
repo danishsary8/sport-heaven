@@ -1,4 +1,4 @@
-const STATIC = ['/', '/shop', '/custom', '/stores', '/help', '/help/delivery', '/help/returns', '/help/size-guide', '/help/contact', '/help/about', '/track'];
+const STATIC = ['/', '/shop', '/custom', '/stores', '/help', '/help/delivery', '/help/returns', '/help/size-guide', '/help/contact', '/help/about'];
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 /** sitemap.xml for the public pages (checkout, account, admin and orders are never listed). */

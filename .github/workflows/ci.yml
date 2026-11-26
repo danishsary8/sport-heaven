@@ -46,10 +46,22 @@ jobs:
         with:
           path: sport-heaven
       # The backend lives in its own repository. A private repository needs a read token in BACKEND_REPO_TOKEN.
+      # Use the backend branch with the same name when there is one, otherwise the backend's main.
+      - name: Pick the backend branch
+        id: backend
+        env:
+          TOKEN: ${{ secrets.BACKEND_REPO_TOKEN || github.token }}
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          if git ls-remote --exit-code --heads "https://x-access-token:${TOKEN}@github.com/danishsary8/sport-backend.git" "$BRANCH" > /dev/null; then
+            echo "ref=$BRANCH" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=main" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/checkout@v4
         with:
           repository: danishsary8/sport-backend
-          ref: ${{ github.head_ref || github.ref_name }}
+          ref: ${{ steps.backend.outputs.ref }}
           path: sport-backend
           token: ${{ secrets.BACKEND_REPO_TOKEN || github.token }}
       - uses: actions/setup-node@v4

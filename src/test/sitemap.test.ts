@@ -11,6 +11,8 @@ describe('sitemap', () => {
     expect(xml).toContain('<loc>https://shop.example/stores</loc>');
     expect(xml).not.toContain('#/');
     expect(xml).not.toContain('/checkout');
+    // robots.txt disallows /track: listing it would be a conflict search engines report.
+    expect(xml).not.toContain('/track');
   });
 
   it('escapes characters that break XML', () => {
