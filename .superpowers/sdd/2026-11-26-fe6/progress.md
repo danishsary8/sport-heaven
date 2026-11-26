@@ -14,3 +14,5 @@ Task 2: Ruling: tranId read from the e2e database — the page's token flow diff
 | 3 member journey | done | 218b3c3 | green 4 of 5 runs, last 3 consecutive; one unexplained 90 s timeout on the first run after a rebuild (CI retries once) |
 Task 3: Ruling: helpers navigate in-app after sign-in (nav()) — the test sign-in lives in memory and a reload ends it — none
 | 4 staff + price | done | 4706936 | 2 specs green twice |
+| 5 hosting fallback | done | 72e7fd8 | _redirects, vercel.json, nginx in docs/HOSTING.md; sitemap from API (2 tests); robots disallows private pages; deep links reload on preview |
+Task 5: Ruling: sitemap/robots default to sportcastle.com.kh (the domain in the old files) — owner sets SITE_URL — a wrong domain until the owner confirms (OWNER-TODO)
