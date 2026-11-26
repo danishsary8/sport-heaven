@@ -18,9 +18,9 @@ Target: performance ≥ 85, accessibility and best practices ≥ 95. All three p
 
 axe (WCAG 2 A and AA, `e2e/a11y.spec.ts`) finds no serious or critical problems on home, listing, product, bag, checkout, sign-in, account and admin overview.
 
-First-load JavaScript: 145.8 kB gzipped, against a 150 kB budget enforced by `scripts/check-bundle.mjs` on every build.
+First-load JavaScript: 146.0 kB gzipped, against a 150 kB budget enforced by `scripts/check-bundle.mjs` on every build.
 
-Tests: 160 unit tests, 6 e2e tests (guest, member with a return, staff counter sale, admin price change, two accessibility sweeps). Backend: 724 tests.
+Tests: 162 unit tests, 6 e2e tests (guest, member with a return, staff counter sale, admin price change, two accessibility sweeps). Backend: 724 tests.
 
 ## 1. Intent
 
@@ -96,6 +96,8 @@ All storefront and admin routes in the spec exist (`app/routes.tsx`, `features/a
 | Route | Finding | Action |
 |---|---|---|
 | `/p/:slug#print` | **Gap found.** The spec says the print studio opens at `/p/:slug#print` and `/custom` lists customisable products. The `#print` link landed at the top of the page (the product loads after the browser's own jump), and the `/custom` cards linked to the plain product page. | Fixed test-first: the studio scrolls itself into view when the hash is `#print`, and `/custom` cards link to `#print`. Checked in a real browser. |
+| `/checkout/return` | **Gap found.** PayWay sends card payers back to one fixed address (`PAYWAY_CONTINUE_URL`, documented as `/checkout/return`) without the order number. The shop had no such page, so a card payer landed on "This page doesn't exist". | Fixed test-first: the pay page remembers the order for the tab before handing over to the bank, and `/checkout/return` sends the shopper to that order's pay page, which checks the payment and moves on to the confirmation. If the tab doesn't know the order, the page offers order tracking and My orders. |
+| Old go-live notes | `GO_LIVE_NOTES.md` described the old demo (Stripe, `/api/...` webhooks). | Replaced with links to the real setup documents. |
 | Listings | The spec asks for infinite scroll with a "Load more" fallback. The shop uses the "Load more" button only, with `page` in the URL. | Kept, and recorded in OWNER-DECISIONS: the footer stays reachable and phones on mobile data only load more when asked. |
 | `/stores` | The map appears only with a Maps key (OWNER-DECISIONS); without one, each store has an "Open in Google Maps" link. | No change. |
 | `/sign-in` test sign-in | The spec describes a separate "Test sign-in" form. The test build accepts code 123456 on the real phone form instead (FE4 ruling), so e2e exercises the real page. | No change. |
@@ -105,7 +107,7 @@ All storefront and admin routes in the spec exist (`app/routes.tsx`, `features/a
 
 | Item | Evidence |
 |---|---|
-| Vitest and Testing Library with MSW | 160 tests, 28 files |
+| Vitest and Testing Library with MSW | 162 tests, 28 files |
 | Playwright e2e against the real backend: the four happy paths | `e2e/guest.spec.ts`, `e2e/member.spec.ts`, `e2e/staff.spec.ts` (counter sale and price change); plus `e2e/a11y.spec.ts` |
 | Screenshots after UI tasks | Taken at 390×844 and 1366×900 in English and Khmer |
 | CI: checks job and e2e job with Postgres and the backend from the same branch | `.github/workflows/ci.yml`; the backend checkout falls back to `main` when there's no branch with the same name. It needs the `BACKEND_REPO_TOKEN` secret if the backend repository is private (OWNER-TODO). |

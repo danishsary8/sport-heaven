@@ -6,6 +6,7 @@ import { isApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { formatDate, formatKhr, formatUsd, useI18n } from '../../lib/i18n';
 import { Button, EmptyState, ErrorState, QueryView, Seo, Skeleton } from '../../ui';
+import { rememberCardReturn } from '../checkout/orderAccess';
 import { invalidateOrder, useOrder, usePaymentStatus, useSwitchPayment, type OrderView, type Payment, type PayMethod } from '../orders/api';
 
 const METHODS: PayMethod[] = ['aba_khqr', 'card'];
@@ -131,7 +132,7 @@ function PayView({ order, initialPayment }: { order: OrderView; initialPayment: 
       ) : instructions?.kind === 'qr' ? (
         <KhqrPanel number={order.number} qr={instructions.qrString} deeplink={instructions.deeplink} />
       ) : instructions?.kind === 'redirect' ? (
-        <form method={instructions.method} action={instructions.url} className="flex flex-col gap-3">
+        <form method={instructions.method} action={instructions.url} onSubmit={() => rememberCardReturn(order.number)} className="flex flex-col gap-3">
           {Object.entries(instructions.fields).map(([k, v]) => (
             <input key={k} type="hidden" name={k} value={v} />
           ))}

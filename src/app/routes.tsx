@@ -31,6 +31,7 @@ const BagPage = lazy(() => import('../features/cart/BagPage').then((m) => ({ def
 const CheckoutPage = lazy(() => import('../features/checkout/CheckoutPage').then((m) => ({ default: m.CheckoutPage })));
 
 const PayPage = lazy(() => import('../features/payment/PayPage').then((m) => ({ default: m.PayPage })));
+const CardReturnPage = lazy(() => import('../features/payment/CardReturnPage').then((m) => ({ default: m.CardReturnPage })));
 
 const OrderPage = lazy(() => import('../features/orders/OrderPage').then((m) => ({ default: m.OrderPage })));
 const TrackPage = lazy(() => import('../features/orders/TrackPage').then((m) => ({ default: m.TrackPage })));
@@ -85,7 +86,11 @@ export const routes: RouteObject[] = [
       },
       {
         element: <CheckoutLayout />,
-        children: [{ path: 'checkout', element: <CheckoutPage /> }, { path: 'pay/:number', element: <PayPage /> }],
+        children: [
+          { path: 'checkout', element: <CheckoutPage /> },
+          { path: 'checkout/return', element: <CardReturnPage /> },
+          { path: 'pay/:number', element: <PayPage /> },
+        ],
       },
       { path: 'admin/*', element: <AdminRoot /> },
     ],

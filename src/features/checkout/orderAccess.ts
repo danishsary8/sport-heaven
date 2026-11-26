@@ -25,3 +25,25 @@ export function readOrderAccess(number: string): OrderAccess | null {
     return null;
   }
 }
+
+/**
+ * PayWay sends card payers back to one fixed address (`/checkout/return`) without the order number, so the pay
+ * page remembers the order for this tab just before handing over to the bank.
+ */
+const CARD_RETURN = 'sc.cardReturn';
+
+export function rememberCardReturn(number: string): void {
+  try {
+    sessionStorage.setItem(CARD_RETURN, number);
+  } catch {
+    // storage blocked: the return page offers order tracking instead
+  }
+}
+
+export function readCardReturn(): string | null {
+  try {
+    return sessionStorage.getItem(CARD_RETURN);
+  } catch {
+    return null;
+  }
+}

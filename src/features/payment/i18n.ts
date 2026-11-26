@@ -25,6 +25,10 @@ export const payEn = {
   'pay.noAccessBody': 'For your privacy, an order opens only in the tab where it was placed. Find it with the order number and your phone.',
   'pay.noAccessMember': 'This order is not in your account. Find it with the order number and phone.',
   'pay.findOrder': 'Find your order',
+  'pay.returnTitle': 'Back from card payment',
+  'pay.returnBody': "We couldn't tell which order this was from this window. Track the order to see whether the payment went through.",
+  'pay.returnTrack': 'Track your order',
+  'pay.returnOrders': 'My orders',
 } as const;
 
 export const payKm: Record<keyof typeof payEn, string> = {
@@ -54,4 +58,8 @@ export const payKm: Record<keyof typeof payEn, string> = {
   'pay.noAccessBody': 'ដើម្បីភាពឯកជន ការបញ្ជាទិញបើកបានតែក្នុងផ្ទាំងដែលបានបញ្ជាទិញប៉ុណ្ណោះ។ ស្វែងរកវាដោយលេខបញ្ជាទិញ និងលេខទូរស័ព្ទរបស់អ្នក។',
   'pay.noAccessMember': 'ការបញ្ជាទិញនេះមិនមាននៅក្នុងគណនីរបស់អ្នកទេ។ ស្វែងរកវាដោយលេខបញ្ជាទិញ និងលេខទូរស័ព្ទ។',
   'pay.findOrder': 'ស្វែងរកការបញ្ជាទិញរបស់អ្នក',
+  'pay.returnTitle': 'ត្រឡប់មកពីការបង់ប្រាក់តាមកាត',
+  'pay.returnBody': 'យើងមិនអាចដឹងថាជាការបញ្ជាទិញមួយណាពីផ្ទាំងនេះទេ។ តាមដានការបញ្ជាទិញដើម្បីមើលថាការបង់ប្រាក់បានជោគជ័យឬអត់។',
+  'pay.returnTrack': 'តាមដានការបញ្ជាទិញរបស់អ្នក',
+  'pay.returnOrders': 'ការបញ្ជាទិញរបស់ខ្ញុំ',
 };

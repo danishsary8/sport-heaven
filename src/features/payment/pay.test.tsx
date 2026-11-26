@@ -84,6 +84,22 @@ describe('payment page', () => {
     expect(form.querySelector('input[name="tran_id"]')).toHaveValue('T2');
   });
 
+  it('brings a card payer back from the bank to their order (the bank returns to one fixed address)', async () => {
+    renderRoutes(routes, '/pay/SC-260001');
+    fireEvent.click(await screen.findByRole('button', { name: 'Pay another way' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Credit or debit card' }));
+    fireEvent.submit((await screen.findByRole('button', { name: 'Continue to card payment' })).closest('form')!);
+
+    const { router } = renderRoutes(routes, '/checkout/return');
+    await waitFor(() => expect(router.state.location.pathname).toBe('/pay/SC-260001'));
+  });
+
+  it('helps a card payer find the order when this tab does not know it', async () => {
+    renderRoutes(routes, '/checkout/return');
+    expect(await screen.findByRole('heading', { level: 1, name: 'Back from card payment' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Track your order' })).toHaveAttribute('href', '/track');
+  });
+
   it('says when the hold ran out and offers the way back to the bag', async () => {
     server.use(
       http.get(`${API}/v1/orders/SC-260001`, () => HttpResponse.json({ order: order({ status: 'expired', reservedUntil: null }), payment: null })),
