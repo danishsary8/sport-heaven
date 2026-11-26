@@ -30,6 +30,11 @@ const BagPage = lazy(() => import('../features/cart/BagPage').then((m) => ({ def
 
 const CheckoutPage = lazy(() => import('../features/checkout/CheckoutPage').then((m) => ({ default: m.CheckoutPage })));
 
+const PayPage = lazy(() => import('../features/payment/PayPage').then((m) => ({ default: m.PayPage })));
+
+const OrderPage = lazy(() => import('../features/orders/OrderPage').then((m) => ({ default: m.OrderPage })));
+const TrackPage = lazy(() => import('../features/orders/TrackPage').then((m) => ({ default: m.TrackPage })));
+
 const page = (path: string, title: string): RouteObject => ({ path, element: <Placeholder title={title} /> });
 
 export const routes: RouteObject[] = [
@@ -49,8 +54,8 @@ export const routes: RouteObject[] = [
           { path: 'search', element: <SearchPage /> },
           { path: 'p/:slug', element: <ProductPage /> },
           { path: 'bag', element: <BagPage /> },
-          page('order/:number', 'Your order'),
-          page('track', 'Track an order'),
+          { path: 'order/:number', element: <OrderPage /> },
+          { path: 'track', element: <TrackPage /> },
           page('sign-in', 'Sign in'),
           page('account/*', 'Your account'),
           { path: 'stores', element: <StoresPage /> },
@@ -61,7 +66,7 @@ export const routes: RouteObject[] = [
       },
       {
         element: <CheckoutLayout />,
-        children: [{ path: 'checkout', element: <CheckoutPage /> }, page('pay/:number', 'Pay')],
+        children: [{ path: 'checkout', element: <CheckoutPage /> }, { path: 'pay/:number', element: <PayPage /> }],
       },
       page('admin/*', 'Admin'),
     ],
