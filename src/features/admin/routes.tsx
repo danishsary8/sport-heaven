@@ -13,6 +13,9 @@ const StockPage = page('StockPage');
 const ProductsPage = page('ProductsPage');
 const ProductEditPage = page('ProductEditPage');
 const NewProductPage = page('NewProductPage');
+const PromotionsPage = page('PromotionsPage');
+const DeliveryPage = page('DeliveryPage');
+const SettingsPage = page('SettingsPage');
 
 /** /admin and its pages. The layout and pages are one lazy chunk, loaded only by staff. */
 export const adminRoutes: RouteObject = {
@@ -26,6 +29,9 @@ export const adminRoutes: RouteObject = {
     { path: 'products', element: <ProductsPage /> },
     { path: 'products/new', element: <NewProductPage /> },
     { path: 'products/:id', element: <ProductEditPage /> },
+    { path: 'promotions', element: <PromotionsPage /> },
+    { path: 'delivery', element: <DeliveryPage /> },
+    { path: 'settings', element: <SettingsPage /> },
     { path: '*', element: <NotFoundPage /> },
   ],
 };
