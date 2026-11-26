@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router';
 import { isApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { formatKhr, formatUsd, useI18n, type DictKey } from '../../lib/i18n';
-import { Button, Field, PageTitle, QueryView, Seo, Skeleton, TextArea, cx } from '../../ui';
+import { Button, Field, PageTitle, Picture, QueryView, Seo, Skeleton, TextArea, cx } from '../../ui';
 import { useAddresses } from '../account/api';
 import { useCart, type Cart } from '../cart/api';
 import { PromoField, lineDetails } from '../cart/BagContents';
@@ -322,16 +322,17 @@ function CheckoutForm({ cart }: { cart: Cart }) {
 
       <aside aria-label={t('bag.summary')} className="flex h-fit flex-col gap-4 rounded-[8px] border border-stone bg-chalk p-5 lg:sticky lg:top-6 lg:p-6">
         <h2 className="font-display text-2xl font-bold">{t('bag.summary')}</h2>
-        <ul className="flex flex-col gap-2 text-[15px]">
+        <ul className="flex flex-col gap-3 border-b border-stone pb-4 text-[15px]">
           {cart.lines.map((l) => (
-            <li key={l.id} className="flex justify-between gap-3">
-              <span className="min-w-0">
-                <span className="line-clamp-1">
+            <li key={l.id} className="flex items-start gap-3">
+              <Picture src={l.imageUrl} alt="" sizes="48px" width={48} height={64} className="stage block h-16 w-12 shrink-0 overflow-hidden rounded-[4px]" />
+              <span className="min-w-0 flex-1">
+                <span className="line-clamp-2 leading-snug">
                   {l.qty} × {l.productName}
                 </span>
-                <span className="block text-sm text-graphite">{lineDetails(l, t)}</span>
+                <span className="mt-0.5 block text-sm text-graphite">{lineDetails(l, t)}</span>
               </span>
-              <span className="tabular shrink-0">{formatUsd(l.lineTotalCents)}</span>
+              <span className="tabular shrink-0 font-medium">{formatUsd(l.lineTotalCents)}</span>
             </li>
           ))}
         </ul>

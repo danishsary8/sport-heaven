@@ -2,7 +2,8 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router';
 import { useAuth, type PhoneConfirmation } from '../../lib/auth';
 import { useI18n } from '../../lib/i18n';
-import { Button, Field, PageTitle, Seo } from '../../ui';
+import { Button, Field, PageTitle, Picture, Seo } from '../../ui';
+import { PITCH_PHOTO } from '../../lib/siteImages';
 
 /** "012 345 678" → "+85512345678"; numbers starting with + are kept as they are. */
 export function toE164(input: string): string | null {
@@ -90,7 +91,8 @@ export function SignInPage() {
   };
 
   return (
-    <section className="mx-auto max-w-[440px] px-4 pb-16 pt-8 lg:pt-14">
+    <div className="mx-auto grid max-w-[1320px] lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16 lg:px-8 lg:pt-10">
+    <section className="mx-auto w-full max-w-[440px] px-4 pb-16 pt-8 lg:px-0 lg:pt-14">
       <Seo title={t('signIn.title')} noindex />
       <PageTitle>{t('signIn.title')}</PageTitle>
       <p className="mt-2 text-graphite">{t('signIn.body')}</p>
@@ -146,5 +148,12 @@ export function SignInPage() {
       )}
       <p className="mt-8 text-sm text-graphite">{t('signIn.why')}</p>
     </section>
+      {/* Desktop only: the pitch photo from the home page, so signing in still feels like the shop. */}
+      <div aria-hidden className="relative hidden overflow-hidden rounded-[8px] bg-obsidian lg:block lg:min-h-[560px]">
+        <Picture src={PITCH_PHOTO} alt="" sizes="50vw" width={1440} height={900} className="absolute inset-0 h-full w-full" imgClassName="opacity-80" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_top,rgb(14_17_19/0.7),transparent_55%)]" />
+        <span className="flag-rule absolute bottom-8 left-8 block h-3 w-[72px]" />
+      </div>
+    </div>
   );
 }

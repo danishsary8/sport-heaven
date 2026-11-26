@@ -134,5 +134,17 @@ describe('bag', () => {
     server.use(http.get(`${API}/v1/cart`, () => HttpResponse.json(cart([]))));
     renderRoutes(routes, '/bag');
     expect(await screen.findByRole('heading', { name: 'Your bag is empty' })).toBeTruthy();
+    const browse = await screen.findByRole('navigation', { name: 'Or browse a category' });
+    expect(within(browse).getByRole('link', { name: 'Boots' })).toHaveAttribute('href', '/c/boots');
+  });
+
+  it('closes the drawer when a link in the empty bag is followed', async () => {
+    server.use(http.get(`${API}/v1/cart`, () => HttpResponse.json(cart([]))));
+    const { router } = renderRoutes(routes, '/');
+    fireEvent.click(await screen.findByRole('link', { name: 'Bag' }));
+    const drawer = await screen.findByRole('dialog', { name: 'Your bag' });
+    fireEvent.click(await within(drawer).findByRole('link', { name: 'Jerseys' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Your bag' })).toBeNull());
+    expect(router.state.location.pathname).toBe('/c/jerseys');
   });
 });

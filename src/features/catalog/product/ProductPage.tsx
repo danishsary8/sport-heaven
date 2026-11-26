@@ -6,6 +6,7 @@ import { Availability, Button, EmptyState, Price, QueryView, Seo, Skeleton, useT
 import { useAddToCart } from '../../cart/api';
 import { useProduct, type ProductDetail, type Variant } from '../api';
 import { ProductCard } from '../ProductCard';
+import { Breadcrumbs } from './Breadcrumbs';
 import { Gallery } from './Gallery';
 import { ProductDetails } from './ProductDetails';
 import { QuestionsSection } from './Questions';
@@ -125,7 +126,8 @@ function ProductView({ product }: { product: ProductDetail }) {
     <article className="pb-28 lg:pb-16">
       <Seo title={product.name} description={product.description ?? undefined} canonical={`/p/${product.slug}`} image={product.imageUrl ?? undefined} />
       <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
-      <div className="mx-auto max-w-[1320px] lg:grid lg:grid-cols-[1.3fr_1fr] lg:gap-12 lg:px-8 lg:pt-8">
+      <Breadcrumbs product={product} className="mx-auto max-w-[1320px] px-4 py-3 lg:px-8 lg:pb-0 lg:pt-6" />
+      <div className="mx-auto max-w-[1320px] lg:grid lg:grid-cols-[1.3fr_1fr] lg:gap-12 lg:px-8 lg:pt-5">
         {/* On desktop the photos stay in view while the buy box and details scroll past. */}
         <div className="lg:sticky lg:top-24 lg:self-start">
           <Gallery images={product.images} color={color} name={product.name} />

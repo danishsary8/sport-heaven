@@ -1,4 +1,5 @@
 import { buildUrl } from '../../../lib/api';
+import { PITCH_PHOTO } from '../../../lib/siteImages';
 import type { HomeSection, ProductSummary } from '../api';
 
 /**
@@ -9,7 +10,7 @@ import type { HomeSection, ProductSummary } from '../api';
  */
 
 /** Shown behind the hero when the section has no image of its own. */
-export const HERO_FALLBACK = '/assets/site/editorial_phnom_penh_pitch_1795112606361.jpg';
+export const HERO_FALLBACK = PITCH_PHOTO;
 
 type Payload = HomeSection['payload'];
 

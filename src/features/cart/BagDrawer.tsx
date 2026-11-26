@@ -27,7 +27,7 @@ export function BagDrawer({ open, onClose }: { open: boolean; onClose(): void })
         ) : undefined
       }
     >
-      <QueryView query={cart} skeleton={<Skeleton className="h-40 w-full" />} isEmpty={(d) => d.cart.lines.length === 0} empty={<EmptyBag />}>
+      <QueryView query={cart} skeleton={<Skeleton className="h-40 w-full" />} isEmpty={(d) => d.cart.lines.length === 0} empty={<EmptyBag onNavigate={onClose} />}>
         {({ cart: c }) => (
           <div onClick={(e) => (e.target as HTMLElement).closest('a') && onClose()}>
             <BagLines cart={c} compact />
