@@ -15,3 +15,5 @@ Plan: docs/superpowers/plans/2026-11-26-fe2-5-rebuild.md. Base: 38aa126 (FE1 tas
 | C3 pay | done | bc25c99 | 5 tests; real flow checked (order, KHQR, dev approve, confirmation); stale-order bug found and fixed test-first |
 | C4 order + track | done | bc25c99 | 6 tests (FE3 complete) |
 | D1 sign-in | done | 85b314a | 5 tests; real sign-in against backend ok |
+| D2 account profile + addresses | done | 2e3281c | tests in account.test.tsx |
+| D3 orders, returns, wishlist, points | done | 2e3281c | 8 account tests; reasons sent in English (closes FE4 deferred minor); sign-out guard goes home (FE4 complete) |
