@@ -1,12 +1,12 @@
 import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { API, server, useMsw } from '../../test/msw';
+import { API, server, setupMsw } from '../../test/msw';
 import { ApiError, apiFetch, configureApi } from './index';
 
-useMsw();
+setupMsw();
 
 let token: string | null = null;
-const getToken = vi.fn(async (_force?: boolean) => token);
+const getToken = vi.fn(async (force?: boolean): Promise<string | null> => (force ? token : token));
 const onUnauthorized = vi.fn();
 let lang: 'en' | 'km' = 'en';
 
