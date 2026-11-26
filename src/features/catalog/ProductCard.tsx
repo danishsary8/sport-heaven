@@ -28,7 +28,7 @@ export function ProductCard({ product, priority = false, className, hash }: { pr
         {tag && (
           <span
             className={cx(
-              'absolute left-2 top-2 rounded-[3px] px-1.5 py-[3px] text-xs font-semibold leading-none tracking-[0.01em]',
+              'absolute left-2 top-2 rounded-[3px] px-1.5 py-0.5 text-xs font-semibold leading-snug',
               sale ? 'bg-vermilion text-paper' : 'bg-paper text-obsidian shadow-[0_0_0_1px_rgb(14_17_19/0.06)]',
             )}
           >
