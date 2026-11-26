@@ -1,3 +1,4 @@
+import { Fragment, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router';
 import { useI18n } from '../../../lib/i18n';
 import { cx } from '../../../ui';
@@ -47,16 +48,16 @@ export function FilterPanel({ facets, hidden = [] }: { facets: Facet[]; hidden?:
           if (options.length === 0) return null;
           const multi = isMulti(facet.key);
           const selected = params.getAll(facet.key);
-          return (
-            <fieldset key={facet.key} className="py-4">
-              <legend className="mb-2 text-sm font-semibold">{facet.label}</legend>
-              <div className={cx('flex', facet.key === 'size' ? 'flex-wrap gap-1.5' : 'flex-col gap-1')}>
-                {options.map((o) =>
-                  facet.key === 'size' ? (
+          if (facet.key === 'size') {
+            return (
+              <fieldset key={facet.key} className="py-4">
+                <legend className="mb-2 text-sm font-semibold">{facet.label}</legend>
+                <div className="flex flex-wrap gap-1.5">
+                  {options.map((o) => (
                     <label
                       key={o.value}
                       className={cx(
-                        'relative inline-flex h-9 min-w-12 cursor-pointer items-center justify-center rounded-[6px] border px-2 text-sm font-semibold has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-obsidian',
+                        'relative inline-flex h-9 min-w-12 cursor-pointer items-center justify-center rounded-[6px] border px-2 text-sm font-semibold transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-obsidian',
                         selected.includes(o.value) ? 'border-obsidian bg-obsidian text-paper' : 'border-[#C9C5BB] hover:border-obsidian',
                         o.count === 0 && !selected.includes(o.value) && 'opacity-45',
                       )}
@@ -64,9 +65,21 @@ export function FilterPanel({ facets, hidden = [] }: { facets: Facet[]; hidden?:
                       <input type="checkbox" className="sr-only" checked={selected.includes(o.value)} onChange={() => apply(toggleValue(params, facet.key, o.value, true))} />
                       {o.label}
                     </label>
-                  ) : (
+                  ))}
+                </div>
+              </fieldset>
+            );
+          }
+          return (
+            <fieldset key={facet.key} className="py-4">
+              <legend className="mb-2 text-sm font-semibold">{facet.label}</legend>
+              <CollapsibleOptions
+                total={options.length}
+                items={options.map((o) => ({
+                  key: o.value,
+                  pinned: selected.includes(o.value),
+                  node: (
                     <Choice
-                      key={o.value}
                       type={multi ? 'checkbox' : 'radio'}
                       name={facet.key}
                       label={o.label}
@@ -75,11 +88,33 @@ export function FilterPanel({ facets, hidden = [] }: { facets: Facet[]; hidden?:
                       onChange={() => apply(toggleValue(params, facet.key, o.value, multi))}
                     />
                   ),
-                )}
-              </div>
+                }))}
+              />
             </fieldset>
           );
         })}
+    </div>
+  );
+}
+
+/** Long option lists show the first few (plus anything ticked) until the shopper asks for all of them. */
+const VISIBLE_OPTIONS = 8;
+
+function CollapsibleOptions({ items, total }: { items: { key: string; pinned: boolean; node: ReactNode }[]; total: number }) {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+  const collapsible = total > VISIBLE_OPTIONS + 2;
+  const shown = !collapsible || open ? items : items.filter((it, i) => i < VISIBLE_OPTIONS || it.pinned);
+  return (
+    <div className="flex flex-col gap-1">
+      {shown.map((it) => (
+        <Fragment key={it.key}>{it.node}</Fragment>
+      ))}
+      {collapsible && (
+        <button type="button" aria-expanded={open} onClick={() => setOpen(!open)} className="mt-1 self-start text-sm font-semibold underline underline-offset-4 hover:no-underline">
+          {open ? t('listing.showFewer') : t('listing.showAll', { n: total })}
+        </button>
+      )}
     </div>
   );
 }
