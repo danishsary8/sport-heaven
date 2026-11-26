@@ -19,6 +19,8 @@ const SettingsPage = page('SettingsPage');
 const UsersPage = page('UsersPage');
 const QuestionsPage = page('QuestionsPage');
 const ReturnsPage = page('ReturnsPage');
+const HealthPage = page('HealthPage');
+const LogsPage = page('LogsPage');
 
 /** /admin and its pages. The layout and pages are one lazy chunk, loaded only by staff. */
 export const adminRoutes: RouteObject = {
@@ -38,6 +40,8 @@ export const adminRoutes: RouteObject = {
     { path: 'users', element: <UsersPage /> },
     { path: 'questions', element: <QuestionsPage /> },
     { path: 'returns', element: <ReturnsPage /> },
+    { path: 'health', element: <HealthPage /> },
+    { path: 'logs', element: <LogsPage /> },
     { path: '*', element: <NotFoundPage /> },
   ],
 };

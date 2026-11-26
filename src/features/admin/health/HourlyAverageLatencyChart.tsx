@@ -280,7 +280,7 @@ export function HourlyAverageLatencyChart({
                 className="inline-flex items-center gap-1 border border-[#16A34A]/35 bg-[#16A34A]/10 px-2 py-0.5 font-mono text-[11px] font-semibold text-[#15803D]"
               >
                 <Radio className="h-3 w-3 animate-pulse" />
-                <span>Live · 5s</span>
+                <span>Live every 5 s</span>
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 border border-[#0E1113]/15 bg-[#F4F2EC] px-2 py-0.5 font-mono text-[11px] text-[#5A5D57]">
@@ -290,7 +290,7 @@ export function HourlyAverageLatencyChart({
             )}
           </div>
           <p className="mt-1 text-xs text-[#5A5D57]">
-            1-minute averaged response time over the trailing 60 minutes ·{' '}
+            1-minute averaged response time over the trailing 60 minutes,{' '}
             <span
               data-testid="hourly-latency-sample-count"
               className="font-mono tabular-nums text-[#0E1113]"
@@ -302,7 +302,7 @@ export function HourlyAverageLatencyChart({
             <span className="font-mono tabular-nums text-[#0E1113]">
               {summary.activeMinutes}/60
             </span>{' '}
-            minutes · Updated{' '}
+            minutes, Updated{' '}
             <span className="font-mono tabular-nums text-[#0E1113]">
               {formatUtcClockTime(lastUpdatedAt ?? resolvedSeries.generatedAt)} UTC
             </span>
@@ -621,7 +621,7 @@ export function HourlyAverageLatencyChart({
             </span>
           </div>
           <span className="tabular-nums">
-            Trailing {windowZoom === '15m' ? '15' : '60'} minutes (UTC) ·
+            Trailing {windowZoom === '15m' ? '15' : '60'} minutes (UTC),
             Updates every 5s in Live Mode
           </span>
         </div>

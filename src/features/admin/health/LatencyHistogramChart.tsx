@@ -262,12 +262,12 @@ export function LatencyHistogramChart({
                 className="inline-flex items-center gap-1 border border-[#16A34A]/35 bg-[#16A34A]/10 px-2 py-0.5 font-mono text-[11px] font-semibold text-[#15803D]"
               >
                 <Radio className="h-3 w-3 animate-pulse" />
-                <span>Live · 5s</span>
+                <span>Live every 5 s</span>
               </span>
             )}
           </div>
           <p className="mt-1 text-xs text-[#5A5D57]">
-            Latency histogram across 7 response-time buckets over the last 60 minutes ·{' '}
+            Latency histogram across 7 response-time buckets over the last 60 minutes,{' '}
             <span className="font-mono tabular-nums text-[#0E1113]">
               {summary.totalConnectedSamples} connected probe
               {summary.totalConnectedSamples === 1 ? '' : 's'}
@@ -275,13 +275,13 @@ export function LatencyHistogramChart({
             {summary.disconnectedSamples > 0 && (
               <>
                 {' '}
-                ·{' '}
+               ,{' '}
                 <span className="font-mono tabular-nums text-[#DC2626]">
                   {summary.disconnectedSamples} failed
                 </span>
               </>
             )}{' '}
-            · Updated{' '}
+           , Updated{' '}
             <span className="font-mono tabular-nums text-[#0E1113]">
               {formattedClock} UTC
             </span>
@@ -494,7 +494,7 @@ export function LatencyHistogramChart({
             </span>
           </div>
           <span className="tabular-nums">
-            7 latency buckets · Trailing 60-minute window
+            7 latency buckets, Trailing 60-minute window
           </span>
         </div>
       </div>

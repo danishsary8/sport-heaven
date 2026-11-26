@@ -66,7 +66,7 @@ function formatHourRangeUtc(hourStartIso: string, fallbackLabel: string): string
     day: '2-digit',
     timeZone: 'UTC',
   });
-  return `${monthDay} · ${hh}:00–${hh}:59 UTC`;
+  return `${monthDay}, ${hh}:00–${hh}:59 UTC`;
 }
 
 function UptimeTooltip({
@@ -218,12 +218,12 @@ export function SystemUptimeChart({
                 className="inline-flex items-center gap-1 border border-[#16A34A]/35 bg-[#16A34A]/10 px-2 py-0.5 font-mono text-[11px] font-semibold text-[#15803D]"
               >
                 <Radio className="h-3 w-3 animate-pulse" />
-                <span>Live · 5s</span>
+                <span>Live every 5 s</span>
               </span>
             )}
           </div>
           <p className="mt-1 text-xs text-[#5A5D57]">
-            Hourly availability percentage across the trailing 24-hour UTC window ·{' '}
+            Hourly availability percentage across the trailing 24-hour UTC window,{' '}
             <span className="font-mono tabular-nums text-[#0E1113]">
               {summary.totalChecks} probe{summary.totalChecks === 1 ? '' : 's'}
             </span>{' '}
@@ -526,7 +526,7 @@ export function SystemUptimeChart({
             </span>
           </div>
           <span className="tabular-nums">
-            UTC hourly buckets · Empty hours await probe data
+            UTC hourly buckets, Empty hours await probe data
           </span>
         </div>
       </div>

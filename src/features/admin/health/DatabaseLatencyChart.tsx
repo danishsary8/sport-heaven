@@ -127,7 +127,7 @@ function LatencyTooltip({
     <div className="border border-[#FDFCF9]/15 bg-[#0E1113] px-3.5 py-3 text-xs text-[#FDFCF9] shadow-lg">
       <div className="flex items-center justify-between gap-4 border-b border-[#FDFCF9]/12 pb-1.5">
         <span className="font-mono text-[11px] font-semibold tabular-nums text-[#FDFCF9]/80">
-          Probe #{point.index} · {formattedClock}
+          Probe #{point.index}, {formattedClock}
         </span>
         <span
           className={`font-mono text-[10px] font-bold uppercase ${
@@ -293,7 +293,7 @@ export function DatabaseLatencyChart({
         setErrorMessage(
           error instanceof Error
             ? error.message
-            : 'Unable to reach /api/system-health/metrics.',
+            : 'Unable to reach the health metrics.',
         );
       } finally {
         setIsLoading(false);
@@ -403,7 +403,7 @@ export function DatabaseLatencyChart({
           <div className="flex flex-wrap items-center gap-2">
             <Database className="h-4 w-4 shrink-0 text-[#0E1113]" />
             <h2 className="text-sm font-semibold text-[#0E1113] sm:text-base">
-              Cloud SQL Latency Trends
+              Database latency
             </h2>
             {metrics && (
               <span
@@ -440,19 +440,19 @@ export function DatabaseLatencyChart({
                 className="inline-flex items-center gap-1 border border-[#16A34A]/35 bg-[#F0FDF4] px-2 py-0.5 font-mono text-[11px] font-semibold text-[#15803D]"
               >
                 <Radio className="h-3 w-3 shrink-0" />
-                <span>Live · 5s</span>
+                <span>Live every 5 s</span>
               </span>
             )}
           </div>
           <p className="mt-1 text-xs text-[#5A5D57]">
             Live round-trip query telemetry from{' '}
             <code className="font-mono text-[11px] text-[#0E1113]">
-              /api/system-health/metrics
+              GET /v1/admin/system-health/metrics
             </code>
             {metrics ? (
               <span className="font-mono tabular-nums">
                 {' '}
-                · Pool {metrics.pool.total}/{metrics.pool.idle} idle
+               , Pool {metrics.pool.total}/{metrics.pool.idle} idle
               </span>
             ) : null}
           </p>
@@ -720,7 +720,7 @@ export function DatabaseLatencyChart({
           >
             <div className="flex items-center gap-2 font-mono text-xs text-[#5A5D57]">
               <Activity className="h-4 w-4 animate-pulse text-[#0E1113]" />
-              <span>Sampling Cloud SQL latency metrics…</span>
+              <span>Sampling database latency metrics…</span>
             </div>
           </div>
         ) : errorMessage ? (
@@ -753,7 +753,7 @@ export function DatabaseLatencyChart({
               No database probes recorded yet
             </p>
             <p className="mt-1 text-xs text-[#5A5D57]">
-              Trigger a live Cloud SQL sample to start plotting latency trends.
+              Trigger a live database sample to start plotting latency trends.
             </p>
             <button
               type="button"
@@ -1058,7 +1058,7 @@ export function DatabaseLatencyChart({
               </div>
               <span className="font-mono text-[11px] tabular-nums text-[#5A5D57]">
                 {annotatedSeries.length} sample
-                {annotatedSeries.length === 1 ? '' : 's'} · Availability{' '}
+                {annotatedSeries.length === 1 ? '' : 's'}, Availability{' '}
                 {summary?.availabilityPercent.toFixed(1)}%
               </span>
             </div>

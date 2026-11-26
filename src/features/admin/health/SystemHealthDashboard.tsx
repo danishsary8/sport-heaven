@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { apiFetch, isApiError } from '../../../lib/api';
 import type { FormEvent } from 'react';
 import {
   Activity,
@@ -161,7 +162,7 @@ function formatIsoDateTime(iso: string): string {
 // TODO(api): /v1/admin/system-health/* — this dashboard still targets the legacy
 // /api/system-health endpoints (snapshot, /metrics, /view). Rewire to the new API.
 export function SystemHealthDashboard({
-  endpointUrl = '/api/system-health',
+  endpointUrl = '/v1/admin/system-health',
   onBackToStore,
 }: SystemHealthDashboardProps) {
   const [snapshot, setSnapshot] = useState<SystemHealthSnapshot | null>(null);
@@ -515,28 +516,18 @@ export function SystemHealthDashboard({
       setErrorMessage(null);
 
       try {
-        const response = await fetch(endpointUrl, {
-          headers: { Accept: 'application/json' },
-          cache: 'no-store',
-        });
-
-        const payload = (await response.json()) as Partial<SystemHealthSnapshot> & {
-          error?: string;
-        };
-
+        const payload = await apiFetch<Partial<SystemHealthSnapshot>>(endpointUrl);
         if (payload && payload.database && payload.runtime) {
           setSnapshot(payload as SystemHealthSnapshot);
           setFallbackAttempts([]);
           setMetricsRefreshSignal((prev) => prev + 1);
         } else {
-          const reason =
-            payload?.error || `Health check returned status ${response.status}.`;
+          const reason = 'The health check returned an unexpected answer.';
           setErrorMessage(reason);
           recordClientFailure(reason);
         }
-      } catch {
-        const reason =
-          'Unable to reach the backend health endpoint. Verify the server is running.';
+      } catch (e) {
+        const reason = isApiError(e) && e.status !== 0 ? e.message : 'Unable to reach the backend health endpoint. Verify the server is running.';
         setErrorMessage(reason);
         recordClientFailure(reason);
       } finally {
@@ -736,17 +727,17 @@ export function SystemHealthDashboard({
               )}
               <span className="whitespace-nowrap">Backend Operations</span>
               <span aria-hidden="true" className="hidden sm:inline">
-                ·
+               ,
               </span>
               <span className="hidden font-mono sm:inline whitespace-nowrap">
                 GET {endpointUrl}
               </span>
             </div>
             <h1 className="mt-3 font-display text-4xl font-extrabold tracking-tight text-[#0E1113] sm:text-5xl text-balance">
-              System Health
+              System health
             </h1>
             <p className="mt-2 text-sm leading-relaxed text-[#5A5D57]">
-              Live connectivity diagnostics for the Cloud SQL PostgreSQL instance and
+              Live connectivity diagnostics for the PostgreSQL database and
               Express API service uptime.
             </p>
           </div>
@@ -778,7 +769,7 @@ export function SystemHealthDashboard({
               disabled={chronologicalConnectionLogs.length === 0}
               data-testid="header-export-csv"
               aria-label="Export last 5 connection attempt logs as CSV"
-              title="Download last 5 Cloud SQL connection attempt logs as CSV"
+              title="Download last 5 database connection attempt logs as CSV"
               className={`inline-flex h-10 items-center gap-2 border px-4 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-45 cursor-pointer whitespace-nowrap shrink-0 ${
                 exportFeedback
                   ? 'border-[#16A34A] bg-[#16A34A]/10 text-[#15803D]'
@@ -870,7 +861,7 @@ export function SystemHealthDashboard({
           </div>
         ) : snapshot ? (
           <div className="mt-8 space-y-8">
-            {/* Connection Failure Alert Banner (when Cloud SQL disconnects & channel is enabled) */}
+            {/* Connection Failure Alert Banner (when database disconnects & channel is enabled) */}
             {!errorMessage && connectionFailureAlert && (
               <div
                 role="alert"
@@ -1004,7 +995,7 @@ export function SystemHealthDashboard({
 
               <div className="bg-[#FDFCF9] p-6">
                 <p className="text-xs font-medium text-[#5A5D57]">
-                  Cloud SQL Instance
+                  Database
                 </p>
                 <div className="mt-2.5 flex items-center gap-2">
                   <Database
@@ -1031,7 +1022,7 @@ export function SystemHealthDashboard({
                       : 'text-[#5A5D57]'
                   }`}
                 >
-                  Round-trip: {formatLatencyMs(snapshot.database.latencyMs)} · Limit{' '}
+                  Round-trip: {formatLatencyMs(snapshot.database.latencyMs)}, Limit{' '}
                   {latencyThresholdMs} ms
                 </p>
                 {latencyAlert && (
@@ -1104,7 +1095,7 @@ export function SystemHealthDashboard({
                       </span>
                       {recentThresholdBreaches > 0 && (
                         <span className="ml-1.5 font-mono font-semibold text-[#B45309]">
-                          · {recentThresholdBreaches} recent{' '}
+                         , {recentThresholdBreaches} recent{' '}
                           {recentThresholdBreaches === 1 ? 'breach' : 'breaches'}
                         </span>
                       )}
@@ -1243,7 +1234,7 @@ export function SystemHealthDashboard({
                           data-testid="critical-latency-count"
                           className="ml-1.5 font-mono font-semibold text-[#7E22CE]"
                         >
-                          · {recentCriticalCount} recent critical{' '}
+                         , {recentCriticalCount} recent critical{' '}
                           {recentCriticalCount === 1 ? 'point' : 'points'}
                         </span>
                       )}
@@ -1447,33 +1438,6 @@ export function SystemHealthDashboard({
                 </h2>
                 <div className="flex items-center gap-3 text-xs text-[#5A5D57]">
                   <span className="font-mono">Node {snapshot.runtime.nodeVersion}</span>
-                  <span aria-hidden="true">·</span>
-                  <a
-                    href="/api/system-health"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-mono text-[#0E1113] underline underline-offset-4 hover:text-[#C8232C]"
-                  >
-                    Raw JSON
-                  </a>
-                  <span aria-hidden="true">·</span>
-                  <a
-                    href="/api/system-health/metrics"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-mono text-[#0E1113] underline underline-offset-4 hover:text-[#C8232C]"
-                  >
-                    Metrics JSON
-                  </a>
-                  <span aria-hidden="true">·</span>
-                  <a
-                    href="/api/system-health/view"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-mono text-[#0E1113] underline underline-offset-4 hover:text-[#C8232C]"
-                  >
-                    Standalone View
-                  </a>
                 </div>
               </div>
 
@@ -1509,7 +1473,7 @@ export function SystemHealthDashboard({
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right font-mono text-xs text-[#0E1113] tabular-nums whitespace-nowrap">
-                        {formatLatencyMs(snapshot.database.latencyMs)} · Pool{' '}
+                        {formatLatencyMs(snapshot.database.latencyMs)}, Pool{' '}
                         {snapshot.database.pool.total}/{snapshot.database.pool.idle} idle
                         {snapshot.database.pool.waiting > 0
                           ? ` (${snapshot.database.pool.waiting} waiting)`
@@ -1532,7 +1496,7 @@ export function SystemHealthDashboard({
                         Operational
                       </td>
                       <td className="px-6 py-4 text-right font-mono text-xs text-[#0E1113] tabular-nums whitespace-nowrap">
-                        {snapshot.runtime.memoryRssMb.toFixed(1)} MB RSS ·{' '}
+                        {snapshot.runtime.memoryRssMb.toFixed(1)} MB RSS,{' '}
                         {snapshot.runtime.heapUsedMb.toFixed(1)} MB Heap
                       </td>
                       <td className="px-6 py-4 text-xs text-[#5A5D57]">
@@ -1544,7 +1508,7 @@ export function SystemHealthDashboard({
               </div>
             </section>
 
-            {/* Real-Time Cloud SQL Latency Trends (Recharts + Anomaly Detection) */}
+            {/* Real-Time Database latency (Recharts + Anomaly Detection) */}
             <DatabaseLatencyChart
               thresholdMs={latencyThresholdMs}
               criticalThresholdMs={criticalLatencyThresholdMs}
@@ -1559,7 +1523,7 @@ export function SystemHealthDashboard({
               refreshSignal={metricsRefreshSignal}
             />
 
-            {/* Last-Hour Average System Latency Line Chart (Recharts · Syncs with Live Mode) */}
+            {/* Last-Hour Average System Latency Line Chart (Recharts, Syncs with Live Mode) */}
             <HourlyAverageLatencyChart
               hourlyLatency={snapshot.hourlyLatency}
               fallbackSamples={snapshot.recentChecks}
@@ -1646,16 +1610,16 @@ export function SystemHealthDashboard({
               <div className="mt-2 flex flex-wrap items-center justify-between gap-2 font-mono text-[11px] text-[#5A5D57]">
                 <span>Older checks</span>
                 <span>
-                  Green: ≤{latencyThresholdMs}ms · Amber: &gt;{latencyThresholdMs}ms · Red:
+                  Green: ≤{latencyThresholdMs}ms, Amber: &gt;{latencyThresholdMs}ms, Red:
                   Unreachable
                 </span>
                 <span>Most recent</span>
               </div>
             </section>
 
-            {/* Chronological Cloud SQL Connection Attempt Log (Last 5) */}
+            {/* Chronological database Connection Attempt Log (Last 5) */}
             <section
-              aria-label="Cloud SQL connection attempt log"
+              aria-label="database connection attempt log"
               data-testid="cloud-sql-connection-log"
               className="border border-[#0E1113]/15 bg-[#FDFCF9]"
             >
@@ -1664,16 +1628,16 @@ export function SystemHealthDashboard({
                   <Terminal className="h-4 w-4 text-[#0E1113]" />
                   <div>
                     <h2 className="text-base font-semibold text-[#0E1113]">
-                      Cloud SQL Connection Log
+                      Database connection log
                     </h2>
                     <p className="text-xs text-[#5A5D57]">
-                      Chronological record of the last 5 Cloud SQL connection attempts
+                      Chronological record of the last 5 database connection attempts
                     </p>
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
                   <span className="font-mono text-xs text-[#5A5D57] tabular-nums">
-                    {chronologicalConnectionLogs.length} of 5 max · Oldest → Latest
+                    {chronologicalConnectionLogs.length} of 5 max, Oldest → Latest
                   </span>
                   {exportFeedback && (
                     <span
@@ -1688,8 +1652,8 @@ export function SystemHealthDashboard({
                     onClick={handleExportConnectionLogsCsv}
                     disabled={chronologicalConnectionLogs.length === 0}
                     data-testid="export-connection-logs-csv"
-                    aria-label="Download last 5 Cloud SQL connection attempt logs as CSV"
-                    title="Download last 5 Cloud SQL connection attempt logs as CSV"
+                    aria-label="Download last 5 database connection attempt logs as CSV"
+                    title="Download last 5 database connection attempt logs as CSV"
                     className={`inline-flex items-center gap-1.5 border px-3 py-1.5 font-mono text-[11px] font-semibold transition disabled:cursor-not-allowed disabled:opacity-45 cursor-pointer whitespace-nowrap shrink-0 ${
                       exportFeedback
                         ? 'border-[#16A34A] bg-[#16A34A]/10 text-[#15803D]'
@@ -1708,7 +1672,7 @@ export function SystemHealthDashboard({
 
               {chronologicalConnectionLogs.length === 0 ? (
                 <div className="px-6 py-8 text-center text-xs text-[#5A5D57]">
-                  No Cloud SQL connection attempts recorded yet. Click{' '}
+                  No database connection attempts recorded yet. Click{' '}
                   <span className="font-semibold text-[#0E1113]">Run Live Check</span> to
                   probe the database instance.
                 </div>
@@ -1777,7 +1741,7 @@ export function SystemHealthDashboard({
                                   {!connected
                                     ? 'Disconnected'
                                     : exceedsThreshold
-                                      ? 'Connected · Slow'
+                                      ? 'Connected, Slow'
                                       : 'Connected'}
                                 </span>
                               </span>
@@ -1805,7 +1769,7 @@ export function SystemHealthDashboard({
           </div>
         ) : chronologicalConnectionLogs.length > 0 ? (
           <section
-            aria-label="Cloud SQL connection attempt log"
+            aria-label="database connection attempt log"
             data-testid="cloud-sql-connection-log"
             className="mt-8 border border-[#0E1113]/15 bg-[#FDFCF9]"
           >
@@ -1813,12 +1777,12 @@ export function SystemHealthDashboard({
               <div className="flex items-center gap-2">
                 <Terminal className="h-4 w-4 text-[#0E1113]" />
                 <h2 className="text-base font-semibold text-[#0E1113]">
-                  Cloud SQL Connection Log
+                  Database connection log
                 </h2>
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <span className="font-mono text-xs text-[#5A5D57] tabular-nums">
-                  {chronologicalConnectionLogs.length} of 5 max · Oldest → Latest
+                  {chronologicalConnectionLogs.length} of 5 max, Oldest → Latest
                 </span>
                 {exportFeedback && (
                   <span
@@ -1833,8 +1797,8 @@ export function SystemHealthDashboard({
                   onClick={handleExportConnectionLogsCsv}
                   disabled={chronologicalConnectionLogs.length === 0}
                   data-testid="export-connection-logs-csv"
-                  aria-label="Download last 5 Cloud SQL connection attempt logs as CSV"
-                  title="Download last 5 Cloud SQL connection attempt logs as CSV"
+                  aria-label="Download last 5 database connection attempt logs as CSV"
+                  title="Download last 5 database connection attempt logs as CSV"
                   className={`inline-flex items-center gap-1.5 border px-3 py-1.5 font-mono text-[11px] font-semibold transition disabled:cursor-not-allowed disabled:opacity-45 cursor-pointer whitespace-nowrap shrink-0 ${
                     exportFeedback
                       ? 'border-[#16A34A] bg-[#16A34A]/10 text-[#15803D]'
@@ -1929,7 +1893,7 @@ export function SystemHealthDashboard({
                     toast.thresholdMs !== undefined &&
                     toast.excessMs !== undefined && (
                       <p className="mt-1.5 font-mono text-[10px] tabular-nums text-[#FBBF24]">
-                        Observed {toast.latencyMs} ms · Limit {toast.thresholdMs} ms (+
+                        Observed {toast.latencyMs} ms, Limit {toast.thresholdMs} ms (+
                         {toast.excessMs} ms)
                       </p>
                     )}

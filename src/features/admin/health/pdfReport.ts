@@ -748,7 +748,7 @@ export function generateSystemHealthPdfBytes(
     doc.setFont('courier', 'normal');
     doc.setFontSize(7.2);
     doc.text(
-      `Generated ${formatUtcStamp(report.generatedAtIso)} | Sport Castle Operations | /api/system-health/report.pdf`,
+      `Generated ${formatUtcStamp(report.generatedAtIso)} | Sport Castle Operations | Sport Castle`,
       marginX,
       pageHeight - 22,
     );
