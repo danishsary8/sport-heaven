@@ -2,7 +2,8 @@ import { useState, type FormEvent } from 'react';
 import { isApiError } from '../../../lib/api';
 import { useI18n } from '../../../lib/i18n';
 import { Button, EmptyState, Field, PageTitle, QueryView, Seo, Sheet, Skeleton, useToast } from '../../../ui';
-import { AddressFields, EMPTY_ADDRESS, looksLikePhone, type AddressDraft } from '../../checkout/AddressFields';
+import { AddressFields } from '../../checkout/AddressFields';
+import { EMPTY_ADDRESS, looksLikePhone, type AddressDraft } from '../../checkout/address';
 import { placeName } from '../../geo/api';
 import { useAddresses, useCreateAddress, useDefaultAddress, useDeleteAddress, useUpdateAddress, type Address, type AddressBody } from '../api';
 

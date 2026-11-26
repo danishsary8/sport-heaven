@@ -8,10 +8,12 @@ import { formatKhr, formatUsd, useI18n, type DictKey } from '../../lib/i18n';
 import { Button, Field, PageTitle, Picture, QueryView, Seo, Skeleton, TextArea, cx } from '../../ui';
 import { useAddresses } from '../account/api';
 import { useCart, type Cart } from '../cart/api';
-import { PromoField, lineDetails } from '../cart/BagContents';
+import { PromoField } from '../cart/BagContents';
+import { lineDetails } from '../cart/lineDetails';
 import { EmptyBag } from '../cart/BagPage';
 import { placeName } from '../geo/api';
-import { AddressFields, EMPTY_ADDRESS, looksLikePhone, type AddressDraft } from './AddressFields';
+import { AddressFields } from './AddressFields';
+import { EMPTY_ADDRESS, looksLikePhone, type AddressDraft } from './address';
 import { usePlaceOrder, useQuote, type OrderBody, type Quote, type QuoteBody } from './api';
 import { saveOrderAccess } from './orderAccess';
 

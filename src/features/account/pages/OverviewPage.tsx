@@ -4,7 +4,7 @@ import { useAuth } from '../../../lib/auth';
 import { useI18n } from '../../../lib/i18n';
 import { PageTitle, Seo, Skeleton } from '../../../ui';
 import { OrderList } from '../OrderRow';
-import { ACCOUNT_LINKS, useSignOutHome } from '../AccountLayout';
+import { ACCOUNT_LINKS, useSignOutHome } from '../accountNav';
 import { useLoyalty, useMyOrders } from '../api';
 import { TierCard } from './PointsPage';
 

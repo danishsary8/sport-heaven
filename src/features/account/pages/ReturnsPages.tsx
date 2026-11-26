@@ -5,7 +5,7 @@ import { formatDate, formatUsd, useI18n, type DictKey } from '../../../lib/i18n'
 import { Button, EmptyState, ErrorState, PageTitle, QueryView, Select, Seo, Skeleton, TextArea, cx, useToast } from '../../../ui';
 import { useProduct } from '../../catalog/api';
 import { useCreateReturn, useMyOrder, useMyReturns, type MyOrder, type ReturnBody } from '../api';
-import { canReturn } from './OrdersPages';
+import { canReturn } from '../returns';
 
 /** Reasons are sent in English whatever the page language, so staff always read them in one language. */
 const REASONS = ['Too small', 'Too big', 'Changed my mind', 'Faulty or damaged', 'Not as pictured', 'Other'] as const;

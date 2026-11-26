@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { isApiError } from '../../lib/api';
 import { useI18n } from '../../lib/i18n';
 import { Button, Field, PageTitle, Seo } from '../../ui';
-import { looksLikePhone } from '../checkout/AddressFields';
+import { looksLikePhone } from '../checkout/address';
 import { saveOrderAccess } from '../checkout/orderAccess';
 import { useTrackOrder } from './api';
 import { Fulfilment, OrderItems, OrderTotals, StatusBadge, Timeline } from './OrderParts';

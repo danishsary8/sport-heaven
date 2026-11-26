@@ -1,14 +1,11 @@
 import { CheckCircle2, Circle, MapPin, Store } from 'lucide-react';
 import { formatDate, formatKhr, formatUsd, useI18n, type DictKey } from '../../lib/i18n';
 import { Picture, cx } from '../../ui';
-import { lineDetails } from '../cart/BagContents';
+import { lineDetails } from '../cart/lineDetails';
 import type { OrderView } from './api';
+import { statusLabel } from './status';
 
 export type OrderStatus = OrderView['status'];
-
-export function statusLabel(status: string, t: ReturnType<typeof useI18n>['t']): string {
-  return t(`status.${status}` as DictKey);
-}
 
 export function StatusBadge({ status }: { status: OrderStatus }) {
   const { t } = useI18n();

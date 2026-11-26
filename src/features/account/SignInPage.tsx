@@ -4,16 +4,7 @@ import { useAuth, type PhoneConfirmation } from '../../lib/auth';
 import { useI18n } from '../../lib/i18n';
 import { Button, Field, PageTitle, Picture, Seo } from '../../ui';
 import { PITCH_PHOTO } from '../../lib/siteImages';
-
-/** "012 345 678" → "+85512345678"; numbers starting with + are kept as they are. */
-export function toE164(input: string): string | null {
-  const d = input.replace(/[\s()-]/g, '');
-  if (/^\+\d{8,15}$/.test(d)) return d;
-  if (/^855\d{8,9}$/.test(d)) return `+${d}`;
-  if (/^0\d{8,9}$/.test(d)) return `+855${d.slice(1)}`;
-  if (/^[1-9]\d{7,8}$/.test(d)) return `+855${d}`;
-  return null;
-}
+import { toE164 } from './phone';
 
 function friendly(e: unknown, t: ReturnType<typeof useI18n>['t']): string {
   const msg = e instanceof Error ? e.message : String(e);

@@ -1,59 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router';
-import { apiFetch, type ResponseOf } from '../../../lib/api';
 import { formatUsd, useI18n } from '../../../lib/i18n';
 import { Field, Select, cx } from '../../../ui';
 import { JerseyPreviewSvg } from './JerseyPreview';
 import type { JerseyFontStyle, JerseyPatchId } from './types';
-
-export type PrintOptions = ResponseOf<'/v1/catalog/print-options', 'get'>;
-
-export interface PrintChoice {
-  name: string;
-  number: number;
-  patch: JerseyPatchId;
-  font: JerseyFontStyle;
-}
-
-/** What the shopper typed, kept as text so half-typed values stay on screen. */
-export interface PrintState {
-  on: boolean;
-  name: string;
-  number: string;
-  patch: JerseyPatchId;
-  font: JerseyFontStyle;
-}
-
-export const EMPTY_PRINT: PrintState = { on: false, name: '', number: '', patch: 'none', font: 'pro-condensed' };
-
-const NAME_RE = /^[A-Z .'-]+$/;
-
-export function printErrors(s: PrintState, max = 14, min = 1, maxNum = 99): { name?: 'nameRequired' | 'nameLong' | 'nameChars'; number?: 'number' } {
-  const name = s.name.trim();
-  const n = Number(s.number);
-  return {
-    name: !name ? 'nameRequired' : name.length > max ? 'nameLong' : !NAME_RE.test(name) ? 'nameChars' : undefined,
-    number: !/^\d+$/.test(s.number) || n < min || n > maxNum ? 'number' : undefined,
-  };
-}
-
-/** The print to send with Add to bag: null when printing is off; 'invalid' while the fields are wrong. */
-export function printChoice(s: PrintState): PrintChoice | null | 'invalid' {
-  if (!s.on) return null;
-  const e = printErrors(s);
-  if (e.name || e.number) return 'invalid';
-  return { name: s.name.trim(), number: Number(s.number), patch: s.patch, font: s.font };
-}
-
-export function usePrintOptions(enabled = true) {
-  return useQuery({
-    queryKey: ['catalog', 'print-options'],
-    queryFn: ({ signal }) => apiFetch<PrintOptions>('/v1/catalog/print-options', { signal }),
-    staleTime: 10 * 60_000,
-    enabled,
-  });
-}
+import { type PrintState, printErrors } from './printState';
+import { usePrintOptions } from './api';
 
 /** Name and number printing: the letters "press" onto the shirt preview as you type. Fees come from the API. */
 export function PrintStudio({ value, onChange, swatch }: { value: PrintState; onChange(v: PrintState): void; swatch?: string | null }) {

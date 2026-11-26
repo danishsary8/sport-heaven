@@ -1,12 +1,8 @@
 import { Clock, MapPin, Phone, Send } from 'lucide-react';
 import { useI18n } from '../../lib/i18n';
 import { PageTitle, QueryView, Seo, Skeleton } from '../../ui';
-import { useBranches, type Branch } from '../catalog/api';
-
-export function mapsUrl(b: Branch): string {
-  const q = b.lat != null && b.lng != null ? `${b.lat},${b.lng}` : `${b.name}, ${b.address}, Phnom Penh`;
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
-}
+import { useBranches } from '../catalog/api';
+import { mapsUrl } from './maps';
 
 /** The three stores as a list with "Open in Google Maps" links (an embedded map needs a Maps key: OWNER-TODO). */
 export function StoresPage() {

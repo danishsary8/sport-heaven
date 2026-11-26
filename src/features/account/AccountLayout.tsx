@@ -1,27 +1,9 @@
 import { useState } from 'react';
-import { Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
+import { Navigate, NavLink, Outlet, useLocation } from 'react-router';
 import { useAuth } from '../../lib/auth';
-import { useI18n, type DictKey } from '../../lib/i18n';
+import { useI18n } from '../../lib/i18n';
 import { Skeleton, cx } from '../../ui';
-
-export const ACCOUNT_LINKS: [string, DictKey][] = [
-  ['/account', 'acc.nav.overview'],
-  ['/account/orders', 'acc.nav.orders'],
-  ['/account/returns', 'acc.nav.returns'],
-  ['/account/wishlist', 'acc.nav.wishlist'],
-  ['/account/points', 'acc.nav.points'],
-  ['/account/addresses', 'acc.nav.addresses'],
-  ['/account/profile', 'acc.nav.profile'],
-];
-
-export function useSignOutHome() {
-  const { signOut } = useAuth();
-  const navigate = useNavigate();
-  return async () => {
-    await signOut();
-    void navigate('/', { replace: true });
-  };
-}
+import { ACCOUNT_LINKS, useSignOutHome } from './accountNav';
 
 /** Members only: guests go to sign in and come back here afterwards. */
 export function AccountLayout() {

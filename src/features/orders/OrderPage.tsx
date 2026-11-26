@@ -5,6 +5,7 @@ import { useI18n } from '../../lib/i18n';
 import { Button, EmptyState, PageTitle, QueryView, Seo, Sheet, Skeleton, useToast } from '../../ui';
 import { useCancelOrder, useOrder, type OrderView } from './api';
 import { Fulfilment, OrderItems, OrderTotals, StatusBadge, Timeline } from './OrderParts';
+import { confirmationMessage } from './confirmation';
 
 export function OrderPage() {
   const { number = '' } = useParams();
@@ -34,12 +35,6 @@ export function OrderPage() {
       </QueryView>
     </section>
   );
-}
-
-export function confirmationMessage(o: Pick<OrderView, 'status' | 'paymentStatus' | 'fulfillment'>, t: ReturnType<typeof useI18n>['t']): string | null {
-  if (o.status === 'awaiting_pickup_payment') return t('order.thanksPickup');
-  if (o.paymentStatus === 'paid' && o.status === 'confirmed') return t('order.thanks');
-  return null;
 }
 
 export function OrderDetailView({ order, backTo }: { order: OrderView; backTo?: { href: string; label: string } }) {

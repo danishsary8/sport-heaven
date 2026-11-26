@@ -4,7 +4,7 @@ import { useI18n } from '../../../lib/i18n';
 import { EmptyState, PageTitle, QueryView, Seo } from '../../../ui';
 import { GridSkeleton } from '../../catalog/listing/ListingView';
 import { ProductCard } from '../../catalog/ProductCard';
-import { useToggleWishlist, useWishlist } from '../../catalog/product/WishlistButton';
+import { useToggleWishlist, useWishlist } from '../../catalog/product/wishlist';
 
 export function WishlistPage() {
   const { t } = useI18n();

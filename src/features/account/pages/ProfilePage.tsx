@@ -5,7 +5,7 @@ import { useAuth, type PhoneConfirmation } from '../../../lib/auth';
 import { useI18n } from '../../../lib/i18n';
 import { Button, Field, PageTitle, QueryView, Select, Seo, Sheet, Skeleton, useToast } from '../../../ui';
 import { useBranches } from '../../catalog/api';
-import { toE164 } from '../SignInPage';
+import { toE164 } from '../phone';
 import { useDeleteMe, useMe, useUpdateMe, type Me, type MeBody } from '../api';
 
 const JERSEY_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'] as const;

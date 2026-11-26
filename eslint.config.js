@@ -28,6 +28,11 @@ export default tseslint.config(
     },
   },
   {
+    // Route tables hold lazy() page references, not components of their own: Fast Refresh does not apply.
+    files: ['src/app/routes.tsx', 'src/features/admin/routes.tsx'],
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
+  {
     files: ['*.config.{js,ts}', 'scripts/**/*.mjs'],
     extends: [js.configs.recommended],
     languageOptions: { globals: globals.node },

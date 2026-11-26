@@ -4,7 +4,8 @@ import { formatDate, useI18n } from '../../../lib/i18n';
 import { Button, EmptyState, PageTitle, QueryView, Seo, Skeleton } from '../../../ui';
 import { OrderDetailView } from '../../orders/OrderPage';
 import { OrderList } from '../OrderRow';
-import { useMyOrder, useMyOrders, type MyOrder } from '../api';
+import { useMyOrder, useMyOrders } from '../api';
+import { canReturn } from '../returns';
 
 export function MyOrdersPage() {
   const { t } = useI18n();
@@ -40,11 +41,6 @@ export function MyOrdersPage() {
       </QueryView>
     </div>
   );
-}
-
-/** Items can be returned while the exchange window is open and something is still returnable. */
-export function canReturn(order: MyOrder['order'], now = Date.now()): boolean {
-  return !!order.returnWindow && new Date(order.returnWindow.exchangeUntil).getTime() > now && order.items.some((i) => i.returnableQty > 0);
 }
 
 export function MyOrderPage() {
