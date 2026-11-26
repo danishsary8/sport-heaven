@@ -11,3 +11,5 @@ Task 1: Ruling: eslint ignores .claude/ (agent worktrees) — they are not proje
 | 2 playwright + guest | done | 7a03af7 | guest spec green twice (fresh sport_e2e each run, backend on :3100) |
 Task 2: Ruling: backend for e2e on port 3100 with its own sport_e2e database, reset by the webServer command (not globalSetup) — Playwright starts web servers before global setup; dev server on :3000 stays untouched — none
 Task 2: Ruling: tranId read from the e2e database — the page's token flow differs for members; PayWay would know the id the same way — none
+| 3 member journey | done | 218b3c3 | green 4 of 5 runs, last 3 consecutive; one unexplained 90 s timeout on the first run after a rebuild (CI retries once) |
+Task 3: Ruling: helpers navigate in-app after sign-in (nav()) — the test sign-in lives in memory and a reload ends it — none
