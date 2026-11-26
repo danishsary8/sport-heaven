@@ -21,8 +21,14 @@ function unconfiguredAdapter(): AuthAdapter {
   };
 }
 
+/**
+ * True only in e2e/dev test builds and unit tests. Vite replaces both values at build time, so in a production
+ * build this is the constant `false` and the test adapter is dropped from the bundle (scripts/check-bundle.mjs).
+ */
+const TEST_BUILD = import.meta.env.VITE_AUTH_TEST_MODE === 'true' || import.meta.env.MODE === 'test';
+
 export function createAuthAdapter(env: Env = import.meta.env): AuthAdapter {
-  if (env.VITE_AUTH_TEST_MODE === 'true') return createTestAdapter();
+  if (TEST_BUILD && env.VITE_AUTH_TEST_MODE === 'true') return createTestAdapter();
   const apiKey = typeof env.VITE_FIREBASE_API_KEY === 'string' ? env.VITE_FIREBASE_API_KEY : '';
   if (!apiKey) return unconfiguredAdapter();
   return createFirebaseAdapter({

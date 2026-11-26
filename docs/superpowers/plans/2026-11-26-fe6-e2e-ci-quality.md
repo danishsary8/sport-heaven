@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - e2e builds are the only builds that may contain the test sign-in; `npm run build` must fail if it does (bundle check).
-- Initial JavaScript for `/` (entry chunk + its static imports) ≤ 120 kB gzipped; no single lazy chunk ≥ 250 kB gzipped except the admin health charts.
+- Initial JavaScript for `/` (entry chunk + its static imports) ≤ 150 kB gzipped (ruled in the ledger); no single lazy chunk ≥ 250 kB gzipped except the admin health charts.
 - Lighthouse mobile: performance ≥ 85, accessibility ≥ 95, best practices ≥ 95 on `/`, `/c/boots`, `/p/<slug>`; record the numbers.
 - axe: zero serious/critical violations on home, listing, product, bag, checkout, sign-in, account, admin overview.
 - e2e uses only the `sport_e2e` database; never `sport_dev`.
