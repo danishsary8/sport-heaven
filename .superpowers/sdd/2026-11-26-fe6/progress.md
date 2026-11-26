@@ -13,3 +13,4 @@ Task 2: Ruling: backend for e2e on port 3100 with its own sport_e2e database, re
 Task 2: Ruling: tranId read from the e2e database — the page's token flow differs for members; PayWay would know the id the same way — none
 | 3 member journey | done | 218b3c3 | green 4 of 5 runs, last 3 consecutive; one unexplained 90 s timeout on the first run after a rebuild (CI retries once) |
 Task 3: Ruling: helpers navigate in-app after sign-in (nav()) — the test sign-in lives in memory and a reload ends it — none
+| 4 staff + price | done | 4706936 | 2 specs green twice |
