@@ -2,7 +2,6 @@ import type { RouteObject } from 'react-router';
 import { lazy } from 'react';
 import { HomePage } from '../features/catalog/home/HomePage';
 import { NotFoundPage } from '../features/shell/NotFoundPage';
-import { Placeholder } from '../features/shell/Placeholder';
 import { CheckoutLayout } from './layouts/CheckoutLayout';
 import { StoreLayout } from './layouts/StoreLayout';
 import { RootBoundary } from './RootBoundary';
@@ -40,7 +39,7 @@ const SignInPage = lazy(() => import('../features/account/SignInPage').then((m) 
 
 const AccountLayout = lazy(() => import('../features/account/AccountLayout').then((m) => ({ default: m.AccountLayout })));
 
-const page = (path: string, title: string): RouteObject => ({ path, element: <Placeholder title={title} /> });
+const AdminRoot = lazy(() => import('../features/admin/AdminRoot').then((m) => ({ default: m.AdminRoot })));
 
 export const routes: RouteObject[] = [
   {
@@ -88,7 +87,7 @@ export const routes: RouteObject[] = [
         element: <CheckoutLayout />,
         children: [{ path: 'checkout', element: <CheckoutPage /> }, { path: 'pay/:number', element: <PayPage /> }],
       },
-      page('admin/*', 'Admin'),
+      { path: 'admin/*', element: <AdminRoot /> },
     ],
   },
 ];
