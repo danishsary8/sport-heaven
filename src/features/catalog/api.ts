@@ -84,3 +84,22 @@ export function useSuggest(q: string) {
     placeholderData: keepPreviousData,
   });
 }
+
+export type ProductDetail = ResponseOf<'/v1/catalog/products/{slug}', 'get'>['product'];
+export type Variant = ProductDetail['variants'][number];
+export type Questions = ResponseOf<'/v1/catalog/products/{slug}/questions', 'get'>;
+
+export function useProduct(slug: string) {
+  const { lang } = useI18n();
+  return useQuery({
+    queryKey: ['catalog', 'product', slug, lang],
+    queryFn: ({ signal }) => apiFetch<{ product: ProductDetail }>(`/v1/catalog/products/${encodeURIComponent(slug)}`, { withLang: true, signal }),
+  });
+}
+
+export function useQuestions(slug: string) {
+  return useQuery({
+    queryKey: ['catalog', 'questions', slug],
+    queryFn: ({ signal }) => apiFetch<Questions>(`/v1/catalog/products/${encodeURIComponent(slug)}/questions`, { signal }),
+  });
+}

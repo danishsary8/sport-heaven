@@ -17,6 +17,8 @@ const CollectionPage = Listing('CollectionPage');
 
 const SearchPage = lazy(() => import('../features/catalog/search/SearchPage').then((m) => ({ default: m.SearchPage })));
 
+const ProductPage = lazy(() => import('../features/catalog/product/ProductPage').then((m) => ({ default: m.ProductPage })));
+
 const page = (path: string, title: string): RouteObject => ({ path, element: <Placeholder title={title} /> });
 
 export const routes: RouteObject[] = [
@@ -34,7 +36,7 @@ export const routes: RouteObject[] = [
           { path: 'brands/:slug', element: <BrandPage /> },
           page('custom', 'Print your shirt'),
           { path: 'search', element: <SearchPage /> },
-          page('p/:slug', 'Product'),
+          { path: 'p/:slug', element: <ProductPage /> },
           page('bag', 'Your bag'),
           page('order/:number', 'Your order'),
           page('track', 'Track an order'),
