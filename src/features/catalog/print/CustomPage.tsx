@@ -37,7 +37,7 @@ function CustomRail({ category, title }: { category: string; title: string }) {
           <ul className="grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 lg:grid-cols-4 lg:gap-x-5">
             {d.pages[0]!.products.slice(0, 8).map((p) => (
               <li key={p.id}>
-                <ProductCard product={p} />
+                <ProductCard product={p} hash="print" />
               </li>
             ))}
           </ul>

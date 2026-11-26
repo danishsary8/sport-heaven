@@ -1,4 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
+import { useLocation } from 'react-router';
 import { apiFetch, type ResponseOf } from '../../../lib/api';
 import { formatUsd, useI18n } from '../../../lib/i18n';
 import { Field, Select, cx } from '../../../ui';
@@ -63,9 +65,15 @@ export function PrintStudio({ value, onChange, swatch }: { value: PrintState; on
   const touchedNumber = value.number.length > 0;
   const set = (patch: Partial<PrintState>) => onChange({ ...value, ...patch });
   const fee = o?.patches.find((p) => p.id === value.patch)?.feeCents ?? 0;
+  // `/p/:slug#print` opens the studio: the product loads after the browser's own hash jump, so scroll here.
+  const { hash } = useLocation();
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (hash === '#print') ref.current?.scrollIntoView({ block: 'start' });
+  }, [hash]);
 
   return (
-    <section id="print" aria-labelledby="print-heading" className="mt-6 scroll-mt-20 rounded-[8px] border border-stone">
+    <section ref={ref} id="print" aria-labelledby="print-heading" className="mt-6 scroll-mt-20 rounded-[8px] border border-stone">
       <h2 id="print-heading" className="sr-only">
         {t('print.title')}
       </h2>

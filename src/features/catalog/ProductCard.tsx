@@ -6,7 +6,8 @@ import type { ProductSummary } from './api';
 export const CARD_SIZES = '(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw';
 
 /** A product in a grid or rail: 3:4 photo on the stone stage, brand, name, price, and "Only N left" when low. */
-export function ProductCard({ product, priority = false, className }: { product: ProductSummary; priority?: boolean; className?: string }) {
+/** `hash` opens the product at a section, e.g. `print` for the print studio. */
+export function ProductCard({ product, priority = false, className, hash }: { product: ProductSummary; priority?: boolean; className?: string; hash?: string }) {
   const { t } = useI18n();
   const sale = product.discountPct ? t('card.sale', { n: product.discountPct }) : null;
   const tag = sale ?? (product.badges.includes('new') ? t('badge.new') : null);
@@ -24,7 +25,7 @@ export function ProductCard({ product, priority = false, className }: { product:
       <div className="mt-2 flex flex-col gap-0.5">
         <p className="text-[13px] text-graphite">{product.brand.name}</p>
         <h3 className="line-clamp-2 text-[15px] font-medium leading-snug">
-          <Link to={`/p/${product.slug}`} className="after:absolute after:inset-0">
+          <Link to={`/p/${product.slug}${hash ? `#${hash}` : ''}`} className="after:absolute after:inset-0">
             {product.name}
           </Link>
         </h3>

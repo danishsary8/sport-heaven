@@ -1,6 +1,6 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { routes } from '../../../app/routes';
 import { configureApi } from '../../../lib/api';
 import { BRANCHES, MENU, product } from '../../../test/fixtures';
@@ -72,6 +72,18 @@ async function openStudio() {
 }
 
 describe('print studio', () => {
+  it('scrolls to the studio when the link ends in #print (the /custom and old studio links)', async () => {
+    const scrolled: Element[] = [];
+    // jsdom has no scrollIntoView.
+    Element.prototype.scrollIntoView = function (this: Element) {
+      scrolled.push(this);
+    };
+    renderRoutes(routes, '/p/home-kit#print');
+    await screen.findByRole('radio', { name: 'M' });
+    await vi.waitFor(() => expect(scrolled.some((el) => el.id === 'print')).toBe(true));
+    delete (Element.prototype as { scrollIntoView?: unknown }).scrollIntoView;
+  });
+
   it('adds the shirt with the name, number, patch and font', async () => {
     const studio = await openStudio();
     expect(within(studio).getByText(/Printing costs \$8\.00/)).toBeTruthy();
@@ -96,7 +108,8 @@ describe('print studio', () => {
   it('lists the printable jerseys and F1 shirts on /custom', async () => {
     renderRoutes(routes, '/custom');
     expect(await screen.findByRole('heading', { level: 1, name: 'Print your name and number' })).toBeTruthy();
-    expect(await screen.findByRole('link', { name: /jerseys shirt/ })).toBeTruthy();
+    // Each card opens the product at its print studio.
+    expect((await screen.findByRole('link', { name: /jerseys shirt/ })).getAttribute('href')).toMatch(/^\/p\/[^#]+#print$/);
     expect(await screen.findByRole('link', { name: /f1 shirt/ })).toBeTruthy();
   });
 });
