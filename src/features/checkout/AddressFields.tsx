@@ -21,12 +21,14 @@ export function AddressFields({
   errors,
   prefix = 'address',
   withRecipient = true,
+  phoneHint = true,
 }: {
   value: AddressDraft;
   onChange(v: AddressDraft): void;
   errors: Record<string, string | undefined>;
   prefix?: string;
   withRecipient?: boolean;
+  phoneHint?: boolean;
 }) {
   const { t, lang } = useI18n();
   const provinces = useProvinces();
@@ -45,7 +47,7 @@ export function AddressFields({
             value={value.phone}
             onChange={(e) => set({ phone: e.target.value })}
             error={err('phone')}
-            hint={t('co.recipientPhoneHint')}
+            hint={phoneHint ? t('co.recipientPhoneHint') : undefined}
             type="tel"
             inputMode="tel"
             autoComplete="tel"

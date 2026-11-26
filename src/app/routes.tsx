@@ -7,6 +7,7 @@ import { CheckoutLayout } from './layouts/CheckoutLayout';
 import { StoreLayout } from './layouts/StoreLayout';
 import { RootBoundary } from './RootBoundary';
 import { RouteError } from './PageFallback';
+import { AccountPage } from './accountPages';
 
 const Listing = (name: 'ShopPage' | 'CategoryPage' | 'BrandPage' | 'CollectionPage') =>
   lazy(() => import('../features/catalog/listing/ListingPages').then((m) => ({ default: m[name] })));
@@ -37,6 +38,8 @@ const TrackPage = lazy(() => import('../features/orders/TrackPage').then((m) => 
 
 const SignInPage = lazy(() => import('../features/account/SignInPage').then((m) => ({ default: m.SignInPage })));
 
+const AccountLayout = lazy(() => import('../features/account/AccountLayout').then((m) => ({ default: m.AccountLayout })));
+
 const page = (path: string, title: string): RouteObject => ({ path, element: <Placeholder title={title} /> });
 
 export const routes: RouteObject[] = [
@@ -59,7 +62,22 @@ export const routes: RouteObject[] = [
           { path: 'order/:number', element: <OrderPage /> },
           { path: 'track', element: <TrackPage /> },
           { path: 'sign-in', element: <SignInPage /> },
-          page('account/*', 'Your account'),
+          {
+            path: 'account',
+            element: <AccountLayout />,
+            children: [
+              { index: true, element: <AccountPage name="OverviewPage" /> },
+              { path: 'profile', element: <AccountPage name="ProfilePage" /> },
+              { path: 'addresses', element: <AccountPage name="AddressesPage" /> },
+              { path: 'orders', element: <AccountPage name="MyOrdersPage" /> },
+              { path: 'orders/:number', element: <AccountPage name="MyOrderPage" /> },
+              { path: 'returns', element: <AccountPage name="MyReturnsPage" /> },
+              { path: 'returns/new', element: <AccountPage name="NewReturnPage" /> },
+              { path: 'wishlist', element: <AccountPage name="WishlistPage" /> },
+              { path: 'points', element: <AccountPage name="PointsPage" /> },
+              { path: '*', element: <NotFoundPage /> },
+            ],
+          },
           { path: 'stores', element: <StoresPage /> },
           { path: 'help', element: <HelpIndexPage /> },
           { path: 'help/:topic', element: <HelpTopicPage /> },
