@@ -64,3 +64,11 @@ export function useCollection(slug: string | undefined) {
     staleTime: 5 * 60_000,
   });
 }
+
+export type Home = ResponseOf<'/v1/catalog/home', 'get'>;
+export type HomeSection = Home['sections'][number];
+
+export function useHome() {
+  const { lang } = useI18n();
+  return useQuery({ queryKey: ['catalog', 'home', lang], queryFn: ({ signal }) => apiFetch<Home>('/v1/catalog/home', { withLang: true, signal }) });
+}

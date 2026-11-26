@@ -29,6 +29,7 @@ beforeEach(() => {
     http.get(`${API}/v1/catalog/menu`, () => HttpResponse.json(MENU)),
     http.get(`${API}/v1/branches`, () => HttpResponse.json(BRANCHES)),
     http.get(`${API}/v1/cart`, () => HttpResponse.json(cartWith([1, 2]))),
+    http.get(`${API}/v1/catalog/home`, () => HttpResponse.json({ sections: [] })),
   );
 });
 
@@ -38,7 +39,7 @@ describe('app shell', () => {
     const nav = await screen.findByRole('navigation', { name: 'Main' });
     expect(await within(nav).findByRole('link', { name: 'Boots' })).toHaveAttribute('href', '/c/boots');
     expect(await screen.findByRole('link', { name: 'Bag, 3 items' })).toBeTruthy();
-    expect(await screen.findByText(/Sen Sok/)).toBeTruthy();
+    expect((await screen.findAllByText(/Sen Sok/)).length).toBeGreaterThan(0);
   });
 
   it('still renders the header when the bag cannot be loaded', async () => {

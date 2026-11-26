@@ -38,7 +38,7 @@ const base = {
   'footer.terms': 'Terms',
   'footer.privacy': 'Privacy',
   'footer.payments': 'Pay with ABA KHQR, cards, or cash when you pick up.',
-  'footer.storesFallback': 'Sen Sok, Chom Chao and Sonthormuk, Phnom Penh',
+  'footer.storesFallback': 'Sen Sok, Chomkadong and Sonthormuk, Phnom Penh',
   'footer.rights': '© {year} Sport Castle, Phnom Penh',
   'notFound.title': "This page doesn't exist",
   'notFound.body': 'The link may be old, or the product may have sold out for good.',

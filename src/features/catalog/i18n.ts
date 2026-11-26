@@ -26,6 +26,13 @@ export const catalogEn = {
   'badge.limited': 'Limited',
   'badge.signature': 'Signature',
   'badge.sale': 'Sale',
+  'home.description': 'Football boots, club and national kits and F1 teamwear from three Phnom Penh stores. Pay with ABA KHQR or pick up in store.',
+  'home.shopNew': 'Shop new arrivals',
+  'home.shopNow': 'Shop now',
+  'home.seeAll': 'See all',
+  'home.storesTitle': 'Pick up from our stores',
+  'home.storesBody': 'Order online and collect at any of our three Phnom Penh stores. We hold your items once you check out.',
+  'home.storesLink': 'Hours and directions',
 } as const;
 
 export const catalogKm: Record<keyof typeof catalogEn, string> = {
@@ -55,4 +62,12 @@ export const catalogKm: Record<keyof typeof catalogEn, string> = {
   'badge.limited': 'មានកំណត់',
   'badge.signature': 'ស៊េរីពិសេស',
   'badge.sale': 'បញ្ចុះតម្លៃ',
+
+  'home.description': 'ស្បែកជើងបាល់ទាត់ អាវក្លឹប និងអាវជាតិ និងសម្លៀកបំពាក់ F1 ពីហាងទាំងបីនៅភ្នំពេញ។ បង់ប្រាក់តាម ABA KHQR ឬមកយកនៅហាង។',
+  'home.shopNew': 'ទិញទំនិញមកដល់ថ្មី',
+  'home.shopNow': 'ទិញឥឡូវនេះ',
+  'home.seeAll': 'មើលទាំងអស់',
+  'home.storesTitle': 'មកយកនៅហាងរបស់យើង',
+  'home.storesBody': 'កុម្ម៉ង់តាមអនឡាញ ហើយមកយកនៅហាងណាមួយក្នុងចំណោមហាងទាំងបីរបស់យើងនៅភ្នំពេញ។ យើងរក្សាទុកទំនិញរបស់អ្នក នៅពេលអ្នកបញ្ជាទិញរួច។',
+  'home.storesLink': 'ម៉ោងបើក និងផ្លូវទៅ',
 };

@@ -1,5 +1,6 @@
 import type { RouteObject } from 'react-router';
 import { lazy } from 'react';
+import { HomePage } from '../features/catalog/home/HomePage';
 import { NotFoundPage } from '../features/shell/NotFoundPage';
 import { Placeholder } from '../features/shell/Placeholder';
 import { CheckoutLayout } from './layouts/CheckoutLayout';
@@ -24,7 +25,7 @@ export const routes: RouteObject[] = [
       {
         element: <StoreLayout />,
         children: [
-          { index: true, element: <Placeholder title="Sport Castle" /> },
+          { index: true, element: <HomePage /> },
           { path: 'shop', element: <ShopPage /> },
           { path: 'c/:category', element: <CategoryPage /> },
           { path: 'collections/:slug', element: <CollectionPage /> },
