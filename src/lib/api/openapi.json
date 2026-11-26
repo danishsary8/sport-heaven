@@ -9577,6 +9577,11 @@
                                     "type": "null"
                                   }
                                 ]
+                              },
+                              "returnableQty": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
                               }
                             },
                             "required": [
@@ -9593,7 +9598,8 @@
                               "printFeeCents",
                               "discountCents",
                               "lineTotalCents",
-                              "customPrint"
+                              "customPrint",
+                              "returnableQty"
                             ],
                             "additionalProperties": false
                           }
@@ -9690,6 +9696,39 @@
                           "type": [
                             "string",
                             "null"
+                          ]
+                        },
+                        "deliveredAt": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "returnWindow": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "exchangeUntil": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                                },
+                                "refundUntil": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                                }
+                              },
+                              "required": [
+                                "exchangeUntil",
+                                "refundUntil"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
                           ]
                         },
                         "createdAt": {
@@ -9923,6 +9962,8 @@
                         "note",
                         "reservedUntil",
                         "paidAt",
+                        "deliveredAt",
+                        "returnWindow",
                         "createdAt",
                         "contact",
                         "shipAddress"
@@ -10353,6 +10394,11 @@
                                     "type": "null"
                                   }
                                 ]
+                              },
+                              "returnableQty": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
                               }
                             },
                             "required": [
@@ -10369,7 +10415,8 @@
                               "printFeeCents",
                               "discountCents",
                               "lineTotalCents",
-                              "customPrint"
+                              "customPrint",
+                              "returnableQty"
                             ],
                             "additionalProperties": false
                           }
@@ -10466,6 +10513,39 @@
                           "type": [
                             "string",
                             "null"
+                          ]
+                        },
+                        "deliveredAt": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "returnWindow": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "exchangeUntil": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                                },
+                                "refundUntil": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                                }
+                              },
+                              "required": [
+                                "exchangeUntil",
+                                "refundUntil"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
                           ]
                         },
                         "createdAt": {
@@ -10699,6 +10779,8 @@
                         "note",
                         "reservedUntil",
                         "paidAt",
+                        "deliveredAt",
+                        "returnWindow",
                         "createdAt",
                         "contact",
                         "shipAddress"
@@ -11420,9 +11502,822 @@
         }
       }
     },
+    "/v1/orders/{number}/cancel": {
+      "post": {
+        "summary": "Cancel an unpaid order (owner)",
+        "tags": [
+          "orders"
+        ],
+        "security": [
+          {},
+          {
+            "firebase": []
+          }
+        ],
+        "x-auth": "order-owner",
+        "parameters": [
+          {
+            "name": "number",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "contactPhone": {
+                    "type": "string"
+                  },
+                  "orderAccessToken": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "order": {
+                      "type": "object",
+                      "properties": {
+                        "number": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "pending_payment",
+                            "awaiting_pickup_payment",
+                            "confirmed",
+                            "printing",
+                            "ready_for_pickup",
+                            "out_for_delivery",
+                            "delivered",
+                            "completed",
+                            "cancelled",
+                            "expired"
+                          ]
+                        },
+                        "paymentStatus": {
+                          "type": "string",
+                          "enum": [
+                            "unpaid",
+                            "paid",
+                            "refunded"
+                          ]
+                        },
+                        "paymentMethod": {
+                          "type": "string",
+                          "enum": [
+                            "aba_khqr",
+                            "card",
+                            "acleda",
+                            "wing",
+                            "cash_on_pickup"
+                          ]
+                        },
+                        "fulfillment": {
+                          "type": "string",
+                          "enum": [
+                            "delivery",
+                            "pickup"
+                          ]
+                        },
+                        "shippingMethodId": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "pickupBranch": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "name"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "productSlug": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "brand": {
+                                "type": "string"
+                              },
+                              "size": {
+                                "type": "string"
+                              },
+                              "color": {
+                                "type": "string"
+                              },
+                              "imageUrl": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "qty": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "unitPriceCents": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "compareAtCents": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "printFeeCents": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "discountCents": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "lineTotalCents": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "customPrint": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "number": {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      "patch": {
+                                        "type": "string"
+                                      },
+                                      "font": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "name",
+                                      "number",
+                                      "patch",
+                                      "font"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "returnableQty": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "productSlug",
+                              "name",
+                              "brand",
+                              "size",
+                              "color",
+                              "imageUrl",
+                              "qty",
+                              "unitPriceCents",
+                              "compareAtCents",
+                              "printFeeCents",
+                              "discountCents",
+                              "lineTotalCents",
+                              "customPrint",
+                              "returnableQty"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "pricing": {
+                          "type": "object",
+                          "properties": {
+                            "merchandiseCents": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "discountCents": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "shippingCents": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "totalCents": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "totalKhr": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "discounts": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": [
+                                      "team",
+                                      "member",
+                                      "promo"
+                                    ]
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "amountCents": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "label",
+                                  "amountCents"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "promoCode": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "merchandiseCents",
+                            "discountCents",
+                            "shippingCents",
+                            "totalCents",
+                            "totalKhr",
+                            "discounts",
+                            "promoCode"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "note": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "reservedUntil": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "paidAt": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "deliveredAt": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "returnWindow": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "exchangeUntil": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                                },
+                                "refundUntil": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                                }
+                              },
+                              "required": [
+                                "exchangeUntil",
+                                "refundUntil"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                        },
+                        "timeline": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "at": {
+                                "type": "string"
+                              },
+                              "from": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "enum": [
+                                      "pending_payment",
+                                      "awaiting_pickup_payment",
+                                      "confirmed",
+                                      "printing",
+                                      "ready_for_pickup",
+                                      "out_for_delivery",
+                                      "delivered",
+                                      "completed",
+                                      "cancelled",
+                                      "expired"
+                                    ]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "to": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "enum": [
+                                      "pending_payment",
+                                      "awaiting_pickup_payment",
+                                      "confirmed",
+                                      "printing",
+                                      "ready_for_pickup",
+                                      "out_for_delivery",
+                                      "delivered",
+                                      "completed",
+                                      "cancelled",
+                                      "expired"
+                                    ]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "kind": {
+                                "type": "string"
+                              },
+                              "note": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "at",
+                              "from",
+                              "to",
+                              "kind",
+                              "note"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "contact": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string"
+                            },
+                            "phoneE164": {
+                              "type": "string"
+                            },
+                            "email": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "channel": {
+                              "type": "string",
+                              "enum": [
+                                "phone",
+                                "telegram",
+                                "whatsapp"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "phoneE164",
+                            "email",
+                            "channel"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "shipAddress": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "recipientName": {
+                                  "type": "string"
+                                },
+                                "phoneE164": {
+                                  "type": "string"
+                                },
+                                "provinceCode": {
+                                  "type": "string"
+                                },
+                                "provinceName": {
+                                  "type": "object",
+                                  "properties": {
+                                    "en": {
+                                      "type": "string"
+                                    },
+                                    "km": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "en"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "districtCode": {
+                                  "type": "string"
+                                },
+                                "districtName": {
+                                  "type": "object",
+                                  "properties": {
+                                    "en": {
+                                      "type": "string"
+                                    },
+                                    "km": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "en"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "communeCode": {
+                                  "type": "string"
+                                },
+                                "communeName": {
+                                  "type": "object",
+                                  "properties": {
+                                    "en": {
+                                      "type": "string"
+                                    },
+                                    "km": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "en"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "street": {
+                                  "type": "string"
+                                },
+                                "landmark": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "lat": {
+                                  "type": [
+                                    "number",
+                                    "null"
+                                  ]
+                                },
+                                "lng": {
+                                  "type": [
+                                    "number",
+                                    "null"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "recipientName",
+                                "phoneE164",
+                                "provinceCode",
+                                "provinceName",
+                                "districtCode",
+                                "districtName",
+                                "communeCode",
+                                "communeName",
+                                "street",
+                                "landmark",
+                                "lat",
+                                "lng"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "number",
+                        "status",
+                        "paymentStatus",
+                        "paymentMethod",
+                        "fulfillment",
+                        "shippingMethodId",
+                        "pickupBranch",
+                        "items",
+                        "pricing",
+                        "note",
+                        "reservedUntil",
+                        "paidAt",
+                        "deliveredAt",
+                        "returnWindow",
+                        "createdAt",
+                        "contact",
+                        "shipAddress"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "payment": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "attempt": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "method": {
+                              "type": "string"
+                            },
+                            "status": {
+                              "type": "string",
+                              "enum": [
+                                "pending",
+                                "approved",
+                                "declined",
+                                "refunded",
+                                "expired",
+                                "cancelled"
+                              ]
+                            },
+                            "tranId": {
+                              "type": "string"
+                            },
+                            "amountCents": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "instructions": {
+                              "anyOf": [
+                                {
+                                  "oneOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "kind": {
+                                          "type": "string",
+                                          "const": "qr"
+                                        },
+                                        "qrString": {
+                                          "type": "string"
+                                        },
+                                        "deeplink": {
+                                          "type": [
+                                            "string",
+                                            "null"
+                                          ]
+                                        },
+                                        "expiresAt": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": [
+                                        "kind",
+                                        "qrString",
+                                        "deeplink",
+                                        "expiresAt"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "kind": {
+                                          "type": "string",
+                                          "const": "redirect"
+                                        },
+                                        "url": {
+                                          "type": "string"
+                                        },
+                                        "method": {
+                                          "type": "string",
+                                          "enum": [
+                                            "GET",
+                                            "POST"
+                                          ]
+                                        },
+                                        "fields": {
+                                          "type": "object",
+                                          "propertyNames": {
+                                            "type": "string"
+                                          },
+                                          "additionalProperties": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "expiresAt": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": [
+                                        "kind",
+                                        "url",
+                                        "method",
+                                        "fields",
+                                        "expiresAt"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "kind": {
+                                          "type": "string",
+                                          "const": "none"
+                                        }
+                                      },
+                                      "required": [
+                                        "kind"
+                                      ],
+                                      "additionalProperties": false
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "expiresAt": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "attempt",
+                            "method",
+                            "status",
+                            "tranId",
+                            "amountCents",
+                            "instructions",
+                            "expiresAt"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "order",
+                    "payment"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {},
+                        "requestId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/orders/track": {
       "post": {
-        "summary": "Track with order number + phone (masked)",
+        "summary": "Track with order number + phone (masked); returns an order token while the order awaits payment",
         "tags": [
           "orders"
         ],
@@ -11634,6 +12529,11 @@
                                     "type": "null"
                                   }
                                 ]
+                              },
+                              "returnableQty": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
                               }
                             },
                             "required": [
@@ -11650,7 +12550,8 @@
                               "printFeeCents",
                               "discountCents",
                               "lineTotalCents",
-                              "customPrint"
+                              "customPrint",
+                              "returnableQty"
                             ],
                             "additionalProperties": false
                           }
@@ -11747,6 +12648,39 @@
                           "type": [
                             "string",
                             "null"
+                          ]
+                        },
+                        "deliveredAt": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "returnWindow": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "exchangeUntil": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                                },
+                                "refundUntil": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                                }
+                              },
+                              "required": [
+                                "exchangeUntil",
+                                "refundUntil"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
                           ]
                         },
                         "createdAt": {
@@ -11927,15 +12861,24 @@
                         "note",
                         "reservedUntil",
                         "paidAt",
+                        "deliveredAt",
+                        "returnWindow",
                         "createdAt",
                         "contact",
                         "shipAddress"
                       ],
                       "additionalProperties": false
+                    },
+                    "orderAccessToken": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
                     }
                   },
                   "required": [
-                    "order"
+                    "order",
+                    "orderAccessToken"
                   ],
                   "additionalProperties": false
                 }
@@ -12368,6 +13311,11 @@
                                     "type": "null"
                                   }
                                 ]
+                              },
+                              "returnableQty": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
                               }
                             },
                             "required": [
@@ -12384,7 +13332,8 @@
                               "printFeeCents",
                               "discountCents",
                               "lineTotalCents",
-                              "customPrint"
+                              "customPrint",
+                              "returnableQty"
                             ],
                             "additionalProperties": false
                           }
@@ -12481,6 +13430,39 @@
                           "type": [
                             "string",
                             "null"
+                          ]
+                        },
+                        "deliveredAt": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "returnWindow": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "exchangeUntil": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                                },
+                                "refundUntil": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                                }
+                              },
+                              "required": [
+                                "exchangeUntil",
+                                "refundUntil"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
                           ]
                         },
                         "createdAt": {
@@ -12714,6 +13696,8 @@
                         "note",
                         "reservedUntil",
                         "paidAt",
+                        "deliveredAt",
+                        "returnWindow",
                         "createdAt",
                         "contact",
                         "shipAddress"

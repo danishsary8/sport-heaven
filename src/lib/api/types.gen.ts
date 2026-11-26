@@ -2851,6 +2851,7 @@ export interface paths {
                                         patch: string;
                                         font: string;
                                     } | null;
+                                    returnableQty: number;
                                 }[];
                                 pricing: {
                                     merchandiseCents: number;
@@ -2869,6 +2870,13 @@ export interface paths {
                                 note: string | null;
                                 reservedUntil: string | null;
                                 paidAt: string | null;
+                                deliveredAt: string | null;
+                                returnWindow: {
+                                    /** Format: date-time */
+                                    exchangeUntil: string;
+                                    /** Format: date-time */
+                                    refundUntil: string;
+                                } | null;
                                 /** Format: date-time */
                                 createdAt: string;
                                 timeline?: {
@@ -3031,6 +3039,7 @@ export interface paths {
                                         patch: string;
                                         font: string;
                                     } | null;
+                                    returnableQty: number;
                                 }[];
                                 pricing: {
                                     merchandiseCents: number;
@@ -3049,6 +3058,13 @@ export interface paths {
                                 note: string | null;
                                 reservedUntil: string | null;
                                 paidAt: string | null;
+                                deliveredAt: string | null;
+                                returnWindow: {
+                                    /** Format: date-time */
+                                    exchangeUntil: string;
+                                    /** Format: date-time */
+                                    refundUntil: string;
+                                } | null;
                                 /** Format: date-time */
                                 createdAt: string;
                                 timeline?: {
@@ -3332,6 +3348,198 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/orders/{number}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel an unpaid order (owner) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    number: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        contactPhone?: string;
+                        orderAccessToken?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            order: {
+                                number: string;
+                                /** @enum {string} */
+                                status: "pending_payment" | "awaiting_pickup_payment" | "confirmed" | "printing" | "ready_for_pickup" | "out_for_delivery" | "delivered" | "completed" | "cancelled" | "expired";
+                                /** @enum {string} */
+                                paymentStatus: "unpaid" | "paid" | "refunded";
+                                /** @enum {string} */
+                                paymentMethod: "aba_khqr" | "card" | "acleda" | "wing" | "cash_on_pickup";
+                                /** @enum {string} */
+                                fulfillment: "delivery" | "pickup";
+                                shippingMethodId: string | null;
+                                pickupBranch: {
+                                    id: string;
+                                    name: string;
+                                } | null;
+                                items: {
+                                    id: string;
+                                    productSlug: string;
+                                    name: string;
+                                    brand: string;
+                                    size: string;
+                                    color: string;
+                                    imageUrl: string | null;
+                                    qty: number;
+                                    unitPriceCents: number;
+                                    compareAtCents: number | null;
+                                    printFeeCents: number;
+                                    discountCents: number;
+                                    lineTotalCents: number;
+                                    customPrint: {
+                                        name: string;
+                                        number: number;
+                                        patch: string;
+                                        font: string;
+                                    } | null;
+                                    returnableQty: number;
+                                }[];
+                                pricing: {
+                                    merchandiseCents: number;
+                                    discountCents: number;
+                                    shippingCents: number;
+                                    totalCents: number;
+                                    totalKhr: number;
+                                    discounts: {
+                                        /** @enum {string} */
+                                        kind: "team" | "member" | "promo";
+                                        label: string;
+                                        amountCents: number;
+                                    }[];
+                                    promoCode: string | null;
+                                };
+                                note: string | null;
+                                reservedUntil: string | null;
+                                paidAt: string | null;
+                                deliveredAt: string | null;
+                                returnWindow: {
+                                    /** Format: date-time */
+                                    exchangeUntil: string;
+                                    /** Format: date-time */
+                                    refundUntil: string;
+                                } | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                timeline?: {
+                                    at: string;
+                                    from: ("pending_payment" | "awaiting_pickup_payment" | "confirmed" | "printing" | "ready_for_pickup" | "out_for_delivery" | "delivered" | "completed" | "cancelled" | "expired") | null;
+                                    to: ("pending_payment" | "awaiting_pickup_payment" | "confirmed" | "printing" | "ready_for_pickup" | "out_for_delivery" | "delivered" | "completed" | "cancelled" | "expired") | null;
+                                    kind: string;
+                                    note: string | null;
+                                }[];
+                                contact: {
+                                    name: string;
+                                    phoneE164: string;
+                                    email: string | null;
+                                    /** @enum {string} */
+                                    channel: "phone" | "telegram" | "whatsapp";
+                                };
+                                shipAddress: {
+                                    recipientName: string;
+                                    phoneE164: string;
+                                    provinceCode: string;
+                                    provinceName: {
+                                        en: string;
+                                        km?: string;
+                                    };
+                                    districtCode: string;
+                                    districtName: {
+                                        en: string;
+                                        km?: string;
+                                    };
+                                    communeCode: string;
+                                    communeName: {
+                                        en: string;
+                                        km?: string;
+                                    };
+                                    street: string;
+                                    landmark: string | null;
+                                    lat: number | null;
+                                    lng: number | null;
+                                } | null;
+                            };
+                            payment: {
+                                attempt: number;
+                                method: string;
+                                /** @enum {string} */
+                                status: "pending" | "approved" | "declined" | "refunded" | "expired" | "cancelled";
+                                tranId: string;
+                                amountCents: number;
+                                instructions: ({
+                                    /** @constant */
+                                    kind: "qr";
+                                    qrString: string;
+                                    deeplink: string | null;
+                                    expiresAt: string;
+                                } | {
+                                    /** @constant */
+                                    kind: "redirect";
+                                    url: string;
+                                    /** @enum {string} */
+                                    method: "GET" | "POST";
+                                    fields: {
+                                        [key: string]: string;
+                                    };
+                                    expiresAt: string;
+                                } | {
+                                    /** @constant */
+                                    kind: "none";
+                                }) | null;
+                                expiresAt: string | null;
+                            } | null;
+                        };
+                    };
+                };
+                /** @description Error */
+                default: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: unknown;
+                                requestId?: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/orders/track": {
         parameters: {
             query?: never;
@@ -3341,7 +3549,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Track with order number + phone (masked) */
+        /** Track with order number + phone (masked); returns an order token while the order awaits payment */
         post: {
             parameters: {
                 query?: never;
@@ -3400,6 +3608,7 @@ export interface paths {
                                         patch: string;
                                         font: string;
                                     } | null;
+                                    returnableQty: number;
                                 }[];
                                 pricing: {
                                     merchandiseCents: number;
@@ -3418,6 +3627,13 @@ export interface paths {
                                 note: string | null;
                                 reservedUntil: string | null;
                                 paidAt: string | null;
+                                deliveredAt: string | null;
+                                returnWindow: {
+                                    /** Format: date-time */
+                                    exchangeUntil: string;
+                                    /** Format: date-time */
+                                    refundUntil: string;
+                                } | null;
                                 /** Format: date-time */
                                 createdAt: string;
                                 timeline?: {
@@ -3448,6 +3664,7 @@ export interface paths {
                                     };
                                 } | null;
                             };
+                            orderAccessToken: string | null;
                         };
                     };
                 };
@@ -3609,6 +3826,7 @@ export interface paths {
                                         patch: string;
                                         font: string;
                                     } | null;
+                                    returnableQty: number;
                                 }[];
                                 pricing: {
                                     merchandiseCents: number;
@@ -3627,6 +3845,13 @@ export interface paths {
                                 note: string | null;
                                 reservedUntil: string | null;
                                 paidAt: string | null;
+                                deliveredAt: string | null;
+                                returnWindow: {
+                                    /** Format: date-time */
+                                    exchangeUntil: string;
+                                    /** Format: date-time */
+                                    refundUntil: string;
+                                } | null;
                                 /** Format: date-time */
                                 createdAt: string;
                                 timeline?: {
