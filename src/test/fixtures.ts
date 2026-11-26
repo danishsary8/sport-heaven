@@ -64,6 +64,56 @@ export const FILTERS = {
   ],
 };
 
-export const EMPTY_CART = {
-  cart: { id: 'c1', lines: [], subtotalCents: 0, discountCents: 0, totalCents: 0, promo: null, problems: [] },
-};
+export function cartLine(i: number, over: Record<string, unknown> = {}) {
+  return {
+    id: `line${i}`,
+    productSlug: `product-${i}`,
+    productName: `Product ${i}`,
+    brand: 'Nike',
+    imageUrl: null,
+    size: 'EU 41',
+    color: 'Black',
+    sku: `SKU${i}`,
+    qty: 1,
+    maxQty: 5,
+    availability: 'ok',
+    lowStockCount: null,
+    customPrint: null,
+    unitPriceCents: 9500,
+    compareAtCents: null,
+    printFeeCents: 0,
+    discountCents: 0,
+    lineTotalCents: 9500,
+    purchasable: true,
+    problem: null,
+    ...over,
+  };
+}
+
+/** A full cart response; totals are whatever the test says (the browser never computes them). */
+export function cart(lines: ReturnType<typeof cartLine>[], over: { totalCents?: number; promo?: { code: string | null; applied: boolean; message: string | null }; checkoutReady?: boolean; discounts?: { kind: string; label: string; amountCents: number }[] } = {}) {
+  const total = over.totalCents ?? lines.reduce((n, l) => n + (l.lineTotalCents as number), 0);
+  return {
+    cart: {
+      id: 'c1',
+      lines,
+      pricing: {
+        lines: [],
+        merchandiseCents: total,
+        discounts: over.discounts ?? [],
+        shippingCents: 0,
+        totalCents: total,
+        totalKhr: total * 41,
+        promo: over.promo ?? { code: null, applied: false, message: null },
+        memberPerks: { tier: null, applied: [] },
+        freeDeliveryRemainingCents: null,
+        messages: [],
+      },
+      promoCode: over.promo?.code ?? null,
+      checkoutReady: over.checkoutReady ?? lines.every((l) => l.problem === null),
+      notices: ["Items in your bag aren't reserved until you check out"],
+    },
+  };
+}
+
+export const EMPTY_CART = cart([]);

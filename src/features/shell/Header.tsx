@@ -5,6 +5,7 @@ import { useAuth } from '../../lib/auth';
 import { useI18n } from '../../lib/i18n';
 import { cx } from '../../ui';
 import { useBagCount } from '../cart/api';
+import { BagDrawer } from '../cart/BagDrawer';
 import { useMenu } from '../catalog/api';
 import { SearchOverlay } from '../catalog/search/SearchOverlay';
 import { LangSwitch } from './LangSwitch';
@@ -20,6 +21,7 @@ export function Header() {
   const count = useBagCount();
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [bagOpen, setBagOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -78,7 +80,16 @@ export function Header() {
           <Link to={status === 'member' ? '/account' : '/sign-in'} className={iconButton} aria-label={status === 'member' ? t('nav.account') : t('nav.signIn')}>
             <User className="size-[22px]" aria-hidden />
           </Link>
-          <Link to="/bag" className={cx(iconButton, '-mr-2')} aria-label={bagLabel}>
+          <Link
+            to="/bag"
+            className={cx(iconButton, '-mr-2')}
+            aria-label={bagLabel}
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+              e.preventDefault();
+              setBagOpen(true);
+            }}
+          >
             <ShoppingBag className="size-[22px]" aria-hidden />
             {count ? (
               <span aria-hidden className="tabular absolute right-0.5 top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-vermilion px-1 text-[11px] font-bold text-paper">
@@ -90,6 +101,7 @@ export function Header() {
       </div>
       <MobileMenu open={open} onClose={() => setOpen(false)} />
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
+      <BagDrawer open={bagOpen} onClose={() => setBagOpen(false)} />
     </header>
   );
 }

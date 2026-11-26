@@ -1,11 +1,13 @@
 import { catalogKm } from '../../features/catalog/i18n';
 import { pagesKm } from '../../features/pages/i18n';
+import { cartKm } from '../../features/cart/i18n';
 import type { Dict } from './dict.en';
 
 /** Khmer copy. Every English key must exist here (the type enforces it). */
 export const km: Dict = {
   ...catalogKm,
   ...pagesKm,
+  ...cartKm,
   'brand.name': 'Sport Castle',
   'nav.menu': 'ម៉ឺនុយ',
   'nav.home': 'ទំព័រដើម Sport Castle',

@@ -26,6 +26,8 @@ const HelpIndexPage = lazy(() => pages().then((m) => ({ default: m.HelpIndexPage
 const HelpTopicPage = lazy(() => pages().then((m) => ({ default: m.HelpTopicPage })));
 const StoresPage = lazy(() => import('../features/pages/StoresPage').then((m) => ({ default: m.StoresPage })));
 
+const BagPage = lazy(() => import('../features/cart/BagPage').then((m) => ({ default: m.BagPage })));
+
 const page = (path: string, title: string): RouteObject => ({ path, element: <Placeholder title={title} /> });
 
 export const routes: RouteObject[] = [
@@ -44,7 +46,7 @@ export const routes: RouteObject[] = [
           { path: 'custom', element: <CustomPage /> },
           { path: 'search', element: <SearchPage /> },
           { path: 'p/:slug', element: <ProductPage /> },
-          page('bag', 'Your bag'),
+          { path: 'bag', element: <BagPage /> },
           page('order/:number', 'Your order'),
           page('track', 'Track an order'),
           page('sign-in', 'Sign in'),
