@@ -95,7 +95,7 @@ function UserRow({ user }: { user: AdminUser }) {
         <p>
           <span className="font-semibold">{label}</span>
           <span className="block text-sm text-graphite tabular">
-            {[user.phone, user.email].filter(Boolean).join(', ')}
+            {[user.phone, user.email].filter((x) => x && x !== label).join(', ')}
             {user.phone && !user.phoneVerified && ' (not verified)'}
           </span>
         </p>
@@ -135,8 +135,8 @@ function UserRow({ user }: { user: AdminUser }) {
           {self && <p className="w-full text-sm text-graphite">You can't change your own role.</p>}
         </div>
         <div className="flex flex-wrap items-end gap-2">
-          <Field label="Points to add or remove" value={delta} onChange={(e) => setDelta(e.target.value.replace(/[^\d-]/g, ''))} inputMode="numeric" className="w-36" />
-          <Field label="Why" value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} className="min-w-0 flex-1" />
+          <Field label="Points to add or remove" value={delta} onChange={(e) => setDelta(e.target.value.replace(/[^\d-]/g, ''))} inputMode="numeric" className="w-full sm:w-36" />
+          <Field label="Why" value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} className="min-w-[160px] flex-1" />
           <Button
             variant="secondary"
             loading={points.isPending}
