@@ -16,3 +16,5 @@ Task 3: Ruling: helpers navigate in-app after sign-in (nav()) — the test sign-
 | 4 staff + price | done | 4706936 | 2 specs green twice |
 | 5 hosting fallback | done | 72e7fd8 | _redirects, vercel.json, nginx in docs/HOSTING.md; sitemap from API (2 tests); robots disallows private pages; deep links reload on preview |
 Task 5: Ruling: sitemap/robots default to sportcastle.com.kh (the domain in the old files) — owner sets SITE_URL — a wrong domain until the owner confirms (OWNER-TODO)
+| 6 CI | done | 5dd66b5 | checks + e2e (Postgres 16 service, backend checked out at the same branch); YAML parsed |
+Task 6: Ruling: backend checkout uses secrets.BACKEND_REPO_TOKEN, falling back to the workflow token — the backend repo is separate and may be private — e2e job fails at checkout until the owner adds the secret (OWNER-TODO)
