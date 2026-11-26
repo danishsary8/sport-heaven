@@ -1,6 +1,7 @@
 import { ChevronRight } from 'lucide-react';
 import { Link } from 'react-router';
 import { useI18n } from '../../../lib/i18n';
+import { JsonLd } from '../../../ui';
 import { useMenu, type ProductDetail } from '../api';
 import { productCrumbs } from './crumbs';
 
@@ -18,7 +19,7 @@ export function Breadcrumbs({ product, className }: { product: ProductDetail; cl
   };
   return (
     <nav aria-label={t('product.breadcrumb')} className={className}>
-      <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+      <JsonLd data={jsonLd} />
       <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-graphite">
         {crumbs.map((c, i) => (
           <li key={c.to} className="flex items-center gap-1.5">

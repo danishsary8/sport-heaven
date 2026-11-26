@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 import { isApiError } from '../../../lib/api';
 import { useI18n } from '../../../lib/i18n';
-import { Availability, Button, EmptyState, Price, QueryView, Seo, Skeleton, useToast } from '../../../ui';
+import { Availability, Button, EmptyState, JsonLd, Price, QueryView, Seo, Skeleton, useToast } from '../../../ui';
 import { useAddToCart } from '../../cart/api';
 import { useProduct, type ProductDetail, type Variant } from '../api';
 import { ProductCard } from '../ProductCard';
@@ -127,7 +127,7 @@ function ProductView({ product }: { product: ProductDetail }) {
   return (
     <article className="pb-28 lg:pb-16">
       <Seo title={product.name} description={product.description ?? undefined} canonical={`/p/${product.slug}`} image={product.imageUrl ?? undefined} />
-      <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+      <JsonLd data={jsonLd} />
       <Breadcrumbs product={product} className="mx-auto max-w-[1320px] px-4 py-3 lg:px-8 lg:pb-0 lg:pt-6" />
       <div className="mx-auto max-w-[1320px] lg:grid lg:grid-cols-[1.3fr_1fr] lg:gap-12 lg:px-8 lg:pt-5">
         {/* On desktop the photos stay in view while the buy box and details scroll past. */}
