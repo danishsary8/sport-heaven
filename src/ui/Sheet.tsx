@@ -9,7 +9,7 @@ const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), selec
 export interface SheetProps {
   open: boolean;
   onClose(): void;
-  side?: 'left' | 'right' | 'bottom' | 'center';
+  side?: 'left' | 'right' | 'bottom' | 'center' | 'top';
   title: string;
   /** Hide the visible title (it stays the dialog's accessible name). */
   hideTitle?: boolean;
@@ -33,7 +33,7 @@ export function Sheet({ open, onClose, side = 'right', title, hideTitle, childre
     const opener = document.activeElement as HTMLElement | null;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    const first = panel.current?.querySelector<HTMLElement>(FOCUSABLE);
+    const first = panel.current?.querySelector<HTMLElement>("[data-autofocus]") ?? panel.current?.querySelector<HTMLElement>(FOCUSABLE);
     (first ?? panel.current)?.focus();
 
     const onKey = (e: KeyboardEvent) => {
@@ -67,6 +67,7 @@ export function Sheet({ open, onClose, side = 'right', title, hideTitle, childre
   const position = {
     left: 'inset-y-0 left-0 w-[min(88vw,380px)] animate-sheet-left',
     right: 'inset-y-0 right-0 w-[min(92vw,440px)] animate-sheet-right',
+    top: 'inset-x-0 top-0 max-h-[92vh] rounded-b-[14px] animate-fade',
     bottom: 'inset-x-0 bottom-0 max-h-[88vh] rounded-t-[14px] animate-sheet-bottom',
     center: 'left-1/2 top-1/2 w-[min(92vw,520px)] max-h-[88vh] -translate-x-1/2 -translate-y-1/2 rounded-[10px] animate-fade',
   }[side];

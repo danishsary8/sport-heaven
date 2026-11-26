@@ -32,6 +32,8 @@ export function ListingView({
   hidden = [],
   path = '/v1/catalog/products',
   emptyAction,
+  emptyTitle,
+  emptyBody,
 }: {
   title: ReactNode;
   intro?: ReactNode;
@@ -40,6 +42,8 @@ export function ListingView({
   hidden?: string[];
   path?: '/v1/catalog/products' | '/v1/search';
   emptyAction?: ReactNode;
+  emptyTitle?: string;
+  emptyBody?: string;
 }) {
   const { t } = useI18n();
   const [params, setParams] = useSearchParams();
@@ -127,8 +131,8 @@ export function ListingView({
             isEmpty={(d) => d.pages[0]?.products.length === 0}
             empty={
               <EmptyState
-                title={t('listing.empty')}
-                body={t('listing.emptyBody')}
+                title={filtered ? t('listing.empty') : (emptyTitle ?? t('listing.empty'))}
+                body={filtered ? t('listing.emptyBody') : (emptyBody ?? t('listing.emptyBody'))}
                 action={
                   filtered ? (
                     <Button variant="primary" onClick={() => setParams(clearFilters(params))}>

@@ -72,3 +72,15 @@ export function useHome() {
   const { lang } = useI18n();
   return useQuery({ queryKey: ['catalog', 'home', lang], queryFn: ({ signal }) => apiFetch<Home>('/v1/catalog/home', { withLang: true, signal }) });
 }
+
+export type Suggest = ResponseOf<'/v1/search/suggest', 'get'>;
+
+export function useSuggest(q: string) {
+  const { lang } = useI18n();
+  return useQuery({
+    queryKey: ['catalog', 'suggest', lang, q],
+    queryFn: ({ signal }) => apiFetch<Suggest>('/v1/search/suggest', { query: { q }, withLang: true, signal }),
+    enabled: q.length >= 2,
+    placeholderData: keepPreviousData,
+  });
+}

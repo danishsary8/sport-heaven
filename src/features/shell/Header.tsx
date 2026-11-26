@@ -6,6 +6,7 @@ import { useI18n } from '../../lib/i18n';
 import { cx } from '../../ui';
 import { useBagCount } from '../cart/api';
 import { useMenu } from '../catalog/api';
+import { SearchOverlay } from '../catalog/search/SearchOverlay';
 import { LangSwitch } from './LangSwitch';
 import { MobileMenu } from './MobileMenu';
 import { Wordmark } from './Wordmark';
@@ -18,6 +19,7 @@ export function Header() {
   const menu = useMenu();
   const count = useBagCount();
   const [open, setOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -62,9 +64,17 @@ export function Header() {
           <div className="mr-2 hidden lg:block">
             <LangSwitch />
           </div>
-          <Link to="/search" className={iconButton} aria-label={t('nav.search')}>
+          <button
+            type="button"
+            className={iconButton}
+            aria-label={t('nav.search')}
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey) return void window.open('/search', '_blank');
+              setSearchOpen(true);
+            }}
+          >
             <Search className="size-[22px]" aria-hidden />
-          </Link>
+          </button>
           <Link to={status === 'member' ? '/account' : '/sign-in'} className={iconButton} aria-label={status === 'member' ? t('nav.account') : t('nav.signIn')}>
             <User className="size-[22px]" aria-hidden />
           </Link>
@@ -79,6 +89,7 @@ export function Header() {
         </div>
       </div>
       <MobileMenu open={open} onClose={() => setOpen(false)} />
+      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
   );
 }
