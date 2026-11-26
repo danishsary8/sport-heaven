@@ -23,3 +23,4 @@ Plan: docs/superpowers/plans/2026-11-26-fe2-5-rebuild.md. Base: 38aa126 (FE1 tas
 | E4 products | done | c43500c | 5 tests + client text bodies test; CSV preview then apply |
 | E5 promotions, delivery, settings | done | f516619 | 3 tests |
 | E6 users, questions, returns | done | f601d0d | 6 tests in people/adminPeople.test.tsx |
+| E7 health + logs | done | 91d5aac | 3 tests; health live against backend; FE5 build complete, review next |
