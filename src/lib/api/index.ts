@@ -3,3 +3,4 @@ export { apiFetch, buildUrl, configureApi } from './client';
 export type { ClientConfig, FetchOptions } from './client';
 export type { components, paths } from './types.gen';
 export type Schemas = import('./types.gen').components['schemas'];
+export type { BodyOf, ResponseOf } from './schema';
