@@ -4,6 +4,10 @@ import type { Dict } from './dict.en';
 export const km: Dict = {
   'brand.name': 'Sport Castle',
   'nav.menu': 'ម៉ឺនុយ',
+  'nav.home': 'ទំព័រដើម Sport Castle',
+  'nav.main': 'មាតិកាចម្បង',
+  'nav.categories': 'ទិញតាមប្រភេទ',
+  'nav.track': 'តាមដានការបញ្ជាទិញ',
   'nav.close': 'បិទ',
   'nav.search': 'ស្វែងរក',
   'nav.account': 'គណនី',

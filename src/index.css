@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: "Barlow Condensed", "Plus Jakarta Sans", ui-sans-serif, sans-serif;
+  --font-sans: "Plus Jakarta Sans", "Noto Sans Khmer", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: "Barlow Condensed", "Noto Sans Khmer", "Plus Jakarta Sans", ui-sans-serif, sans-serif;
   --font-khmer: "Noto Sans Khmer", "Plus Jakarta Sans", ui-sans-serif, sans-serif;
 
   /* Sport Castle palette */
@@ -32,6 +32,12 @@
   :root[lang="km"] body {
     font-family: var(--font-khmer);
     line-height: 1.7;
+  }
+
+  /* Barlow has no Khmer glyphs; the stack falls back to Noto Sans Khmer per character. Khmer stacks need room. */
+  :root[lang="km"] .font-display {
+    letter-spacing: 0;
+    line-height: 1.35;
   }
 
   body {

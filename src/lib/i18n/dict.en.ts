@@ -2,6 +2,10 @@
 export const en = {
   'brand.name': 'Sport Castle',
   'nav.menu': 'Menu',
+  'nav.home': 'Sport Castle home',
+  'nav.main': 'Main',
+  'nav.categories': 'Shop by category',
+  'nav.track': 'Track an order',
   'nav.close': 'Close',
   'nav.search': 'Search',
   'nav.account': 'Account',
