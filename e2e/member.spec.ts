@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { approvePayment, latestTranId, nav, signIn, signInAs, testPhone } from './helpers';
+import { approvePayment, latestTranId, nav, signInAs, testPhone } from './helpers';
 
 test('a member gets their guest bag, orders to a saved address and returns an item', async ({ page, browser, request }) => {
   const phone = testPhone();

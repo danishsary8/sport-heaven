@@ -8,7 +8,7 @@ export function StoreLayout() {
   return (
     <div className="flex min-h-dvh flex-col">
       <Header />
-      <main id="main" className="flex-1">
+      <main id="main" className="min-h-dvh flex-1">
         <Suspense fallback={<PageFallback />}>
           <Outlet />
         </Suspense>

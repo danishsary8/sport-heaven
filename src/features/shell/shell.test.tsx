@@ -34,6 +34,12 @@ beforeEach(() => {
 });
 
 describe('app shell', () => {
+  it('keeps the footer below the first screen while a page loads, so it does not jump', async () => {
+    renderRoutes(routes, '/');
+    // jsdom has no layout: the guard is the full-viewport minimum on main (Lighthouse found a 0.24 shift without it).
+    expect(await screen.findByRole('main')).toHaveClass('min-h-dvh');
+  });
+
   it('shows the categories from the menu and the bag count', async () => {
     renderRoutes(routes, '/');
     const nav = await screen.findByRole('navigation', { name: 'Main' });

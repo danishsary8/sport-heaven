@@ -18,3 +18,6 @@ Task 3: Ruling: helpers navigate in-app after sign-in (nav()) — the test sign-
 Task 5: Ruling: sitemap/robots default to sportcastle.com.kh (the domain in the old files) — owner sets SITE_URL — a wrong domain until the owner confirms (OWNER-TODO)
 | 6 CI | done | 5dd66b5 | checks + e2e (Postgres 16 service, backend checked out at the same branch); YAML parsed |
 Task 6: Ruling: backend checkout uses secrets.BACKEND_REPO_TOKEN, falling back to the workflow token — the backend repo is separate and may be private — e2e job fails at checkout until the owner adds the secret (OWNER-TODO)
+| 7 performance | done | (this commit) | Lighthouse mobile, 2 runs. Before: home 77 (CLS 0.24, footer pushed down by loading content), listing 89, product 89. After main gets min-h-dvh: home 89/100/100, listing 89/98/100, product 88-90/100/100 (perf/a11y/bp); CLS 0 on all three; LCP 3.5-3.7 s simulated |
+Task 7: Ruling: footer kept below the first screen by a full-viewport minimum on main, not by sizing every skeleton — one rule covers every lazy page — on short pages (404) the footer sits just below the fold
+Task 7: Ruling: no hero preload — the hero image comes from the API and home already passes 85; a guessed preload would waste bytes on every other page — none
