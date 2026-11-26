@@ -17,3 +17,5 @@ Plan: docs/superpowers/plans/2026-11-26-fe2-5-rebuild.md. Base: 38aa126 (FE1 tas
 | D1 sign-in | done | 85b314a | 5 tests; real sign-in against backend ok |
 | D2 account profile + addresses | done | 2e3281c | tests in account.test.tsx |
 | D3 orders, returns, wishlist, points | done | 2e3281c | 8 account tests; reasons sent in English (closes FE4 deferred minor); sign-out guard goes home (FE4 complete) |
+| E1 admin layout + overview | done | 408d338 | 4 tests; staff vs admin nav; overview overflow at 390 fixed |
+| E2 admin orders | done | 408d338 | 5 tests; pick list, status buttons from the machine, cancel with reason, cash, notes |
