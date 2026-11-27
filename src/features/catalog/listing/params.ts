@@ -1,7 +1,7 @@
 import type { ListingQuery } from '../api';
 
 /** Facets that can hold several values, sent as repeated params (brand=a&brand=b). */
-export const MULTI_KEYS = ['brand', 'size', 'color', 'league', 'surface', 'kitType', 'garmentType', 'tag'] as const;
+export const MULTI_KEYS = ['brand', 'size', 'color', 'league', 'surface', 'kitType', 'garmentType', 'season', 'continent', 'tag'] as const;
 const SINGLE_KEYS = ['category', 'priceMin', 'priceMax', 'discount', 'inStockOnly', 'sort', 'q'] as const;
 
 /** The API query a listing URL asks for (page excluded: paging is handled by the infinite query). */

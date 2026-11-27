@@ -15,7 +15,7 @@ export function usefulFacets(facets: Facet[]): Facet[] {
 }
 
 /** Sub-category filters that can name a page on their own (e.g. /c/jerseys?league=Premier League). */
-const TITLE_KEYS = ['league', 'surface', 'garmentType', 'kitType'] as const;
+const TITLE_KEYS = ['league', 'surface', 'garmentType', 'kitType', 'continent', 'season'] as const;
 
 /** The one sub-category value in the URL that should title the page, if exactly one is set. */
 export function subCategory(params: URLSearchParams): { key: (typeof TITLE_KEYS)[number]; value: string } | null {

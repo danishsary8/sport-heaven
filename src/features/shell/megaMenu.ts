@@ -1,7 +1,7 @@
 import type { DictKey, Lang } from '../../lib/i18n';
 import type { Facet, Menu } from '../catalog/api';
 export { inTopMenu } from './topMenu';
-import { SURFACE_LABELS, valueLabel } from '../catalog/filterLabels';
+import { seasonLabel, SURFACE_LABELS, valueLabel } from '../catalog/filterLabels';
 
 /**
  * What a category's menu shows, built from what the API says the category holds: its facets
@@ -49,6 +49,12 @@ const COPY = {
     'intro.balls': 'Official match balls, and low-bounce balls for futsal.',
     'intro.essentials': 'Gloves, shin guards and grip socks to finish your kit.',
     'intro.jackets': 'Walkout, training, rain and travel jackets, plus F1 paddock jackets.',
+    'continent.europe': 'Europe',
+    'continent.south-america': 'South America',
+    'continent.north-america': 'North & Central America',
+    'continent.africa': 'Africa',
+    'continent.asia': 'Asia',
+    'continent.oceania': 'Oceania',
     'jacket.anthem': 'Anthem / Walkout Jacket',
     'jacket.anthemNote': 'Worn lining up before kickoff',
     'jacket.drill': 'Drill Top / Half-Zip',
@@ -75,13 +81,6 @@ const COPY = {
     'league.ligue1': 'Paris Saint-Germain',
     'league.cpl': 'Phnom Penh Crown, Svay Rieng',
     'nation.all': 'All national teams',
-    'nation.cambodia': 'Cambodia',
-    'nation.argentina': 'Argentina',
-    'nation.brazil': 'Brazil',
-    'nation.france': 'France',
-    'nation.spain': 'Spain',
-    'nation.japan': 'Japan',
-    'nation.korea': 'South Korea',
     'f1.ferrari': 'Puma team kits and jacket',
     'f1.redbull': 'Castore team kits and jacket',
     'f1.mercedes': 'Adidas team kits and jacket',
@@ -108,6 +107,12 @@ const COPY = {
     'intro.balls': 'បាល់ប្រកួតផ្លូវការ និងបាល់លោតទាបសម្រាប់ហ្វុតសាល។',
     'intro.essentials': 'ស្រោមដៃ ការពារស្មង និងស្រោមជើងប្រឆាំងរអិល ដើម្បីបំពេញឈុតរបស់អ្នក។',
     'intro.jackets': 'អាវរងាដើរចូលទីលាន ហ្វឹកហាត់ ការពារភ្លៀង និងធ្វើដំណើរ ព្រមទាំងអាវរងា F1។',
+    'continent.europe': 'អឺរ៉ុប',
+    'continent.south-america': 'អាមេរិកខាងត្បូង',
+    'continent.north-america': 'អាមេរិកខាងជើង និងកណ្តាល',
+    'continent.africa': 'អាហ្វ្រិក',
+    'continent.asia': 'អាស៊ី',
+    'continent.oceania': 'អូសេអានី',
     'jacket.anthem': 'អាវរងា Anthem / ដើរចូលទីលាន',
     'jacket.anthemNote': 'ពាក់ពេលតម្រង់ជួរមុនការប្រកួត',
     'jacket.drill': 'អាវ Drill / រូបពាក់កណ្តាល',
@@ -134,13 +139,6 @@ const COPY = {
     'league.ligue1': 'Paris Saint-Germain',
     'league.cpl': 'ភ្នំពេញក្រោន ស្វាយរៀង',
     'nation.all': 'ក្រុមជម្រើសជាតិទាំងអស់',
-    'nation.cambodia': 'កម្ពុជា',
-    'nation.argentina': 'អាហ្សង់ទីន',
-    'nation.brazil': 'ប្រេស៊ីល',
-    'nation.france': 'បារាំង',
-    'nation.spain': 'អេស្ប៉ាញ',
-    'nation.japan': 'ជប៉ុន',
-    'nation.korea': 'កូរ៉េខាងត្បូង',
     'f1.ferrari': 'អាវក្រុម Puma និងអាវរងា',
     'f1.redbull': 'អាវក្រុម Castore និងអាវរងា',
     'f1.mercedes': 'អាវក្រុម Adidas និងអាវរងា',
@@ -168,7 +166,6 @@ const img = (name: string) => `/assets/catalog/${name}.jpg`;
 
 /** Club leagues, biggest first; any league not listed follows in the API's order. */
 const LEAGUE_ORDER = ['Premier League', 'La Liga', 'Serie A', 'Bundesliga', 'Ligue 1', 'Cambodian Premier League'];
-const KIT_ORDER = ['Home', 'Away', 'Third', 'Special Edition', 'Retro'];
 const byOrder = (list: string[]) => (a: { value: string }, b: { value: string }) => rank(list, a.value) - rank(list, b.value);
 const rank = (list: string[], v: string) => (list.indexOf(v) === -1 ? 99 : list.indexOf(v));
 
@@ -236,17 +233,6 @@ const JACKET_TYPES: Curated[] = [
 
 /** Boot lines players ask for by name. */
 const BOOT_FAMILIES = ['Mercurial', 'Phantom', 'Tiempo', 'Predator', 'F50', 'Copa', 'Puma Future', 'Morelia'];
-
-/** National teams, home first, then the biggest names. */
-const NATIONS: { label: CopyKey; q: string }[] = [
-  { label: 'nation.cambodia', q: 'Cambodia' },
-  { label: 'nation.argentina', q: 'Argentina' },
-  { label: 'nation.brazil', q: 'Brazil' },
-  { label: 'nation.france', q: 'France' },
-  { label: 'nation.spain', q: 'Spain' },
-  { label: 'nation.japan', q: 'Japan' },
-  { label: 'nation.korea', q: 'Korea' },
-];
 
 /** Curated collection links per category, by collection slug, with short menu names. */
 const COLLECTION_LINKS: Record<string, { slug: string; label: DictKey }[]> = {
@@ -316,18 +302,22 @@ export function buildMegaMenu(category: string, facets: Facet[], collections: Me
         count: o.count,
         image: LEAGUES[o.value]?.image,
       }));
+    // National teams by continent (the API works the continent out for every national-team kit).
     const national = options(facets, 'league').find((o) => o.value === 'International');
-    if (national) {
+    const continents = options(facets, 'continent').map((o) => ({
+      label: isCopyKey(`continent.${o.value}`) ? copy(`continent.${o.value}` as CopyKey) : o.label,
+      href: categoryHref(category, { continent: o.value }),
+      count: o.count,
+    }));
+    if (national || continents.length) {
       columns.push({
         title: 'mega.nations',
-        links: [
-          { label: copy('nation.all'), href: categoryHref(category, { league: 'International' }), count: national.count },
-          ...NATIONS.map((n) => ({ label: copy(n.label), href: categoryHref(category, { league: 'International', q: n.q }) })),
-        ],
+        links: [...(national ? [{ label: copy('nation.all'), href: categoryHref(category, { league: 'International' }), count: national.count }] : []), ...continents],
       });
     }
-    const kits = facetLinks('kitType', KIT_ORDER);
-    if (kits.length) columns.push({ title: 'mega.kit', links: kits });
+    // Seasons, newest first (the API sends them in that order, labelled "2026–2027").
+    const seasons = options(facets, 'season').map((o) => ({ label: seasonLabel(o.value), href: categoryHref(category, { season: o.value }), count: o.count }));
+    if (seasons.length) columns.push({ title: 'mega.season', links: seasons });
     if (curated.length) columns.push({ title: 'mega.collections', links: curated });
   } else if (category === 'boots') {
     tilesTitle = 'mega.surface';

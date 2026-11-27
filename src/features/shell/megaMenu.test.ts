@@ -9,21 +9,39 @@ const facet = (key: string, opts: [string, number][]) => ({ key, label: key, typ
 const collections = [{ slug: 'national-teams', name: 'x' }, { slug: 'retro-jerseys', name: 'x' }, { slug: 'f1-jackets', name: 'x' }] as Menu['collections'];
 
 describe('buildMegaMenu', () => {
-  it('shows club leagues as tiles biggest first (with their clubs), then national teams, kits, collections and brands', () => {
+  it('shows club leagues as tiles biggest first (with their clubs), then national teams by continent, seasons, collections and brands', () => {
     const menu = buildMegaMenu(
       'jerseys',
-      [facet('league', [['Serie A', 3], ['International', 19], ['Premier League', 7], ['La Liga', 9], ['Empty League', 0]]), facet('kitType', [['Away', 4], ['Home', 9]]), facet('brand', [['nike', 5]])],
+      [
+        facet('league', [['Serie A', 3], ['International', 19], ['Premier League', 7], ['La Liga', 9], ['Empty League', 0]]),
+        facet('continent', [['europe', 8], ['south-america', 6], ['asia', 5], ['africa', 0]]),
+        facet('season', [['2026/27', 41], ['2025/26', 1], ['2002', 1]]),
+        facet('brand', [['nike', 5]]),
+      ],
       collections,
       t,
     );
     expect(menu.tilesTitle).toBe('mega.leagues');
     expect(menu.tiles.map((l) => l.label)).toEqual(['Premier League', 'La Liga', 'Serie A']);
     expect(menu.tiles[0]).toMatchObject({ href: '/c/jerseys?league=Premier+League', count: 7, note: expect.stringContaining('Arsenal') });
-    expect(menu.columns.map((c) => c.title)).toEqual(['mega.nations', 'mega.kit', 'mega.collections', 'mega.brands']);
-    expect(menu.columns[0]!.links[0]).toEqual({ label: 'All national teams', href: '/c/jerseys?league=International', count: 19 });
-    expect(menu.columns[0]!.links[1]).toEqual({ label: 'Cambodia', href: '/c/jerseys?league=International&q=Cambodia' });
-    expect(menu.columns[1]!.links.map((l) => l.label)).toEqual(['Home', 'Away']);
+    expect(menu.columns.map((c) => c.title)).toEqual(['mega.nations', 'mega.season', 'mega.collections', 'mega.brands']);
+    expect(menu.columns[0]!.links).toEqual([
+      { label: 'All national teams', href: '/c/jerseys?league=International', count: 19 },
+      { label: 'Europe', href: '/c/jerseys?continent=europe', count: 8 },
+      { label: 'South America', href: '/c/jerseys?continent=south-america', count: 6 },
+      { label: 'Asia', href: '/c/jerseys?continent=asia', count: 5 },
+    ]);
+    expect(menu.columns[1]!.links).toEqual([
+      { label: '2026–2027', href: '/c/jerseys?season=2026%2F27', count: 41 },
+      { label: '2025–2026', href: '/c/jerseys?season=2025%2F26', count: 1 },
+      { label: '2002', href: '/c/jerseys?season=2002', count: 1 },
+    ]);
     expect(menu.columns[2]!.links).toEqual([{ label: 'Retro jerseys', href: '/collections/retro-jerseys' }]);
+  });
+
+  it('names continents in Khmer too', () => {
+    const menu = buildMegaMenu('jerseys', [facet('league', [['International', 3]]), facet('continent', [['asia', 3]])], [], t, 'km');
+    expect(menu.columns[0]!.links[1]!.label).toBe('អាស៊ី');
   });
 
   it('names boot surfaces for shoppers, says what pitch each is for, and keeps pitch order', () => {

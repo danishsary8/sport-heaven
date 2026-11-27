@@ -24,6 +24,8 @@ export interface paths {
                     surface?: string | string[];
                     kitType?: string | string[];
                     garmentType?: string | string[];
+                    season?: string | string[];
+                    continent?: string | string[];
                     tag?: string | string[];
                     priceMin?: number;
                     priceMax?: number;
@@ -125,6 +127,8 @@ export interface paths {
                     surface?: string | string[];
                     kitType?: string | string[];
                     garmentType?: string | string[];
+                    season?: string | string[];
+                    continent?: string | string[];
                     tag?: string | string[];
                     priceMin?: number;
                     priceMax?: number;
@@ -648,6 +652,8 @@ export interface paths {
                     surface?: string | string[];
                     kitType?: string | string[];
                     garmentType?: string | string[];
+                    season?: string | string[];
+                    continent?: string | string[];
                     tag?: string | string[];
                     priceMin?: number;
                     priceMax?: number;
