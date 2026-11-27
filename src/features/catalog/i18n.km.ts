@@ -14,6 +14,7 @@ export const catalogKm: Record<keyof typeof catalogEn, string> = {
   'listing.showFewer': 'បង្ហាញតិចជាងនេះ',
   'listing.sort': 'តម្រៀប',
   'listing.sort.popular': 'ពេញនិយម',
+  'listing.sort.best_selling': 'លក់ដាច់ជាងគេ',
   'listing.sort.new': 'ថ្មីបំផុត',
   'listing.sort.price_asc': 'តម្លៃ ពីទាបទៅខ្ពស់',
   'listing.sort.price_desc': 'តម្លៃ ពីខ្ពស់ទៅទាប',

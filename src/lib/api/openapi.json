@@ -310,6 +310,7 @@
               "type": "string",
               "enum": [
                 "popular",
+                "best_selling",
                 "new",
                 "price_asc",
                 "price_desc",
@@ -873,6 +874,7 @@
               "type": "string",
               "enum": [
                 "popular",
+                "best_selling",
                 "new",
                 "price_asc",
                 "price_desc",
@@ -2640,6 +2642,7 @@
               "type": "string",
               "enum": [
                 "popular",
+                "best_selling",
                 "new",
                 "price_asc",
                 "price_desc",

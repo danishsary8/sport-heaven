@@ -10,7 +10,7 @@ import { FilterPanel } from './FilterPanel';
 import { usefulFacets } from './facets';
 import { clearFilters, hasFilters, queryFromSearch, setPrice, toggleValue } from './params';
 
-const SORTS = ['popular', 'new', 'price_asc', 'price_desc', 'discount'] as const;
+const SORTS = ['popular', 'best_selling', 'new', 'price_asc', 'price_desc', 'discount'] as const;
 
 export function GridSkeleton({ n = 8 }: { n?: number }) {
   return (

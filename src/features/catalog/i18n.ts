@@ -12,6 +12,7 @@ export const catalogEn = {
   'listing.showFewer': 'Show fewer',
   'listing.sort': 'Sort',
   'listing.sort.popular': 'Popular',
+  'listing.sort.best_selling': 'Best selling',
   'listing.sort.new': 'Newest',
   'listing.sort.price_asc': 'Price, low to high',
   'listing.sort.price_desc': 'Price, high to low',

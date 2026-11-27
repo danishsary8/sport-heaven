@@ -32,7 +32,7 @@ export interface paths {
                     discount?: "1" | "2" | "3";
                     inStockOnly?: "0" | "1" | "true" | "false";
                     q?: string;
-                    sort?: "popular" | "new" | "price_asc" | "price_desc" | "discount";
+                    sort?: "popular" | "best_selling" | "new" | "price_asc" | "price_desc" | "discount";
                     page?: number;
                     pageSize?: number;
                     lang?: "en" | "km";
@@ -135,7 +135,7 @@ export interface paths {
                     discount?: "1" | "2" | "3";
                     inStockOnly?: "0" | "1" | "true" | "false";
                     q?: string;
-                    sort?: "popular" | "new" | "price_asc" | "price_desc" | "discount";
+                    sort?: "popular" | "best_selling" | "new" | "price_asc" | "price_desc" | "discount";
                     page?: number;
                     pageSize?: number;
                     lang?: "en" | "km";
@@ -660,7 +660,7 @@ export interface paths {
                     discount?: "1" | "2" | "3";
                     inStockOnly?: "0" | "1" | "true" | "false";
                     q?: string;
-                    sort?: "popular" | "new" | "price_asc" | "price_desc" | "discount";
+                    sort?: "popular" | "best_selling" | "new" | "price_asc" | "price_desc" | "discount";
                     page?: number;
                     pageSize?: number;
                     lang?: "en" | "km";
