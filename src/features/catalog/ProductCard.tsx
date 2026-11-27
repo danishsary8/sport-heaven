@@ -1,7 +1,13 @@
+import { Plus, ShoppingBag } from 'lucide-react';
+import { lazy, Suspense, useState } from 'react';
 import { Link } from 'react-router';
 import { useI18n } from '../../lib/i18n';
 import { Picture, Price, cx } from '../../ui';
 import type { ProductSummary } from './api';
+import { WishlistButton } from './product/WishlistButton';
+
+// The size picker loads the first time someone opens it, so the cards stay light on the home page.
+const QuickAddPanel = lazy(() => import('./QuickAdd').then((m) => ({ default: m.QuickAddPanel })));
 
 export const CARD_SIZES = '(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw';
 
@@ -11,9 +17,11 @@ export function ProductCard({ product, priority = false, className, hash }: { pr
   const { t } = useI18n();
   const sale = product.discountPct ? t('card.sale', { n: product.discountPct }) : null;
   const tag = sale ?? (product.badges.includes('new') ? t('badge.new') : null);
+  const [quick, setQuick] = useState(false);
+  const canAdd = product.availability !== 'out';
   return (
     <article className={cx('group relative flex flex-col', className)}>
-      <div className="stage relative aspect-[3/4] overflow-hidden rounded-[6px]">
+      <div className="stage relative aspect-[3/4] overflow-hidden rounded-[10px]">
         <Picture
           src={product.imageUrl}
           alt=""
@@ -50,9 +58,39 @@ export function ProductCard({ product, priority = false, className, hash }: { pr
         {product.availability === 'out' && (
           <span className="absolute inset-x-2 bottom-2 rounded-[4px] bg-paper/95 px-2 py-1.5 text-center text-xs font-semibold text-graphite">{t('availability.out')}</span>
         )}
+        {/* Above the card's full-size link: wishlist, and quick add (hover on desktop, a bag button on phones). */}
+        <div className="absolute right-2 top-2 z-10">
+          <WishlistButton slug={product.slug} name={product.name} variant="card" />
+        </div>
+        {canAdd && !quick && (
+          <>
+            <button
+              type="button"
+              onClick={() => setQuick(true)}
+              className="absolute inset-x-2 bottom-2 z-10 hidden h-11 translate-y-2 items-center justify-center gap-2 rounded-[6px] bg-obsidian/90 text-[15px] font-semibold text-paper opacity-0 backdrop-blur transition-[opacity,transform] duration-300 ease-out hover:bg-obsidian focus-visible:translate-y-0 focus-visible:opacity-100 group-hover:translate-y-0 group-hover:opacity-100 [@media(hover:hover)]:flex"
+            >
+              <Plus className="size-4" aria-hidden />
+              {t('card.quickAdd')}
+              <span className="sr-only">: {product.name}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setQuick(true)}
+              aria-label={t('card.quickAddName', { name: product.name })}
+              className="absolute bottom-2 right-2 z-10 grid size-10 place-items-center rounded-full bg-paper/95 text-obsidian shadow-[0_4px_14px_-6px_rgb(14_17_19/0.5)] [@media(hover:hover)]:hidden"
+            >
+              <ShoppingBag className="size-[18px]" aria-hidden />
+            </button>
+          </>
+        )}
+        {quick && (
+          <Suspense fallback={null}>
+            <QuickAddPanel slug={product.slug} name={product.name} onClose={() => setQuick(false)} />
+          </Suspense>
+        )}
       </div>
       <div className="mt-3 flex flex-col gap-0.5">
-        <p className="text-[13px] leading-tight text-graphite">{product.brand.name}</p>
+        <p className="text-[13px] font-medium leading-tight text-graphite">{product.brand.name}</p>
         <h3 className="line-clamp-2 text-[15px] font-medium leading-snug">
           <Link to={`/p/${product.slug}${hash ? `#${hash}` : ''}`} className="decoration-obsidian/30 underline-offset-[3px] after:absolute after:inset-0 group-hover:underline">
             {product.name}

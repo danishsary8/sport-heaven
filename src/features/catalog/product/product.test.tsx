@@ -127,6 +127,19 @@ describe('product page', () => {
     expect(asked).toEqual([{ authorName: 'Sokha', question: 'Is there a wide fit?' }]);
   });
 
+  it('adds a size from a product card with quick add, without opening the product', async () => {
+    server.use(http.get(`${API}/v1/catalog/products/product-9`, () => HttpResponse.json({ product: { ...DETAIL.product, slug: 'product-9', name: 'Predator' } })));
+    renderRoutes(routes, '/p/f50');
+    const related = await screen.findByRole('region', { name: 'You may also like' });
+    fireEvent.click(within(related).getByRole('button', { name: 'Quick add Predator' }));
+    const picker = await screen.findByRole('dialog', { name: 'Choose a size for Predator' });
+    expect(await within(picker).findByRole('button', { name: /EU 42/ })).toBeDisabled();
+    fireEvent.click(within(picker).getByRole('button', { name: 'Add size EU 40 to bag' }));
+    await waitFor(() => expect(added).toEqual([{ variantId: '11111111-1111-4111-8111-111111111111', qty: 1 }]));
+    expect(await screen.findByText('Added to bag')).toBeTruthy();
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Choose a size for Predator' })).toBeNull());
+  });
+
   it('says when a product does not exist', async () => {
     renderRoutes(routes, '/p/nope');
     expect(await screen.findByRole('heading', { name: "This product isn't available" })).toBeTruthy();
