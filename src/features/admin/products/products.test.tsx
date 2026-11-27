@@ -194,13 +194,33 @@ describe('admin products', () => {
   it('previews a price import before applying it', async () => {
     renderRoutes(routes, '/admin/products', { signedIn: true });
     const file = new File(['sku,price_usd\nPRED-EU39,240.00'], 'prices.csv', { type: 'text/csv' });
-    fireEvent.change(await screen.findByLabelText('Import prices from a CSV file'), { target: { files: [file] } });
+    fireEvent.change(await screen.findByLabelText('Update prices from a CSV file'), { target: { files: [file] } });
     const preview = await screen.findByRole('region', { name: 'Import preview' });
     expect(within(preview).getByText('PRED-EU39')).toBeTruthy();
     expect(calls[0]).toMatchObject({ method: 'POST', url: '/v1/admin/products/import?apply=false', body: 'sku,price_usd\nPRED-EU39,240.00' });
     fireEvent.click(within(preview).getByRole('button', { name: 'Apply 1 change' }));
     await waitFor(() => expect(calls[1]).toMatchObject({ url: '/v1/admin/products/import?apply=true' }));
     expect(await screen.findByText('Prices updated')).toBeTruthy();
+  });
+
+  it('checks a new-product spreadsheet and creates nothing while a row is wrong', async () => {
+    renderRoutes(routes, '/admin/products', { signedIn: true });
+    const csv = 'name,brand,category,colour,sizes,price\nCopa,Fake,boots,White,EU 40,120';
+    fireEvent.change(await screen.findByLabelText('New products spreadsheet'), { target: { files: [new File([csv], 'new.csv', { type: 'text/csv' })] } });
+    const check = await screen.findByRole('region', { name: 'New products check' });
+    expect(await within(check).findByText('Line 2: unknown brand "Fake"')).toBeTruthy();
+    expect(within(check).getByRole('button', { name: /Create/ })).toBeDisabled();
+  });
+
+  it('creates every product in a good spreadsheet as a draft', async () => {
+    renderRoutes(routes, '/admin/products', { signedIn: true });
+    const csv = 'name,brand,category,colour,sizes,price\nCopa Pure,adidas,boots,White,EU 40|EU 41,120\nCopa Lite,Adidas,Boots,Black,EU 42,90';
+    fireEvent.change(await screen.findByLabelText('New products spreadsheet'), { target: { files: [new File([csv], 'new.csv', { type: 'text/csv' })] } });
+    const check = await screen.findByRole('region', { name: 'New products check' });
+    fireEvent.click(await within(check).findByRole('button', { name: 'Create 2 products as drafts' }));
+    await waitFor(() => expect(calls.filter((c) => c.method === 'POST' && c.url === '/v1/admin/products')).toHaveLength(2));
+    expect(calls[0]!.body).toMatchObject({ slug: 'copa-pure', brandSlug: 'adidas', status: 'draft', variants: [{ size: 'EU 40', priceCents: 12000 }, { size: 'EU 41', priceCents: 12000 }] });
+    expect(await within(check).findByText('2 created')).toBeTruthy();
   });
 
   it('downloads the price list', async () => {

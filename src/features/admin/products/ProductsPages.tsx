@@ -7,6 +7,7 @@ import { AdminOnly } from '../AdminLayout';
 import { patch, post, put, useAdminMutation, useAdminQuery } from '../api';
 import type { AdminProduct, AdminProductListRow, AdminVariant, Brand, Category, CsvImportResult } from '../types';
 import { ProductsTable } from './ProductsTable';
+import { ProductImport } from './ProductImport';
 import { PhotoManager, tilesOf, type PhotoTile } from './PhotoManager';
 import { ChevronDown, Plus, Search } from 'lucide-react';
 import { AdminPage, Pager, human } from '../ui';
@@ -84,8 +85,11 @@ function ProductsList() {
           Import from a spreadsheet
           <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden />
         </summary>
-        <div className="mt-4 flex flex-col gap-4">
-          <CsvImport />
+        <div className="mt-4 flex flex-col gap-5 divide-y divide-dashed divide-[#C9C5BB]">
+          <ProductImport />
+          <div className="pt-5">
+            <CsvImport />
+          </div>
         </div>
       </details>
 
@@ -166,7 +170,7 @@ function CsvImport() {
   return (
     <div className="rounded-[8px] border border-dashed border-[#C9C5BB] p-3">
       <label className="flex flex-wrap items-center gap-3 text-[15px]">
-        <span className="font-semibold">Import prices from a CSV file</span>
+        <span className="font-semibold">Update prices from a CSV file</span>
         <input
           ref={input}
           type="file"
