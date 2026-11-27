@@ -2,11 +2,13 @@ import { useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { apiFetch, isApiError } from '../../../lib/api';
 import { formatUsd } from '../../../lib/i18n';
-import { Button, EmptyState, ErrorState, Field, QueryView, Select, Skeleton, TextArea, useToast } from '../../../ui';
+import { Button, EmptyState, ErrorState, Field, QueryView, Select, Skeleton, TextArea, cx, useToast } from '../../../ui';
 import { AdminOnly } from '../AdminLayout';
 import { patch, post, put, useAdminMutation, useAdminQuery } from '../api';
-import type { AdminProduct, AdminProductRow, AdminVariant, Brand, Category, CsvImportResult } from '../types';
-import { AdminPage, Pager, Pill, human } from '../ui';
+import type { AdminProduct, AdminProductListRow, AdminVariant, Brand, Category, CsvImportResult } from '../types';
+import { ProductsTable } from './ProductsTable';
+import { ChevronDown, Plus, Search } from 'lucide-react';
+import { AdminPage, Pager, human } from '../ui';
 
 /** "120" / "120.5" → 12050; null when not a price. */
 export function toCents(v: string): number | null {
@@ -24,12 +26,20 @@ export function ProductsPage() {
   );
 }
 
+const STATUS_TABS = [
+  ['', 'All'],
+  ['active', 'Active'],
+  ['draft', 'Draft'],
+  ['archived', 'Archived'],
+] as const;
+
 function ProductsList() {
   const toast = useToast();
   const [params, setParams] = useSearchParams();
   const [q, setQ] = useState(params.get('q') ?? '');
-  const query = { q: params.get('q') ?? undefined, status: params.get('status') ?? undefined, page: Number(params.get('page') ?? 1), pageSize: 50 };
-  const list = useAdminQuery<{ products: AdminProductRow[]; total: number; page: number; pageSize: number }>(['products'], '/v1/admin/products', query);
+  const categories = useAdminQuery<{ categories: Category[] }>(['categories'], '/v1/admin/categories');
+  const query = { q: params.get('q') ?? undefined, status: params.get('status') ?? undefined, category: params.get('category') ?? undefined, page: Number(params.get('page') ?? 1), pageSize: 50 };
+  const list = useAdminQuery<{ products: AdminProductListRow[]; total: number; page: number; pageSize: number }>(['products'], '/v1/admin/products', query, { keepPrevious: true });
   const set = (k: string, v: string) => {
     const n = new URLSearchParams(params);
     n.delete('page');
@@ -44,7 +54,7 @@ function ProductsList() {
       const url = URL.createObjectURL(new Blob([text], { type: 'text/csv' }));
       const a = document.createElement('a');
       a.href = url;
-      a.download = `sport-castle-prices-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.download = `sport-heaven-prices-${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (e) {
@@ -55,57 +65,84 @@ function ProductsList() {
   return (
     <AdminPage
       title="Products"
+      description="Tick products to change many at once. Click one to edit its details, sizes and photos."
       actions={
         <div className="flex flex-wrap gap-2">
           <Button variant="secondary" onClick={() => void exportCsv()}>
             Export prices (CSV)
           </Button>
-          <Link to="/admin/products/new" className="inline-flex h-11 items-center rounded-[6px] bg-obsidian px-5 font-semibold text-paper">
+          <Link to="/admin/products/new" className="inline-flex h-11 items-center gap-2 rounded-[8px] bg-obsidian px-5 font-semibold text-paper transition-colors hover:bg-[#2A2E31]">
+            <Plus className="size-4" aria-hidden />
             New product
           </Link>
         </div>
       }
     >
-      <CsvImport />
-      <div className="flex flex-wrap items-end gap-3">
+      <details className="group rounded-[14px] border border-dashed border-[#C9C5BB] p-4 [&_summary::-webkit-details-marker]:hidden">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-semibold">
+          Import from a spreadsheet
+          <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden />
+        </summary>
+        <div className="mt-4 flex flex-col gap-4">
+          <CsvImport />
+        </div>
+      </details>
+
+      <div className="flex flex-wrap items-center gap-3">
         <form
           role="search"
-          className="flex min-w-[220px] flex-1 gap-2"
+          className="relative min-w-[240px] flex-1"
           onSubmit={(e) => {
             e.preventDefault();
             set('q', q.trim());
           }}
         >
-          <Field label="Search products" value={q} onChange={(e) => setQ(e.target.value)} className="flex-1" />
-          <Button type="submit" variant="primary" className="self-end">
-            Search
-          </Button>
+          <label htmlFor="product-search" className="sr-only">
+            Search products
+          </label>
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-graphite" aria-hidden />
+          <input
+            id="product-search"
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search by name or web address, then press Enter"
+            className="h-11 w-full rounded-full border border-[#C9C5BB] bg-paper pl-10 pr-4 text-[15px] transition-colors focus:border-obsidian"
+          />
         </form>
-        <Select label="Status" value={params.get('status') ?? ''} onChange={(e) => set('status', e.target.value)}>
-          <option value="">All</option>
-          <option value="active">Active</option>
-          <option value="draft">Draft</option>
-          <option value="archived">Archived</option>
-        </Select>
+        <div role="radiogroup" aria-label="Status" className="inline-flex rounded-full bg-stone p-1">
+          {STATUS_TABS.map(([value, label]) => {
+            const on = (params.get('status') ?? '') === value;
+            return (
+              <label key={value} className={cx('cursor-pointer rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-obsidian', on ? 'bg-paper shadow-[0_1px_3px_rgb(14_17_19/0.15)]' : 'text-graphite hover:text-obsidian')}>
+                <input type="radio" name="status" className="sr-only" checked={on} onChange={() => set('status', value)} />
+                {label}
+              </label>
+            );
+          })}
+        </div>
+        <label className="sr-only" htmlFor="product-category">
+          Category
+        </label>
+        <select id="product-category" value={params.get('category') ?? ''} onChange={(e) => set('category', e.target.value)} className="h-11 rounded-full border border-[#C9C5BB] bg-paper px-4 text-[15px]">
+          <option value="">All categories</option>
+          {(categories.data?.categories ?? []).map((c) => (
+            <option key={c.id} value={c.slug}>
+              {c.nameI18n.en}
+            </option>
+          ))}
+        </select>
       </div>
-      <QueryView query={list} skeleton={<Skeleton className="h-64 w-full" />} isEmpty={(d) => d.products.length === 0} empty={<EmptyState title="No products match" />}>
+
+      <QueryView query={list} skeleton={<Skeleton className="h-80 w-full rounded-[14px]" />} isEmpty={(d) => d.products.length === 0} empty={<EmptyState title="No products match" body="Clear the search or pick another status." />}>
         {(d) => (
-          <>
-            <ul className="divide-y divide-stone rounded-[8px] border border-stone">
-              {d.products.map((p) => (
-                <li key={p.id}>
-                  <Link to={`/admin/products/${p.id}`} className="flex items-center justify-between gap-3 p-3 hover:bg-chalk">
-                    <span className="min-w-0">
-                      <span className="block font-medium">{p.nameI18n.en}</span>
-                      <span className="block truncate text-sm text-graphite">{p.slug}</span>
-                    </span>
-                    <Pill tone={p.status === 'active' ? 'good' : p.status === 'draft' ? 'warn' : 'neutral'}>{human(p.status)}</Pill>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+          <div className={cx('flex flex-col gap-3 transition-opacity', list.isPlaceholderData && 'opacity-60')}>
+            <p className="text-sm text-graphite">
+              {d.total} {d.total === 1 ? 'product' : 'products'}
+            </p>
+            <ProductsTable products={d.products} />
             <Pager page={d.page} pageSize={d.pageSize} total={d.total} onPage={(p) => set('page', String(p))} />
-          </>
+          </div>
         )}
       </QueryView>
     </AdminPage>

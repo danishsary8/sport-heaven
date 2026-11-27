@@ -241,3 +241,16 @@ export interface Sales {
   byCategory: { slug: string; name: string; revenueCents: number }[];
   branch: string | null;
 }
+
+/** A row of the admin product list: the product plus what a manager needs at a glance. */
+export interface AdminProductListRow extends AdminProductRow {
+  brandName?: string;
+  categorySlug?: string;
+  imageUrl?: string | null;
+  hoverImageUrl?: string | null;
+  imageCount?: number;
+  priceMinCents?: number | null;
+  priceMaxCents?: number | null;
+  variantCount?: number;
+  onHand?: number;
+}

@@ -11,7 +11,10 @@ setupMsw();
 
 const PID = 'f408daf5-756f-4457-8ebf-dd5e5e6eec7c';
 const VID = '60981c81-5e86-4baf-84e2-cddd1b9083db';
+const LIST = { brandName: 'Adidas', categorySlug: 'boots', imageUrl: '/assets/catalog/pred.jpg', hoverImageUrl: null, imageCount: 1, priceMinCents: 25500, priceMaxCents: 25500, variantCount: 1, onHand: 7 };
 const ROW = { id: PID, slug: 'predator', brandId: 'b1', categoryId: 'c1', nameI18n: { en: 'Predator Elite FG' }, status: 'active', isCustomizable: false, updatedAt: '2026-11-26T08:00:00Z' };
+const PID2 = 'a1b2c3d4-0000-4000-8000-000000000002';
+const ROW2 = { ...ROW, id: PID2, slug: 'copa', nameI18n: { en: 'Copa Pure FG' }, status: 'draft', ...LIST, imageUrl: '/assets/catalog/copa.jpg', hoverImageUrl: '/assets/catalog/copa-2.jpg', imageCount: 2, priceMinCents: 18000, priceMaxCents: 21000, variantCount: 8, onHand: 0 };
 const PRODUCT = {
   ...ROW,
   shortNameI18n: null,
@@ -43,7 +46,7 @@ beforeEach(() => {
   configureApi({ baseUrl: API });
   server.use(
     ...adminBase('admin'),
-    http.get(`${API}/v1/admin/products`, () => HttpResponse.json({ products: [ROW], total: 1, page: 1, pageSize: 20 })),
+    http.get(`${API}/v1/admin/products`, () => HttpResponse.json({ products: [{ ...ROW, ...LIST }, ROW2], total: 2, page: 1, pageSize: 50 })),
     http.get(`${API}/v1/admin/products/export.csv`, () => new HttpResponse('sku,price_usd\nPRED-EU39,255.00', { headers: { 'content-type': 'text/csv' } })),
     http.get(`${API}/v1/admin/products/:id`, () => HttpResponse.json({ product: PRODUCT })),
     http.get(`${API}/v1/admin/brands`, () => HttpResponse.json({ brands: [{ id: 'b1', slug: 'adidas', name: 'Adidas' }] })),
@@ -63,6 +66,36 @@ describe('admin products', () => {
   it('lists products with links to edit them', async () => {
     renderRoutes(routes, '/admin/products', { signedIn: true });
     expect(await screen.findByRole('link', { name: /Predator Elite FG/ }, { timeout: 4000 })).toHaveAttribute('href', `/admin/products/${PID}`);
+  });
+
+  it('shows each product with its price range, stock and a warning when it lacks a second photo', async () => {
+    renderRoutes(routes, '/admin/products', { signedIn: true });
+    const pred = await screen.findByRole('row', { name: /Predator Elite FG/ });
+    expect(pred).toHaveTextContent('$255.00');
+    expect(pred).toHaveTextContent('7 in stock');
+    expect(within(pred).getByText('Needs a 2nd photo')).toBeTruthy();
+    const copa = screen.getByRole('row', { name: /Copa Pure FG/ });
+    expect(copa).toHaveTextContent('$180.00 – $210.00');
+    expect(copa).toHaveTextContent('Out of stock');
+    expect(within(copa).queryByText('Needs a 2nd photo')).toBeNull();
+  });
+
+  it('changes the status of the selected products in one go', async () => {
+    renderRoutes(routes, '/admin/products', { signedIn: true });
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Select Predator Elite FG' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select Copa Pure FG' }));
+    const bar = screen.getByRole('region', { name: '2 selected' });
+    fireEvent.click(within(bar).getByRole('button', { name: 'Make draft' }));
+    await waitFor(() => expect(calls.filter((c) => c.method === 'PATCH')).toHaveLength(2));
+    expect(calls).toContainEqual({ method: 'PATCH', url: `/v1/admin/products/${PID}`, body: { status: 'draft' } });
+    expect(calls).toContainEqual({ method: 'PATCH', url: `/v1/admin/products/${PID2}`, body: { status: 'draft' } });
+    expect(await screen.findByText('2 products set to draft')).toBeTruthy();
+  });
+
+  it('changes one product status right from the list', async () => {
+    renderRoutes(routes, '/admin/products', { signedIn: true });
+    fireEvent.change(await screen.findByRole('combobox', { name: 'Status of Copa Pure FG' }), { target: { value: 'active' } });
+    await waitFor(() => expect(calls).toEqual([{ method: 'PATCH', url: `/v1/admin/products/${PID2}`, body: { status: 'active' } }]));
   });
 
   it('saves product fields and a size price', async () => {
