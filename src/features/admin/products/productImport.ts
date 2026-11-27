@@ -63,6 +63,7 @@ const slugify = (s: string) =>
   s
     .toLowerCase()
     .normalize('NFKD')
+    .replace(/\p{M}+/gu, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
@@ -105,24 +106,33 @@ export function checkImport(text: string, brands: Brand[], categories: Category[
     const category = findCategory(at(r, 'category'));
     const slug = slugify(name);
 
+    const description = at(r, 'description');
     if (!name) problems.push('name is empty');
+    else if (name.length > 500) problems.push('name is longer than 500 characters');
+    else if (slug.length < 2) problems.push('the name needs Latin letters or numbers for the web address');
     if (!brand) problems.push(at(r, 'brand') ? `unknown brand "${at(r, 'brand')}"` : 'brand is empty');
     if (!category) problems.push(at(r, 'category') ? `unknown category "${at(r, 'category')}"` : 'category is empty');
     if (!colour) problems.push('colour is empty');
+    else if (colour.length > 80) problems.push('colour is longer than 80 characters');
     if (hex && !/^#[0-9a-fA-F]{6}$/.test(hex)) problems.push('colour code must look like #D81E2B');
     if (sizes.length === 0) problems.push('add at least one size');
+    const twice = sizes.find((x, j) => sizes.indexOf(x) !== j);
+    if (twice) problems.push(`size "${twice}" is listed twice`);
+    if (sizes.some((x) => x.length > 40)) problems.push('a size is longer than 40 characters');
     if (price === null) problems.push('price must look like 120 or 120.50');
     if (compare === null) problems.push('compare_at must look like 150 or be empty');
+    else if (compare !== undefined && price !== null && compare <= price) problems.push('compare_at must be higher than the price');
+    if (description.length > 500) problems.push('description is longer than 500 characters');
     if (photos.some((p) => !PHOTO.test(p) || p.split('/').includes('..'))) problems.push('photo paths look like catalog/name.jpg');
-    if (slug && seen.has(slug)) problems.push(`the same product is already on line ${seen.get(slug)}`);
-    else if (slug) seen.set(slug, line);
+    if (slug.length >= 2 && seen.has(slug)) problems.push(`the same product is already on line ${seen.get(slug)}`);
+    else if (slug.length >= 2) seen.set(slug, line);
 
     const body: CreateBody = {
       slug,
       brandSlug: brand?.slug ?? '',
       categorySlug: category?.slug ?? '',
       name: { en: name },
-      ...(at(r, 'description') ? { description: { en: at(r, 'description') } } : {}),
+      ...(description ? { description: { en: description } } : {}),
       status: 'draft',
       colors: [{ name: colour, ...(hex ? { swatchHex: hex } : {}) }],
       variants: sizes.map((size) => ({ color: colour, size, priceCents: price ?? 0, ...(compare != null ? { compareAtCents: compare } : {}) })),

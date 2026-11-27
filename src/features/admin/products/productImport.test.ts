@@ -53,6 +53,26 @@ describe('checkImport', () => {
     ]);
   });
 
+  it('catches what the server would refuse, before anything is created', () => {
+    const long = 'x'.repeat(501);
+    const r = checkImport(
+      `${HEAD}\nCheap,Adidas,boots,Black,,EU 40,120,100,,,\nកីឡា,Adidas,boots,Black,,EU 40,90,,,,\nTwice,Adidas,boots,Black,,EU 40|EU 40,90,,,,\n${long},Adidas,boots,Black,,EU 40,90,,,,`,
+      BRANDS,
+      CATEGORIES,
+    );
+    expect(r.problems).toEqual([
+      'Line 2: compare_at must be higher than the price',
+      'Line 3: the name needs Latin letters or numbers for the web address',
+      'Line 4: size "EU 40" is listed twice',
+      'Line 5: name is longer than 500 characters',
+    ]);
+  });
+
+  it('keeps accented letters readable in the web address', () => {
+    const r = checkImport(`${HEAD}\nFútbol Pro,Adidas,boots,Black,,EU 40,90,,,,`, BRANDS, CATEGORIES);
+    expect(r.rows[0]!.body.slug).toBe('futbol-pro');
+  });
+
   it('refuses a file without the needed columns', () => {
     expect(checkImport('name,price\nX,1', BRANDS, CATEGORIES).problems).toEqual(['The file needs these columns: brand, category, colour, sizes']);
   });

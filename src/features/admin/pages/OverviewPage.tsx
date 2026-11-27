@@ -23,9 +23,9 @@ export function OverviewPage() {
         {(o) => (
           <section aria-label="Today" className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-[14px] bg-obsidian px-5 py-4 text-paper">
             <span className="text-sm font-semibold text-paper/60">Today</span>
-            <TodayFigure label="Orders today" value={String(o.today.orders)} />
-            <TodayFigure label="Paid today" value={String(o.today.paidOrders)} />
-            <TodayFigure label="Takings today" value={formatUsd(o.today.revenueCents)} />
+            <TodayFigure label="Orders today" unit={o.today.orders === 1 ? 'order' : 'orders'} value={String(o.today.orders)} />
+            <TodayFigure label="Paid today" unit="paid" value={String(o.today.paidOrders)} />
+            <TodayFigure label="Takings today" unit="takings" value={formatUsd(o.today.revenueCents)} />
           </section>
         )}
       </QueryView>
@@ -49,7 +49,7 @@ export function OverviewPage() {
             <Kpi label="Paid orders" value={String(sales.data.totals.paidOrders)} now={sales.data.totals.paidOrders} before={sales.data.previous.paidOrders} icon={<ShoppingBag className="size-4" />} />
             <Kpi label="Average order" value={formatUsd(sales.data.totals.averageOrderCents)} now={sales.data.totals.averageOrderCents} before={sales.data.previous.averageOrderCents} icon={<ClipboardList className="size-4" />} />
           </section>
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
             <section aria-label="Takings by day" className="rounded-[14px] border border-stone p-4 sm:p-5">
               <h3 className="text-sm font-semibold text-graphite">Takings by day</h3>
               <SalesChart days={sales.data.days} />
@@ -128,12 +128,11 @@ export function OverviewPage() {
   );
 }
 
-function TodayFigure({ label, value }: { label: string; value: string }) {
+function TodayFigure({ label, unit, value }: { label: string; unit: string; value: string }) {
   return (
-    <p className="flex items-baseline gap-2">
+    <p className="flex items-baseline gap-2" aria-label={`${label}: ${value}`}>
       <span className="tabular font-display text-2xl font-bold leading-none">{value}</span>
-      <span className="text-sm text-paper/70">{label.replace(' today', '').toLowerCase()}</span>
-      <span className="sr-only">{label}</span>
+      <span aria-hidden className="text-sm text-paper/70">{unit}</span>
     </p>
   );
 }
@@ -164,7 +163,7 @@ const shortDate = (iso: string) => new Intl.DateTimeFormat('en-GB', { day: 'nume
 function SalesChart({ days }: { days: Sales['days'] }) {
   const data = days.map((d) => ({ ...d, label: shortDate(d.date), dollars: d.revenueCents / 100 }));
   return (
-    <div className="mt-3 h-64" aria-hidden>
+    <div className="mt-3 h-72" aria-hidden>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
           <defs>

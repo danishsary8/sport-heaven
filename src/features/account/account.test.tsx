@@ -117,6 +117,16 @@ describe('account', () => {
     await waitFor(() => expect(router.state.location.pathname).toBe('/'));
   });
 
+  it('keeps the address form in the sheet while it slides closed', async () => {
+    renderRoutes(routes, '/account/addresses', { signedIn: true });
+    fireEvent.click(await screen.findByRole('button', { name: 'Add an address' }));
+    await screen.findByRole('dialog', { name: 'New address' });
+    fireEvent.keyDown(document, { key: 'Escape' });
+    const leaving = document.querySelector('[data-sheet="closing"]')!;
+    expect(leaving).toHaveTextContent('New address');
+    expect(leaving.querySelector('input')).toBeTruthy();
+  });
+
   it('adds and removes addresses', async () => {
     renderRoutes(routes, '/account/addresses', { signedIn: true });
     expect(await screen.findByText('St 51, house 12')).toBeTruthy();

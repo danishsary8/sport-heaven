@@ -145,7 +145,7 @@ function ProductsList() {
             <p className="text-sm text-graphite">
               {d.total} {d.total === 1 ? 'product' : 'products'}
             </p>
-            <ProductsTable products={d.products} />
+            <ProductsTable key={JSON.stringify(query)} products={d.products} />
             <Pager page={d.page} pageSize={d.pageSize} total={d.total} onPage={(p) => set('page', String(p))} />
           </div>
         )}
@@ -251,7 +251,7 @@ export function ProductEditPage() {
   return (
     <AdminOnly>
       <QueryView query={product} skeleton={<Skeleton className="h-96 w-full" />}>
-        {(d) => <ProductEditor key={d.product.updatedAt} product={d.product} />}
+        {(d) => <ProductEditor key={d.product.id} product={d.product} />}
       </QueryView>
     </AdminOnly>
   );
@@ -328,6 +328,7 @@ function ProductEditor({ product }: { product: AdminProduct }) {
         </Button>
       </form>
 
+      <PhotoManager product={product} tiles={photos} onChange={setPhotos} />
       <section aria-labelledby="sizes-h" className="rounded-[16px] border border-stone p-5">
         <h2 id="sizes-h" className="mb-3 font-display text-[28px] font-bold leading-none">
           Sizes and prices
@@ -341,7 +342,6 @@ function ProductEditor({ product }: { product: AdminProduct }) {
         </ul>
       </section>
 
-      <PhotoManager product={product} tiles={photos} onChange={setPhotos} />
       </div>
       <ShopPreview name={f.nameEn || product.nameI18n.en} status={f.status} photos={photos} fromCents={Math.min(...product.variants.map((v) => v.priceCents))} />
       </div>

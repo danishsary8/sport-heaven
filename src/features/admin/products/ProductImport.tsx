@@ -5,8 +5,9 @@ import { Link } from 'react-router';
 import { isApiError } from '../../../lib/api';
 import { formatUsd } from '../../../lib/i18n';
 import { Button, cx } from '../../../ui';
+import { apiFetch } from '../../../lib/api';
 import { post, useAdminQuery } from '../api';
-import type { AdminProduct, Brand, Category } from '../types';
+import type { AdminProduct, AdminProductListRow, Brand, Category } from '../types';
 import { IMPORT_TEMPLATE, checkImport, type ImportRow } from './productImport';
 
 type Result = { line: number; ok: true; id: string; name: string } | { line: number; ok: false; name: string; message: string };
@@ -23,6 +24,7 @@ export function ProductImport() {
   const [file, setFile] = useState<{ name: string; text: string } | null>(null);
   const [results, setResults] = useState<Result[] | null>(null);
   const [busy, setBusy] = useState(false);
+  const [taken, setTaken] = useState<string[]>([]);
   const ready = !!brands.data && !!categories.data;
   const check = file && ready ? checkImport(file.text, brands.data!.brands, categories.data!.categories) : null;
   const ok = !!check && check.rows.length > 0 && check.problems.length === 0;
@@ -38,6 +40,21 @@ export function ProductImport() {
 
   const create = async (rows: ImportRow[]) => {
     setBusy(true);
+    // First make sure none of the products is already in the shop, so the file is created whole or not at all.
+    const clashes: string[] = [];
+    for (const r of rows) {
+      try {
+        const found = await apiFetch<{ products: AdminProductListRow[] }>('/v1/admin/products', { query: { q: r.body.slug, pageSize: 10 } });
+        if (found.products.some((p) => p.slug === r.body.slug)) clashes.push(`Line ${r.line}: ${r.body.slug} is already in the shop. Change the name or edit that product.`);
+      } catch (e) {
+        clashes.push(`Line ${r.line}: could not check the shop (${isApiError(e) ? e.message : 'try again'}).`);
+      }
+    }
+    setTaken(clashes);
+    if (clashes.length) {
+      setBusy(false);
+      return;
+    }
     const out: Result[] = [];
     // One at a time, so the results read in file order and a slow server is not flooded.
     for (const r of rows) {
@@ -76,7 +93,10 @@ export function ProductImport() {
               const f = e.target.files?.[0];
               if (!f) return;
               setResults(null);
+              setTaken([]);
               setFile({ name: f.name, text: await f.text() });
+              // Lets the same file name be chosen again after fixing it in a spreadsheet app.
+              e.target.value = '';
             }}
           />
         </label>
@@ -98,6 +118,13 @@ export function ProductImport() {
               {check.problems.length > 0 && (
                 <ul className="mt-2 list-disc pl-5 text-sm">
                   {check.problems.map((p) => (
+                    <li key={p}>{p}</li>
+                  ))}
+                </ul>
+              )}
+              {taken.length > 0 && (
+                <ul role="alert" className="mt-2 list-disc pl-5 text-sm font-medium text-vermilion">
+                  {taken.map((p) => (
                     <li key={p}>{p}</li>
                   ))}
                 </ul>

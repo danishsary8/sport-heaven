@@ -56,6 +56,14 @@ describe('admin overview', () => {
     expect(screen.getByText('Predator Elite FG')).toBeTruthy();
   });
 
+  it('says "1 order", not "1 orders", in the today bar', async () => {
+    server.use(http.get(`${API}/v1/admin/overview`, () => HttpResponse.json({ ...OVERVIEW, today: { orders: 1, paidOrders: 1, revenueCents: 25000 } })));
+    renderRoutes(routes, '/admin', { signedIn: true });
+    const today = await screen.findByRole('region', { name: 'Today' });
+    expect(today).toHaveTextContent('1order');
+    expect(today).not.toHaveTextContent('orders');
+  });
+
   it('switches the chart range', async () => {
     renderRoutes(routes, '/admin', { signedIn: true });
     await screen.findByRole('group', { name: 'Takings' });

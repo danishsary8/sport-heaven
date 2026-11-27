@@ -29,7 +29,8 @@ const signature = (tiles: PhotoTile[]) => JSON.stringify(tiles.map((t) => [t.pat
 export function PhotoManager({ product, tiles, onChange }: { product: AdminProduct; tiles: PhotoTile[]; onChange: Dispatch<SetStateAction<PhotoTile[]>> }) {
   const toast = useToast();
   const input = useRef<HTMLInputElement>(null);
-  const [initial] = useState(() => signature(tilesOf(product)));
+  // Compared with the saved photos, so after a save (and the product reloading) nothing shows as unsaved.
+  const initial = signature(tilesOf(product));
   const [dragging, setDragging] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const update = (fn: (t: PhotoTile[]) => PhotoTile[]) => onChange(fn);

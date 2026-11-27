@@ -223,6 +223,52 @@ describe('admin products', () => {
     expect(await within(check).findByText('2 created')).toBeTruthy();
   });
 
+  it('creates nothing when a product in the file already exists in the shop', async () => {
+    server.use(
+      http.get(`${API}/v1/admin/products`, ({ request }) => {
+        const q = new URL(request.url).searchParams.get('q');
+        return HttpResponse.json({ products: q === 'copa-lite' ? [{ ...ROW, ...LIST, slug: 'copa-lite' }] : [], total: 0, page: 1, pageSize: 50 });
+      }),
+    );
+    renderRoutes(routes, '/admin/products', { signedIn: true });
+    const csv = 'name,brand,category,colour,sizes,price\nCopa Pure,adidas,boots,White,EU 40,120\nCopa Lite,Adidas,Boots,Black,EU 42,90';
+    fireEvent.change(await screen.findByLabelText('New products spreadsheet'), { target: { files: [new File([csv], 'new.csv', { type: 'text/csv' })] } });
+    const check = await screen.findByRole('region', { name: 'New products check' });
+    fireEvent.click(await within(check).findByRole('button', { name: 'Create 2 products as drafts' }));
+    expect(await within(check).findByText('Line 3: copa-lite is already in the shop. Change the name or edit that product.')).toBeTruthy();
+    expect(calls.filter((c) => c.method === 'POST')).toEqual([]);
+  });
+
+  it('clears the selection when the list changes, so hidden products are never changed', async () => {
+    renderRoutes(routes, '/admin/products', { signedIn: true });
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Select Predator Elite FG' }));
+    expect(screen.getByRole('region', { name: '1 selected' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('radio', { name: 'Draft' }));
+    await waitFor(() => expect(screen.queryByRole('region', { name: /selected/ })).toBeNull());
+  });
+
+  it('keeps unsaved details when photos are saved', async () => {
+    let version = 0;
+    server.use(
+      http.get(`${API}/v1/admin/products/:id`, () => HttpResponse.json({ product: { ...PRODUCT, updatedAt: `2026-11-26T08:00:0${version}Z` } })),
+      http.put(`${API}/v1/admin/products/:id/images`, async ({ request }) => {
+        await rec(request);
+        version += 1;
+        return HttpResponse.json({ product: PRODUCT });
+      }),
+    );
+    renderRoutes(routes, `/admin/products/${PID}`, { signedIn: true });
+    const name = await screen.findByLabelText('Name (English)');
+    fireEvent.change(name, { target: { value: 'Predator, not saved yet' } });
+    const photos = screen.getByRole('region', { name: 'Photos' });
+    fireEvent.change(within(photos).getByLabelText('Add photos'), { target: { files: [new File(['x'], 'b.png', { type: 'image/png' })] } });
+    await waitFor(() => expect(within(photos).getByRole('button', { name: 'Save photos' })).toBeEnabled());
+    fireEvent.click(within(photos).getByRole('button', { name: 'Save photos' }));
+    await waitFor(() => expect(version).toBe(1));
+    await waitFor(() => expect(screen.getByText('Photos saved')).toBeTruthy());
+    expect(screen.getByLabelText('Name (English)')).toHaveValue('Predator, not saved yet');
+  });
+
   it('downloads the price list', async () => {
     const create = vi.fn(() => 'blob:prices');
     const revoke = vi.fn();

@@ -14,6 +14,9 @@ export function AddressesPage() {
   const del = useDeleteAddress();
   const makeDefault = useDefaultAddress();
   const [editing, setEditing] = useState<Address | 'new' | null>(null);
+  // What the sheet shows: the last address opened, kept while the sheet slides closed.
+  const [shown, setShown] = useState<Address | 'new' | null>(null);
+  if (editing !== null && editing !== shown) setShown(editing);
   const onError = (e: unknown) => toast.error(isApiError(e) ? e.message : t('common.error'));
   return (
     <div className="flex flex-col gap-6">
@@ -56,8 +59,8 @@ export function AddressesPage() {
           </ul>
         )}
       </QueryView>
-      <Sheet open={editing !== null} onClose={() => setEditing(null)} side="right" title={editing === 'new' ? t('acc.newAddress') : t('acc.editAddress')}>
-        {editing !== null && <AddressForm address={editing === 'new' ? null : editing} onDone={() => setEditing(null)} />}
+      <Sheet open={editing !== null} onClose={() => setEditing(null)} side="right" title={shown === 'new' ? t('acc.newAddress') : t('acc.editAddress')}>
+        {shown !== null && <AddressForm address={shown === 'new' ? null : shown} onDone={() => setEditing(null)} />}
       </Sheet>
     </div>
   );

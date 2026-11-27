@@ -68,7 +68,7 @@ export function AdminLayout() {
   const groups = ADMIN_GROUPS.map((g) => ({ ...g, links: g.links.filter((l) => admin || !l.adminOnly) })).filter((g) => g.links.length > 0);
   return (
     <div className="min-h-dvh bg-paper lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
-      <header className="sticky top-0 z-30 border-b border-stone bg-paper/95 backdrop-blur lg:flex lg:h-dvh lg:flex-col lg:border-b-0 lg:border-r lg:bg-chalk">
+      <header className="sticky top-0 z-30 border-b border-stone bg-paper/95 backdrop-blur lg:flex lg:h-dvh lg:flex-col lg:self-start lg:border-b-0 lg:border-r lg:bg-chalk">
         <div className="flex h-14 items-center justify-between gap-3 px-4 lg:h-16 lg:px-5">
           <Wordmark />
           <span className={cx('rounded-full px-2.5 py-0.5 text-xs font-semibold', admin ? 'bg-obsidian text-paper' : 'bg-cobalt/10 text-cobalt')}>{admin ? 'Admin' : 'Staff'}</span>
