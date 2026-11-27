@@ -164,20 +164,19 @@
     linear-gradient(160deg, transparent 40%, rgb(14 17 19 / 0.35));
 }
 
-/* Slide change: the new slide is revealed like a curtain in the direction of travel, over the old
-   one (kept visible underneath); its photo settles from a slight zoom; the text rises in after. */
-@keyframes heroRevealNext {
-  from { clip-path: inset(0 0 0 100%); }
-  to { clip-path: inset(0 0 0 0); }
-}
-@keyframes heroRevealPrev {
-  from { clip-path: inset(0 100% 0 0); }
-  to { clip-path: inset(0 0 0 0); }
-}
-.hero-slide[data-reveal='next'] { animation: heroRevealNext 1000ms cubic-bezier(0.77, 0, 0.18, 1) both; }
-.hero-slide[data-reveal='prev'] { animation: heroRevealPrev 1000ms cubic-bezier(0.77, 0, 0.18, 1) both; }
-.hero-slide[data-reveal] .hero-rise { animation-delay: calc(var(--d, 0ms) + 420ms) !important; }
-.hero-slide[data-reveal] .hero-card { animation-delay: calc(var(--d, 0ms) + 380ms) !important; }
+/* Slide change: a parallax glide. The new slide moves in from the side at full speed; the old one
+   drifts the other way at a third of the speed and dims, which reads as depth. Text rises in after. */
+@keyframes heroInNext { from { transform: translate3d(100%, 0, 0); } to { transform: none; } }
+@keyframes heroInPrev { from { transform: translate3d(-100%, 0, 0); } to { transform: none; } }
+@keyframes heroOutNext { from { transform: none; filter: brightness(1); } to { transform: translate3d(-30%, 0, 0); filter: brightness(0.45); } }
+@keyframes heroOutPrev { from { transform: none; filter: brightness(1); } to { transform: translate3d(30%, 0, 0); filter: brightness(0.45); } }
+.hero-slide[data-reveal='next'] { animation: heroInNext 900ms cubic-bezier(0.65, 0, 0.35, 1) both; }
+.hero-slide[data-reveal='prev'] { animation: heroInPrev 900ms cubic-bezier(0.65, 0, 0.35, 1) both; }
+.hero-slide[data-leave='next'] { animation: heroOutNext 900ms cubic-bezier(0.65, 0, 0.35, 1) both; }
+.hero-slide[data-leave='prev'] { animation: heroOutPrev 900ms cubic-bezier(0.65, 0, 0.35, 1) both; }
+.hero-slide[data-reveal] .hero-rise { animation-delay: calc(var(--d, 0ms) + 450ms) !important; }
+.hero-slide[data-reveal] .hero-card { animation-delay: calc(var(--d, 0ms) + 400ms) !important; }
+.hero-slide[data-reveal] { box-shadow: -24px 0 48px rgb(14 17 19 / 0.35); }
 
 @keyframes heroRise {
   from { opacity: 0; transform: translateY(28px); }

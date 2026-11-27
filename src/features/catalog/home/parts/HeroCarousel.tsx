@@ -278,6 +278,7 @@ function Slide({
       inert={!active}
       data-active={active || undefined}
       data-reveal={active && dir !== null ? (dir === 1 ? 'next' : 'prev') : undefined}
+      data-leave={covered && dir !== null ? (dir === 1 ? 'next' : 'prev') : undefined}
       className={cx('hero-slide absolute inset-0', TONES[slide.tone], active ? 'z-10 opacity-100' : covered ? 'z-[5] opacity-100' : 'z-0 opacity-0')}
     >
       {photo && (
