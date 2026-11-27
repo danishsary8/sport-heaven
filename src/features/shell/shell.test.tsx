@@ -48,6 +48,21 @@ describe('app shell', () => {
     expect((await screen.findAllByText(/Sen Sok/)).length).toBeGreaterThan(0);
   });
 
+  it('leaves GK & Essentials out of the top menu, keeping the API order', async () => {
+    server.use(
+      http.get(`${API}/v1/catalog/menu`, () =>
+        HttpResponse.json({
+          ...MENU,
+          categories: ['boots', 'jerseys', 'balls', 'jackets', 'f1', 'essentials'].map((slug) => ({ slug, name: slug.toUpperCase(), productCount: 1 })),
+        }),
+      ),
+    );
+    renderRoutes(routes, '/');
+    const nav = await screen.findByRole('navigation', { name: 'Main' });
+    await within(nav).findByRole('link', { name: 'JACKETS' });
+    expect(within(nav).getAllByRole('link').map((l) => l.textContent).filter((x) => x === x?.toUpperCase() && x !== '')).toEqual(['BOOTS', 'JERSEYS', 'BALLS', 'JACKETS', 'F1']);
+  });
+
   it('opens a category mega menu with sub-categories from the API, and closes it with Escape', async () => {
     server.use(
       http.get(`${API}/v1/catalog/filters`, () =>

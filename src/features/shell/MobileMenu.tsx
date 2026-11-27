@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 import { useI18n } from '../../lib/i18n';
 import { Picture, Sheet, Skeleton, cx } from '../../ui';
 import { useFilters, useMenu } from '../catalog/api';
-import { buildMegaMenu } from './megaMenu';
+import { buildMegaMenu, inTopMenu } from './megaMenu';
 import { LangSwitch } from './LangSwitch';
 
 export function MobileMenu({ open, onClose }: { open: boolean; onClose(): void }) {
@@ -16,7 +16,7 @@ export function MobileMenu({ open, onClose }: { open: boolean; onClose(): void }
     <Sheet open={open} onClose={onClose} side="left" title={t('nav.menu')}>
       <nav aria-label={t('nav.categories')} className="flex flex-col gap-6" onClick={(e) => (e.target as HTMLElement).closest('a') && onClose()}>
         <ul className="divide-y divide-stone">
-          {(menu.data?.categories ?? []).map((c) => {
+          {(menu.data?.categories ?? []).filter((c) => inTopMenu(c.slug)).map((c) => {
             const expanded = openSlug === c.slug;
             return (
               <li key={c.slug}>

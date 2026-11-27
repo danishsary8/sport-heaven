@@ -57,6 +57,7 @@ export const km: Dict = {
   'mega.nations': 'ក្រុមជម្រើសជាតិ',
   'mega.ballUse': 'ទិញតាមការប្រកួត',
   'mega.essType': 'ទិញតាមប្រភេទ',
+  'mega.jacketType': 'ទិញតាមប្រភេទ',
   'nav.help': 'ជំនួយ',
   'nav.brands': 'ម៉ាក',
   'nav.shopAll': 'ទំនិញទាំងអស់',

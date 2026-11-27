@@ -49,6 +49,7 @@ const base = {
   'mega.nations': 'National teams',
   'mega.ballUse': 'Shop by competition',
   'mega.essType': 'Shop by item',
+  'mega.jacketType': 'Shop by type',
   'nav.help': 'Help',
   'nav.brands': 'Brands',
   'nav.shopAll': 'Shop all',

@@ -4,6 +4,7 @@ import { Link, NavLink } from 'react-router';
 import { useAuth } from '../../lib/auth';
 import { useI18n } from '../../lib/i18n';
 import { cx } from '../../ui';
+import { inTopMenu } from './topMenu';
 import { useBagCount } from '../cart/api';
 import { BAG_BUMP, BAG_OPEN } from '../cart/bagEvents';
 import { useMenu } from '../catalog/api';
@@ -56,7 +57,7 @@ export function Header() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const categories = (menu.data?.categories ?? []).slice(0, 7);
+  const categories = (menu.data?.categories ?? []).filter((c) => inTopMenu(c.slug)).slice(0, 7);
   const mega = useMegaMenu();
   const openCategory = categories.find((c) => c.slug === mega.open);
 

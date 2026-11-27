@@ -1,5 +1,6 @@
 import type { DictKey, Lang } from '../../lib/i18n';
 import type { Facet, Menu } from '../catalog/api';
+export { inTopMenu } from './topMenu';
 import { SURFACE_LABELS, valueLabel } from '../catalog/filterLabels';
 
 /**
@@ -47,6 +48,19 @@ const COPY = {
     'intro.f1': 'Team kits and paddock jackets from the 2026 grid.',
     'intro.balls': 'Official match balls, and low-bounce balls for futsal.',
     'intro.essentials': 'Gloves, shin guards and grip socks to finish your kit.',
+    'intro.jackets': 'Walkout, training, rain and travel jackets, plus F1 paddock jackets.',
+    'jacket.anthem': 'Anthem / Walkout Jacket',
+    'jacket.anthemNote': 'Worn lining up before kickoff',
+    'jacket.drill': 'Drill Top / Half-Zip',
+    'jacket.drillNote': 'Tight pullover for warm-ups and training',
+    'jacket.rain': 'Rain / All-Weather Jacket',
+    'jacket.rainNote': 'Waterproof shell for wet sessions',
+    'jacket.presentation': 'Presentation Jacket',
+    'jacket.presentationNote': 'Tailored track jacket for travel and media',
+    'jacket.bench': 'Bench Coat / Stadium Parka',
+    'jacket.benchNote': 'Heavy winter coat for coaches and subs',
+    'jacket.f1': 'F1 Jackets',
+    'jacket.f1Note': 'Team paddock jackets from the 2026 grid',
     'intro.default': 'Everything in this category.',
     'surfaceNote.FG': 'Natural grass pitches',
     'surfaceNote.FGAG': 'Grass or artificial, one boot',
@@ -93,6 +107,19 @@ const COPY = {
     'intro.f1': 'អាវក្រុម និងអាវរងា Paddock ពីរដូវកាល 2026។',
     'intro.balls': 'បាល់ប្រកួតផ្លូវការ និងបាល់លោតទាបសម្រាប់ហ្វុតសាល។',
     'intro.essentials': 'ស្រោមដៃ ការពារស្មង និងស្រោមជើងប្រឆាំងរអិល ដើម្បីបំពេញឈុតរបស់អ្នក។',
+    'intro.jackets': 'អាវរងាដើរចូលទីលាន ហ្វឹកហាត់ ការពារភ្លៀង និងធ្វើដំណើរ ព្រមទាំងអាវរងា F1។',
+    'jacket.anthem': 'អាវរងា Anthem / ដើរចូលទីលាន',
+    'jacket.anthemNote': 'ពាក់ពេលតម្រង់ជួរមុនការប្រកួត',
+    'jacket.drill': 'អាវ Drill / រូបពាក់កណ្តាល',
+    'jacket.drillNote': 'អាវតឹងសម្រាប់កម្តៅខ្លួន និងហ្វឹកហាត់',
+    'jacket.rain': 'អាវការពារភ្លៀង / គ្រប់អាកាសធាតុ',
+    'jacket.rainNote': 'មិនជ្រាបទឹក សម្រាប់ថ្ងៃភ្លៀង',
+    'jacket.presentation': 'អាវរងា Presentation',
+    'jacket.presentationNote': 'អាវរងាកាត់ដេរស្អាត សម្រាប់ធ្វើដំណើរ និងសារព័ត៌មាន',
+    'jacket.bench': 'អាវធំកៅអីបម្រុង / Parka',
+    'jacket.benchNote': 'អាវធំក្រាស់សម្រាប់គ្រូបង្វឹក និងកីឡាករបម្រុង',
+    'jacket.f1': 'អាវរងា F1',
+    'jacket.f1Note': 'អាវរងា Paddock របស់ក្រុមពីរដូវកាល 2026',
     'intro.default': 'ទំនិញទាំងអស់ក្នុងប្រភេទនេះ។',
     'surfaceNote.FG': 'ទីលានស្មៅធម្មជាតិ',
     'surfaceNote.FGAG': 'ស្មៅធម្មជាតិ ឬសិប្បនិម្មិត មួយគូគ្រប់គ្រាន់',
@@ -198,6 +225,15 @@ const ESSENTIALS: Curated[] = [
   { label: 'ess.socks', note: 'ess.socksNote', q: 'socks' },
 ];
 
+/** Jacket types, found by the word in their names (put "anthem", "drill", … in the product name). */
+const JACKET_TYPES: Curated[] = [
+  { label: 'jacket.anthem', note: 'jacket.anthemNote', q: 'anthem' },
+  { label: 'jacket.drill', note: 'jacket.drillNote', q: 'drill' },
+  { label: 'jacket.rain', note: 'jacket.rainNote', q: 'rain' },
+  { label: 'jacket.presentation', note: 'jacket.presentationNote', q: 'presentation' },
+  { label: 'jacket.bench', note: 'jacket.benchNote', q: 'bench' },
+];
+
 /** Boot lines players ask for by name. */
 const BOOT_FAMILIES = ['Mercurial', 'Phantom', 'Tiempo', 'Predator', 'F50', 'Copa', 'Puma Future', 'Morelia'];
 
@@ -232,6 +268,7 @@ const INTROS: Record<string, CopyKey> = {
   f1: 'intro.f1',
   balls: 'intro.balls',
   essentials: 'intro.essentials',
+  jackets: 'intro.jackets',
 };
 
 export function categoryHref(category: string, params: Record<string, string> = {}) {
@@ -314,6 +351,17 @@ export function buildMegaMenu(category: string, facets: Facet[], collections: Me
   } else if (category === 'balls') {
     tilesTitle = 'mega.ballUse';
     tiles = curatedTiles(category, BALL_USES, copy);
+  } else if (category === 'jackets') {
+    tilesTitle = 'mega.jacketType';
+    tiles = [
+      ...curatedTiles(category, JACKET_TYPES, copy),
+      {
+        label: copy('jacket.f1'),
+        note: copy('jacket.f1Note'),
+        href: known.has('f1-jackets') ? '/collections/f1-jackets' : categoryHref('f1', { garmentType: 'jacket' }),
+        image: img('jacket_f1_mclaren_2026_1795194122903'),
+      },
+    ];
   } else if (category === 'essentials') {
     tilesTitle = 'mega.essType';
     tiles = curatedTiles(category, ESSENTIALS, copy);

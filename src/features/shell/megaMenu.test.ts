@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { interpolate } from '../../lib/i18n/I18nProvider';
 import { en } from '../../lib/i18n/dict.en';
 import type { Facet, Menu } from '../catalog/api';
-import { buildMegaMenu } from './megaMenu';
+import { buildMegaMenu, inTopMenu } from './megaMenu';
 
 const t = ((key: keyof typeof en, vars?: Record<string, string | number>) => interpolate(en[key], vars)) as Parameters<typeof buildMegaMenu>[3];
 const facet = (key: string, opts: [string, number][]) => ({ key, label: key, type: 'checkbox', options: opts.map(([value, count]) => ({ value, label: value, count })) }) as unknown as Facet;
@@ -43,6 +43,29 @@ describe('buildMegaMenu', () => {
     const menu = buildMegaMenu('essentials', [facet('brand', [['gksm', 1]])], [], t);
     expect(menu.tiles.map((l) => l.label)).toEqual(['Goalkeeper gloves', 'Shin guards', 'Grip socks']);
     expect(menu.columns).toEqual([{ title: 'mega.brands', links: [{ label: 'gksm', href: '/c/essentials?brand=gksm', count: 1 }] }]);
+  });
+
+  it('gives jackets a tile per jacket type, with the F1 jackets collection last', () => {
+    const menu = buildMegaMenu('jackets', [facet('brand', [['adidas', 3]])], collections, t);
+    expect(menu.tilesTitle).toBe('mega.jacketType');
+    expect(menu.tiles.map((l) => [l.label, l.href])).toEqual([
+      ['Anthem / Walkout Jacket', '/c/jackets?q=anthem'],
+      ['Drill Top / Half-Zip', '/c/jackets?q=drill'],
+      ['Rain / All-Weather Jacket', '/c/jackets?q=rain'],
+      ['Presentation Jacket', '/c/jackets?q=presentation'],
+      ['Bench Coat / Stadium Parka', '/c/jackets?q=bench'],
+      ['F1 Jackets', '/collections/f1-jackets'],
+    ]);
+    expect(menu.tiles.every((l) => l.note.length > 0)).toBe(true);
+    expect(menu.intro).toMatch(/jacket/i);
+    expect(menu.columns).toEqual([{ title: 'mega.brands', links: [{ label: 'adidas', href: '/c/jackets?brand=adidas', count: 3 }] }]);
+    // Without the F1 jackets collection the tile goes to F1 paddock jackets.
+    expect(buildMegaMenu('jackets', [], [], t).tiles.at(-1)!.href).toBe('/c/f1?garmentType=jacket');
+    expect(buildMegaMenu('jackets', [], [], t, 'km').tiles[0]!.label).not.toBe('Anthem / Walkout Jacket');
+  });
+
+  it('keeps GK & Essentials out of the top menu, everything else in', () => {
+    expect(['boots', 'jerseys', 'balls', 'jackets', 'f1', 'essentials'].filter(inTopMenu)).toEqual(['boots', 'jerseys', 'balls', 'jackets', 'f1']);
   });
 
   it('writes its own copy in the shop language', () => {
