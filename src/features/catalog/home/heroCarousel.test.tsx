@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { I18nProvider } from '../../../lib/i18n';
-import { HeroCarousel, type HeroSlide } from './parts/HeroCarousel';
+import { HeroCarousel, SLIDE_MS, type HeroSlide } from './parts/HeroCarousel';
 
 const slides: HeroSlide[] = [
   { id: 'a', title: 'Matchday gear', cta: 'Shop new arrivals', href: '/collections/new-arrivals', tone: 'photo', image: '/x.jpg', products: [] },
@@ -68,11 +68,23 @@ describe('HeroCarousel', () => {
     expect(screen.getByRole('button', { name: 'Play slides' })).toBeTruthy();
   });
 
-  it('never moves by itself under reduced motion', () => {
+  it('still moves on by itself under reduced motion, with a timer and no animation', () => {
+    vi.useFakeTimers();
     vi.stubGlobal('matchMedia', (q: string) => ({ matches: q.includes('reduce'), addEventListener: () => {}, removeEventListener: () => {} }));
     const { container } = renderCarousel();
     expect(container.querySelector('.hero-progress')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Pause slides' })).toBeNull();
+    act(() => vi.advanceTimersByTime(SLIDE_MS));
+    expect(visibleTitle()).toBe('Champions League nights');
+    fireEvent.click(screen.getByRole('button', { name: 'Pause slides' }));
+    act(() => vi.advanceTimersByTime(SLIDE_MS * 2));
+    expect(visibleTitle()).toBe('Champions League nights');
+    vi.useRealTimers();
+  });
+
+  it('keeps playing after a mouse click on the arrows (only keyboard focus pauses it)', () => {
+    const { container } = renderCarousel();
+    fireEvent.click(screen.getByRole('button', { name: 'Next slide' }));
+    expect((container.querySelector('.hero-progress') as HTMLElement).style.animationPlayState).toBe('running');
   });
 
   it('shows a single slide without controls', () => {

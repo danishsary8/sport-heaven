@@ -51,6 +51,14 @@ function saveSlide(i: number) {
   } catch {}
 }
 
+function isFocusVisible(el: EventTarget): boolean {
+  try {
+    return el instanceof HTMLElement && el.matches(':focus-visible');
+  } catch {
+    return false;
+  }
+}
+
 function usePrefersReducedMotion(): boolean {
   const query = typeof window !== 'undefined' && typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
   const [reduced, setReduced] = useState(() => query?.matches ?? false);
@@ -79,23 +87,37 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
   // Coming back to the home page continues from the slide you left, instead of restarting.
   const [index, setIndex] = useState(() => Math.min(readSavedSlide(), Math.max(count - 1, 0)));
   const [userPaused, setUserPaused] = useState(false);
-  const [hovering, setHovering] = useState(false);
+  // Keyboard focus inside pauses it (WCAG 2.2.2); a mouse click on an arrow or dot does not.
   const [focused, setFocused] = useState(false);
+  // The slide being covered and the direction of travel, for the curtain transition.
+  const [prev, setPrev] = useState<number | null>(null);
+  const [dir, setDir] = useState<1 | -1>(1);
   const [visited, setVisited] = useState<Set<number>>(() => new Set([0, index]));
   const swipeStart = useRef<number | null>(null);
 
   const go = useCallback(
-    (to: number) => {
+    (to: number, direction?: 1 | -1) => {
       const next = ((to % count) + count) % count;
+      if (next === index) return;
+      setDir(direction ?? (to > index ? 1 : -1));
+      setPrev(index);
       setIndex(next);
       saveSlide(next);
       setVisited((v) => (v.has(next) ? v : new Set(v).add(next)));
     },
-    [count],
+    [count, index],
   );
 
-  const autoplay = count > 1 && !reducedMotion;
-  const paused = userPaused || hovering || focused;
+  const autoplay = count > 1;
+  const paused = userPaused || focused;
+
+  // Under reduced motion there is no progress animation to drive autoplay, so a timer does it
+  // (slides then swap without any movement).
+  useEffect(() => {
+    if (!autoplay || !reducedMotion || paused) return;
+    const timer = setTimeout(() => go(index + 1, 1), SLIDE_MS);
+    return () => clearTimeout(timer);
+  }, [autoplay, reducedMotion, paused, index, go]);
 
   // Warm the next slide's photos a moment before it shows.
   const upcoming = (index + 1) % count;
@@ -108,8 +130,8 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
   if (count === 0) return null;
 
   const onKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'ArrowRight') go(index + 1);
-    else if (e.key === 'ArrowLeft') go(index - 1);
+    if (e.key === 'ArrowRight') go(index + 1, 1);
+    else if (e.key === 'ArrowLeft') go(index - 1, -1);
     else return;
     e.preventDefault();
   };
@@ -120,7 +142,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
     if (swipeStart.current === null) return;
     const dx = e.clientX - swipeStart.current;
     swipeStart.current = null;
-    if (Math.abs(dx) > SWIPE_PX) go(index + (dx < 0 ? 1 : -1));
+    if (Math.abs(dx) > SWIPE_PX) go(index + (dx < 0 ? 1 : -1), dx < 0 ? 1 : -1);
   };
 
   const active = slides[index]!;
@@ -131,9 +153,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
       aria-roledescription="carousel"
       aria-label={t('hero.label')}
       className="relative isolate overflow-hidden"
-      onMouseEnter={() => setHovering(true)}
-      onMouseLeave={() => setHovering(false)}
-      onFocus={() => setFocused(true)}
+      onFocus={(e) => setFocused(isFocusVisible(e.target))}
       onBlur={(e) => !e.currentTarget.contains(e.relatedTarget as Node | null) && setFocused(false)}
       onKeyDown={onKeyDown}
       onPointerDown={onPointerDown}
@@ -142,7 +162,16 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
     >
       <div className="relative h-[min(88svh,760px)] min-h-[560px] lg:h-[min(80vh,800px)]">
         {slides.map((slide, i) => (
-          <Slide key={slide.id} slide={slide} active={i === index} first={i === 0} load={visited.has(i)} position={t('hero.slide', { n: i + 1, total: count })} />
+          <Slide
+            key={slide.id}
+            slide={slide}
+            active={i === index}
+            covered={i === prev}
+            dir={prev === null ? null : dir}
+            first={i === 0}
+            load={visited.has(i)}
+            position={t('hero.slide', { n: i + 1, total: count })}
+          />
         ))}
       </div>
 
@@ -162,12 +191,12 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
                     <span className={cx('relative block h-[3px] overflow-hidden rounded-full', dark ? 'bg-paper/25' : 'bg-obsidian/15')}>
                       {i < index && <span className={cx('absolute inset-0', dark ? 'bg-paper' : 'bg-obsidian')} />}
                       {i === index &&
-                        (autoplay ? (
+                        (autoplay && !reducedMotion ? (
                           <span
                             key={`${slide.id}-${index}`}
                             className={cx('hero-progress absolute inset-y-0 left-0', dark ? 'bg-paper' : 'bg-obsidian')}
                             style={{ animationDuration: `${SLIDE_MS}ms`, animationPlayState: paused ? 'paused' : 'running' } as CSSProperties}
-                            onAnimationEnd={() => go(index + 1)}
+                            onAnimationEnd={() => go(index + 1, 1)}
                           />
                         ) : (
                           <span className={cx('absolute inset-0', dark ? 'bg-paper' : 'bg-obsidian')} />
@@ -186,10 +215,10 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
                   {userPaused ? <Play className="size-4" aria-hidden /> : <Pause className="size-4" aria-hidden />}
                 </HeroButton>
               )}
-              <HeroButton dark={dark} label={t('hero.prev')} onClick={() => go(index - 1)}>
+              <HeroButton dark={dark} label={t('hero.prev')} onClick={() => go(index - 1, -1)}>
                 <ChevronLeft className="size-5" aria-hidden />
               </HeroButton>
-              <HeroButton dark={dark} label={t('hero.next')} onClick={() => go(index + 1)}>
+              <HeroButton dark={dark} label={t('hero.next')} onClick={() => go(index + 1, 1)}>
                 <ChevronRight className="size-5" aria-hidden />
               </HeroButton>
             </div>
@@ -216,7 +245,25 @@ function HeroButton({ dark, label, onClick, children }: { dark: boolean; label: 
   );
 }
 
-function Slide({ slide, active, first, load, position }: { slide: HeroSlide; active: boolean; first: boolean; load: boolean; position: string }) {
+function Slide({
+  slide,
+  active,
+  covered,
+  dir,
+  first,
+  load,
+  position,
+}: {
+  slide: HeroSlide;
+  active: boolean;
+  /** The slide the active one is sliding over (kept visible underneath until the reveal ends). */
+  covered: boolean;
+  /** Direction of travel; null on first load, so the opening slide shows at once (no delay to LCP). */
+  dir: 1 | -1 | null;
+  first: boolean;
+  load: boolean;
+  position: string;
+}) {
   const Title = first ? 'h1' : 'h2';
   const photo = Boolean(slide.image);
   const end = photo && slide.align === 'end';
@@ -228,7 +275,8 @@ function Slide({ slide, active, first, load, position }: { slide: HeroSlide; act
       aria-hidden={!active}
       inert={!active}
       data-active={active || undefined}
-      className={cx('hero-slide absolute inset-0', TONES[slide.tone], active ? 'z-10 opacity-100' : 'z-0 opacity-0')}
+      data-reveal={active && dir !== null ? (dir === 1 ? 'next' : 'prev') : undefined}
+      className={cx('hero-slide absolute inset-0', TONES[slide.tone], active ? 'z-10 opacity-100' : covered ? 'z-[5] opacity-100' : 'z-0 opacity-0')}
     >
       {photo && (
         <>

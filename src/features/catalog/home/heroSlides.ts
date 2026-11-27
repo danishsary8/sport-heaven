@@ -53,7 +53,8 @@ export const CAMPAIGN_SLIDES: readonly CampaignSlide[] = [
     tone: 'night',
     image: site('hero_ronaldo_ucl.jpg'),
     align: 'end',
-    focus: '42% 30%',
+    valign: 'bottom',
+    focus: '36% 18%',
     products: [],
   },
   {
@@ -77,7 +78,7 @@ export const CAMPAIGN_SLIDES: readonly CampaignSlide[] = [
     tone: 'night',
     image: site('hero_neymar_boots.jpg'),
     align: 'start',
-    focus: '58% 30%',
+    focus: '52% 25%',
     products: [],
   },
   {
@@ -89,8 +90,7 @@ export const CAMPAIGN_SLIDES: readonly CampaignSlide[] = [
     tone: 'night',
     image: site('hero_yamal_barca.jpg'),
     align: 'end',
-    valign: 'bottom',
-    focus: '38% 25%',
+    focus: '48% 18%',
     products: [],
   },
   {
@@ -102,7 +102,7 @@ export const CAMPAIGN_SLIDES: readonly CampaignSlide[] = [
     tone: 'night',
     image: site('hero_hamilton_f1.jpg'),
     align: 'start',
-    focus: '60% 8%',
+    focus: '62% 20%',
     products: [],
   },
 ];
@@ -113,6 +113,6 @@ export const CAMPAIGN_SLIDES: readonly CampaignSlide[] = [
  */
 export const API_HERO_PHOTO: Pick<CampaignSlide, 'image' | 'align' | 'focus' | 'valign'> = {
   image: site('hero_olise_bayern.jpg'),
-  align: 'start',
-  focus: '55% 4%',
+  align: 'end',
+  focus: '62% 22%',
 };
