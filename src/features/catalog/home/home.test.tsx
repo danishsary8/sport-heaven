@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { routes } from '../../../app/routes';
@@ -31,7 +31,10 @@ beforeEach(() => {
 describe('home page', () => {
   it('renders the sections the API sends, in order', async () => {
     renderRoutes(routes, '/');
-    expect(await screen.findByRole('heading', { level: 1, name: 'Matchday gear for Phnom Penh' })).toBeTruthy();
+    // The carousel opens on the first campaign slide; the API's hero follows the campaign slides.
+    expect(await screen.findByRole('heading', { level: 1, name: 'Wear your nation' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Go to slide 7' }));
+    expect(screen.getByRole('heading', { name: 'Matchday gear for Phnom Penh' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Shop new arrivals' })).toHaveAttribute('href', '/collections/new-arrivals');
 
     const rail = screen.getByRole('region', { name: 'New arrivals' });
@@ -64,7 +67,8 @@ describe('home page', () => {
       ),
     );
     renderRoutes(routes, '/');
-    expect(await screen.findByRole('heading', { level: 1, name: 'Matchday gear' })).toBeTruthy();
+    fireEvent.click(await screen.findByRole('button', { name: 'Go to slide 7' }));
+    expect(screen.getByRole('heading', { name: 'Matchday gear' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Shop now' })).toHaveAttribute('href', '/shop');
     expect(screen.queryByRole('region', { name: 'Shop by category' })).toBeNull();
     expect(await screen.findByRole('region', { name: 'Pick up from our stores' })).toBeTruthy();

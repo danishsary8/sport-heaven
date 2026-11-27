@@ -1,11 +1,11 @@
 import type { DictKey } from '../../../lib/i18n';
 
 /**
- * Campaign slides that follow the hero(es) from the API in the home carousel.
+ * Campaign slides for the home carousel, shown before the hero from the API.
  *
- * Every image here is the shop's own product photography (public/assets). To use campaign photos of
- * players or drivers, put the files in public/assets/site and set `image`: only use photos you hold a
- * licence for. A famous athlete's face on a shop banner needs their (or their agency's) permission.
+ * Photo slides: the files live in public/assets/site (run `npm run images` after adding one so the
+ * WebP/AVIF sizes exist). `align` puts the text on the side away from the player, and `focus` is the
+ * CSS object-position that keeps the face in frame when phones crop the photo to portrait.
  */
 export type SlideTone = 'night' | 'cobalt' | 'light';
 
@@ -17,15 +17,34 @@ export interface CampaignSlide {
   cta: DictKey;
   href: string;
   tone: SlideTone;
-  /** A full-bleed background photo. When set, the product photos are not shown. */
+  /** A full-bleed photo. When set, the product photos are not shown. */
   image?: string;
-  /** Two or three product photos shown as cards on the right. */
+  /** Which side the text sits on (desktop). Defaults to the start (left). */
+  align?: 'start' | 'end';
+  /** object-position for the photo, e.g. "62% 25%". */
+  focus?: string;
+  /** Vertical text position on desktop; 'bottom' clears a raised arm or a face high in frame. */
+  valign?: 'center' | 'bottom';
+  /** Product photos shown as cards on slides without a photo. */
   products: string[];
 }
 
 const c = (file: string) => `/assets/catalog/${file}`;
+const site = (file: string) => `/assets/site/${file}`;
 
 export const CAMPAIGN_SLIDES: readonly CampaignSlide[] = [
+  {
+    id: 'nations',
+    title: 'hero.nations.title',
+    body: 'hero.nations.body',
+    cta: 'hero.nations.cta',
+    href: '/collections/national-teams',
+    tone: 'night',
+    image: site('hero_messi_argentina.jpg'),
+    align: 'start',
+    focus: '64% 22%',
+    products: [],
+  },
   {
     id: 'ucl',
     title: 'hero.ucl.title',
@@ -33,34 +52,47 @@ export const CAMPAIGN_SLIDES: readonly CampaignSlide[] = [
     cta: 'hero.ucl.cta',
     href: '/collections/ucl-2026-27',
     tone: 'night',
-    products: [c('jersey_madrid_2627_home_1795132050973.jpg'), c('ball_ucl_pro_2627_1795193989350.jpg'), c('jersey_psg_2627_home_1795132052376.jpg')],
+    image: site('hero_ronaldo_ucl.jpg'),
+    align: 'end',
+    focus: '42% 30%',
+    products: [],
   },
   {
-    id: 'nations',
-    title: 'hero.nations.title',
-    body: 'hero.nations.body',
-    cta: 'hero.nations.cta',
-    href: '/collections/national-teams',
-    tone: 'cobalt',
-    products: [c('jersey_cambodia_blue_1795112605589.jpg'), c('jersey_argentina_3star_1795138746513.jpg'), c('jersey_brazil_2627_home_1795194002586.jpg')],
-  },
-  {
-    id: 'boots',
-    title: 'hero.boots.title',
-    body: 'hero.boots.body',
-    cta: 'hero.boots.cta',
-    href: '/c/boots',
-    tone: 'light',
-    products: [c('boot_adidas_f50_messi_fg_1795193990192.jpg'), c('hero_mercurial_boot_1795112605976.jpg'), c('boot_predator_25_ft_1795135088584.jpg')],
-  },
-  {
-    id: 'retro',
-    title: 'hero.retro.title',
-    body: 'hero.retro.body',
-    cta: 'hero.retro.cta',
-    href: '/collections/retro-jerseys',
+    id: 'laliga',
+    title: 'hero.laliga.title',
+    body: 'hero.laliga.body',
+    cta: 'hero.laliga.cta',
+    href: '/c/jerseys?league=La+Liga',
     tone: 'night',
-    products: [c('jersey_retro_barca_1999_1795193989766.jpg'), c('jersey_retro_brazil_2002_1795193991108.jpg')],
+    image: site('hero_yamal_barca.jpg'),
+    align: 'end',
+    valign: 'bottom',
+    focus: '38% 25%',
+    products: [],
+  },
+  {
+    id: 'brazil',
+    title: 'hero.brazil.title',
+    body: 'hero.brazil.body',
+    cta: 'hero.brazil.cta',
+    href: '/search?q=brazil',
+    tone: 'night',
+    image: site('hero_neymar_brazil.jpg'),
+    align: 'start',
+    focus: '54% 22%',
+    products: [],
+  },
+  {
+    id: 'new',
+    title: 'hero.new.title',
+    body: 'hero.new.body',
+    cta: 'hero.new.cta',
+    href: '/collections/new-arrivals',
+    tone: 'night',
+    image: site('hero_bellingham_england.jpg'),
+    align: 'end',
+    focus: '48% 25%',
+    products: [],
   },
   {
     id: 'f1',

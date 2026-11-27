@@ -59,7 +59,7 @@ function Section({ section }: { section: HomeSection }) {
 
 type Translate = (key: DictKey, vars?: Record<string, string | number>) => string;
 
-/** API heroes (photo slides) first, then the campaign slides with their copy translated. */
+/** The campaign slides (copy translated), then the hero(es) from the API. */
 function heroSlides(sections: HomeSection[], t: Translate): HeroSlide[] {
   const fromApi: HeroSlide[] = sections
     .filter((s) => s.type === 'hero')
@@ -76,7 +76,11 @@ function heroSlides(sections: HomeSection[], t: Translate): HeroSlide[] {
     href: c.href,
     tone: c.image ? 'photo' : c.tone,
     image: c.image,
+    align: c.align,
+    focus: c.focus,
+    valign: c.valign,
     products: c.products,
   }));
-  return [...fromApi, ...campaign];
+  // Player campaigns open the carousel; the hero managed in the API follows them.
+  return [...campaign, ...fromApi];
 }

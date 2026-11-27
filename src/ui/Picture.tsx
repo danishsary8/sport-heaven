@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { srcSetFor } from '../lib/images';
 import { cx } from './cx';
 
@@ -12,10 +13,12 @@ export interface PictureProps {
   height?: number;
   className?: string;
   imgClassName?: string;
+  /** Inline style for the <img>, e.g. an object-position focus point. */
+  imgStyle?: CSSProperties;
 }
 
 /** AVIF/WebP with JPG fallback. Without a source it shows a neutral block (never a broken image). */
-export function Picture({ src, alt, sizes, priority = false, width = 960, height = 1200, className, imgClassName }: PictureProps) {
+export function Picture({ src, alt, sizes, priority = false, width = 960, height = 1200, className, imgClassName, imgStyle }: PictureProps) {
   if (!src) return <div aria-hidden className={cx('bg-stone', className, imgClassName)} />;
   const set = srcSetFor(src);
   return (
@@ -31,6 +34,7 @@ export function Picture({ src, alt, sizes, priority = false, width = 960, height
         fetchPriority={priority ? 'high' : undefined}
         decoding="async"
         className={cx('block h-full w-full object-cover', imgClassName)}
+        style={imgStyle}
       />
     </picture>
   );

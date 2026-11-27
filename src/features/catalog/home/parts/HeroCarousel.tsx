@@ -14,6 +14,12 @@ export interface HeroSlide {
   href: string;
   tone: SlideTone | 'photo';
   image?: string;
+  /** Which side the text sits on (desktop). */
+  align?: 'start' | 'end';
+  /** object-position for the photo, keeping the subject in frame on narrow screens. */
+  focus?: string;
+  /** Where the text sits vertically on desktop: centred, or low (under a raised arm, say). */
+  valign?: 'center' | 'bottom';
   products: string[];
 }
 
@@ -193,7 +199,8 @@ function HeroButton({ dark, label, onClick, children }: { dark: boolean; label: 
 
 function Slide({ slide, active, first, load, position }: { slide: HeroSlide; active: boolean; first: boolean; load: boolean; position: string }) {
   const Title = first ? 'h1' : 'h2';
-  const photo = slide.tone === 'photo' && slide.image;
+  const photo = Boolean(slide.image);
+  const end = photo && slide.align === 'end';
   return (
     <div
       role="group"
@@ -206,11 +213,27 @@ function Slide({ slide, active, first, load, position }: { slide: HeroSlide; act
     >
       {photo && (
         <>
-          <Picture src={slide.image} alt="" sizes="100vw" priority={first} width={1440} height={900} className="hero-kenburns absolute inset-0 -z-20 h-full w-full" imgClassName="opacity-80" />
+          <Picture
+            src={slide.image}
+            alt=""
+            sizes="100vw"
+            priority={first}
+            width={1440}
+            height={900}
+            className="hero-kenburns absolute inset-0 -z-20 h-full w-full"
+            imgStyle={slide.focus ? { objectPosition: slide.focus } : undefined}
+          />
+          {/* Shade only the side the text sits on (the bottom on phones), so the player stays bright. */}
           <div
             aria-hidden
-            className="absolute inset-0 -z-10 bg-[linear-gradient(to_top,rgb(14_17_19/0.92)_0%,rgb(14_17_19/0.5)_50%,rgb(14_17_19/0.15)_100%)] lg:bg-[linear-gradient(100deg,rgb(14_17_19/0.9)_0%,rgb(14_17_19/0.5)_45%,rgb(14_17_19/0.05)_80%)]"
+            className={cx(
+              'absolute inset-0 -z-10 bg-[linear-gradient(to_top,rgb(14_17_19/0.94)_0%,rgb(14_17_19/0.55)_42%,rgb(14_17_19/0)_70%)]',
+              end
+                ? 'lg:bg-[linear-gradient(270deg,rgb(14_17_19/0.92)_0%,rgb(14_17_19/0.7)_30%,rgb(14_17_19/0)_55%)]'
+                : 'lg:bg-[linear-gradient(90deg,rgb(14_17_19/0.92)_0%,rgb(14_17_19/0.7)_30%,rgb(14_17_19/0)_55%)]',
+            )}
           />
+          <div aria-hidden className="absolute inset-x-0 bottom-0 -z-10 hidden h-40 bg-gradient-to-t from-obsidian/70 to-transparent lg:block" />
         </>
       )}
 
@@ -221,10 +244,20 @@ function Slide({ slide, active, first, load, position }: { slide: HeroSlide; act
           </div>
         )}
 
-        <div className={cx('row-start-2 self-end lg:col-start-1 lg:row-start-1 lg:self-center', photo && 'row-start-1 row-end-3 lg:pt-16')}>
+        <div
+          className={cx(
+            'row-start-2 self-end lg:row-start-1',
+            slide.valign === 'bottom' ? 'lg:self-end lg:pb-6' : 'lg:self-center',
+            end ? 'lg:col-start-2 lg:justify-self-end' : 'lg:col-start-1',
+            photo && 'row-start-1 row-end-3 lg:max-w-[440px] lg:pt-10',
+          )}
+        >
           <span aria-hidden className="hero-rise flag-rule mb-5 block h-3 w-[72px] lg:mb-7 lg:h-4 lg:w-24" style={{ '--d': '0ms' } as CSSProperties} />
           <Title
-            className="hero-rise max-w-[13ch] font-display text-[clamp(48px,11vw,128px)] font-extrabold uppercase leading-[0.86] tracking-[-0.015em]"
+            className={cx(
+              'hero-rise max-w-[13ch] font-display font-extrabold uppercase leading-[0.86] tracking-[-0.015em]',
+              photo ? 'text-[clamp(46px,10vw,96px)] [text-shadow:0_2px_24px_rgb(14_17_19/0.35)]' : 'text-[clamp(48px,11vw,128px)]',
+            )}
             style={{ '--d': '80ms' } as CSSProperties}
           >
             {slide.title}
