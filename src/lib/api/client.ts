@@ -18,6 +18,8 @@ export interface FetchOptions {
   withLang?: boolean;
   /** A raw text body (e.g. CSV); set the content-type in `headers`. */
   text?: string;
+  /** A raw file body (e.g. a photo); sent with the file's own type unless `headers` say otherwise. */
+  blob?: Blob;
   /** Read the response as text instead of JSON. */
   as?: 'json' | 'text';
 }
@@ -48,13 +50,14 @@ export function buildUrl(path: string, query?: Record<string, QueryValue>, lang?
 async function send(url: string, opts: FetchOptions, token: string | null): Promise<Response> {
   const headers: Record<string, string> = { accept: 'application/json', ...opts.headers };
   if (opts.body !== undefined && !headers['content-type']) headers['content-type'] = 'application/json';
+  if (opts.blob !== undefined && !headers['content-type']) headers['content-type'] = opts.blob.type || 'application/octet-stream';
   if (token) headers.authorization = `Bearer ${token}`;
   try {
     return await fetch(url, {
       method: opts.method ?? 'GET',
       credentials: 'include',
       headers,
-      body: opts.text !== undefined ? opts.text : opts.body === undefined ? undefined : JSON.stringify(opts.body),
+      body: opts.blob !== undefined ? opts.blob : opts.text !== undefined ? opts.text : opts.body === undefined ? undefined : JSON.stringify(opts.body),
       signal: opts.signal,
     });
   } catch (e) {

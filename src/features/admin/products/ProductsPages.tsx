@@ -7,6 +7,7 @@ import { AdminOnly } from '../AdminLayout';
 import { patch, post, put, useAdminMutation, useAdminQuery } from '../api';
 import type { AdminProduct, AdminProductListRow, AdminVariant, Brand, Category, CsvImportResult } from '../types';
 import { ProductsTable } from './ProductsTable';
+import { PhotoManager, tilesOf, type PhotoTile } from './PhotoManager';
 import { ChevronDown, Plus, Search } from 'lucide-react';
 import { AdminPage, Pager, human } from '../ui';
 
@@ -264,6 +265,7 @@ function ProductEditor({ product }: { product: AdminProduct }) {
     highlights: product.highlights.join('\n'),
   };
   const [f, setF] = useState(initial);
+  const [photos, setPhotos] = useState(() => tilesOf(product));
   const [error, setError] = useState<string | null>(null);
   const save = useAdminMutation((body: unknown) => patch(`/v1/admin/products/${product.id}`, body), [['product', product.id], ['products']]);
 
@@ -296,7 +298,10 @@ function ProductEditor({ product }: { product: AdminProduct }) {
         </div>
       }
     >
-      <form onSubmit={submit} noValidate className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
+      <div className="flex min-w-0 flex-col gap-6">
+      <form onSubmit={submit} noValidate className="grid gap-4 rounded-[16px] border border-stone p-5 md:grid-cols-2">
+        <h2 className="font-display text-[28px] font-bold leading-none md:col-span-2">Details</h2>
         <Field label="Name (English)" value={f.nameEn} onChange={(e) => setF({ ...f, nameEn: e.target.value })} maxLength={500} />
         <Field label="Name (Khmer)" value={f.nameKm} onChange={(e) => setF({ ...f, nameKm: e.target.value })} maxLength={500} />
         <TextArea label="Description (English)" value={f.descEn} onChange={(e) => setF({ ...f, descEn: e.target.value })} maxLength={500} />
@@ -319,8 +324,8 @@ function ProductEditor({ product }: { product: AdminProduct }) {
         </Button>
       </form>
 
-      <section aria-labelledby="sizes-h">
-        <h2 id="sizes-h" className="mb-2 text-lg font-semibold">
+      <section aria-labelledby="sizes-h" className="rounded-[16px] border border-stone p-5">
+        <h2 id="sizes-h" className="mb-3 font-display text-[28px] font-bold leading-none">
           Sizes and prices
         </h2>
         <ul className="divide-y divide-stone rounded-[8px] border border-stone">
@@ -332,21 +337,32 @@ function ProductEditor({ product }: { product: AdminProduct }) {
         </ul>
       </section>
 
-      <section aria-labelledby="photos-h">
-        <h2 id="photos-h" className="mb-2 text-lg font-semibold">
-          Photos
-        </h2>
-        <ul className="flex flex-wrap gap-3">
-          {product.images.map((img) => (
-            <li key={img.id} className="w-28 text-xs">
-              <img src={`/assets/${img.path}`} alt={img.alt ?? ''} className="aspect-[3/4] w-full rounded bg-stone object-cover" />
-              <span className="mt-1 block truncate text-graphite">{colorName(img.colorId ?? '') || 'All colours'}</span>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-2 text-sm text-graphite">Photos are uploaded with the image script and linked here by a developer (OWNER-TODO).</p>
-      </section>
+      <PhotoManager product={product} tiles={photos} onChange={setPhotos} />
+      </div>
+      <ShopPreview name={f.nameEn || product.nameI18n.en} status={f.status} photos={photos} fromCents={Math.min(...product.variants.map((v) => v.priceCents))} />
+      </div>
     </AdminPage>
+  );
+}
+
+/** The product as the shop card shows it, live: point at the photo to see the hover pose. */
+function ShopPreview({ name, status, photos, fromCents }: { name: string; status: AdminProduct['status']; photos: PhotoTile[]; fromCents: number }) {
+  const [main, hover] = photos;
+  return (
+    <section aria-label="Shop preview" className="h-fit rounded-[16px] bg-chalk p-5 xl:sticky xl:top-6">
+      <p className="mb-3 flex items-center justify-between text-sm font-semibold text-graphite">
+        Shop preview
+        <span className={cx('rounded-full px-2.5 py-0.5 text-xs', status === 'active' ? 'bg-success/10 text-success' : 'bg-stone text-graphite')}>{status === 'active' ? 'Visible in the shop' : 'Hidden from the shop'}</span>
+      </p>
+      <div className="group stage relative aspect-[3/4] overflow-hidden rounded-[12px]">
+        {main?.url ? <img src={main.url} alt="" className={cx('absolute inset-0 size-full object-cover transition-[opacity,transform] duration-500 group-hover:scale-[1.035]', hover?.url && 'group-hover:opacity-0')} /> : null}
+        {hover?.url && <img src={hover.url} alt="" className="absolute inset-0 size-full scale-[1.02] object-cover opacity-0 transition-[opacity,transform] duration-500 group-hover:scale-100 group-hover:opacity-100" />}
+        {!main && <span className="absolute inset-0 grid place-items-center text-sm text-graphite">No photo yet</span>}
+      </div>
+      <p className="mt-3 line-clamp-2 text-[15px] font-medium leading-snug">{name}</p>
+      {Number.isFinite(fromCents) && <p className="tabular mt-1 font-semibold">{formatUsd(fromCents)}</p>}
+      <p className="mt-3 text-xs text-graphite">{hover ? 'Point at the photo to see the second pose.' : 'Add a second photo for the hover pose.'}</p>
+    </section>
   );
 }
 

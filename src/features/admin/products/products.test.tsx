@@ -26,7 +26,7 @@ const PRODUCT = {
   heroTagline: null,
   colors: [{ id: 'col1', name: 'Red', swatchHex: '#D81E2B', sort: 0 }],
   variants: [{ id: VID, colorId: 'col1', sizeLabel: 'EU 39', sizeSort: 390, sku: 'PRED-EU39', priceCents: 25500, compareAtCents: 28000, status: 'active' }],
-  images: [{ id: 'img1', colorId: 'col1', path: 'catalog/pred.jpg', alt: 'Predator', sort: 0 }],
+  images: [{ id: 'img1', colorId: 'col1', path: 'catalog/pred.jpg', url: '/assets/catalog/pred.jpg', alt: 'Predator', sort: 0 }],
 };
 
 let calls: { method: string; url: string; body: unknown }[] = [];
@@ -54,6 +54,11 @@ beforeEach(() => {
     http.patch(`${API}/v1/admin/products/:id`, async ({ request }) => (await rec(request), HttpResponse.json({ product: PRODUCT }))),
     http.put(`${API}/v1/admin/products/:id/variants/:vid`, async ({ request }) => (await rec(request), HttpResponse.json({ variant: PRODUCT.variants[0] }))),
     http.post(`${API}/v1/admin/products`, async ({ request }) => (await rec(request), HttpResponse.json({ product: { ...PRODUCT, id: 'new-id' } }, { status: 201 }))),
+    http.post(`${API}/v1/admin/media`, async ({ request }) => {
+      calls.push({ method: 'POST', url: '/v1/admin/media', body: request.headers.get('content-type') });
+      return HttpResponse.json({ path: 'media/0b7e2f4c-1111-4222-8333-444455556666.png', url: 'http://api.test/v1/media/0b7e2f4c-1111-4222-8333-444455556666.png' }, { status: 201 });
+    }),
+    http.put(`${API}/v1/admin/products/:id/images`, async ({ request }) => (await rec(request), HttpResponse.json({ product: PRODUCT }))),
     http.post(`${API}/v1/admin/products/import`, async ({ request }) => {
       await rec(request);
       const apply = new URL(request.url).searchParams.get('apply') === 'true';
@@ -108,6 +113,50 @@ describe('admin products', () => {
     fireEvent.change(within(row).getByLabelText('Price EU 39'), { target: { value: '240.00' } });
     fireEvent.click(within(row).getByRole('button', { name: 'Save EU 39' }));
     await waitFor(() => expect(calls).toContainEqual({ method: 'PUT', url: `/v1/admin/products/${PID}/variants/${VID}`, body: { priceCents: 24000 } }));
+  });
+
+  it('shows the main and hover photo slots, and a shop preview', async () => {
+    renderRoutes(routes, `/admin/products/${PID}`, { signedIn: true });
+    const photos = await screen.findByRole('region', { name: 'Photos' });
+    expect(within(photos).getByRole('group', { name: 'Main photo' })).toBeTruthy();
+    expect(within(photos).getByRole('group', { name: 'Hover photo (second pose)' })).toHaveTextContent('Add the second pose');
+    expect(screen.getByRole('region', { name: 'Shop preview' })).toHaveTextContent('Predator Elite FG');
+  });
+
+  it('uploads a second pose and saves the photos in order', async () => {
+    renderRoutes(routes, `/admin/products/${PID}`, { signedIn: true });
+    const photos = await screen.findByRole('region', { name: 'Photos' });
+    const file = new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], 'side.png', { type: 'image/png' });
+    fireEvent.change(within(photos).getByLabelText('Add photos'), { target: { files: [file] } });
+    await waitFor(() => expect(calls).toContainEqual({ method: 'POST', url: '/v1/admin/media', body: 'image/png' }));
+    expect(await within(photos).findByRole('group', { name: 'Hover photo (second pose)' })).not.toHaveTextContent('Add the second pose');
+    fireEvent.click(within(photos).getByRole('button', { name: 'Save photos' }));
+    await waitFor(() =>
+      expect(calls).toContainEqual({
+        method: 'PUT',
+        url: `/v1/admin/products/${PID}/images`,
+        body: { images: [{ path: 'catalog/pred.jpg', color: 'Red', alt: 'Predator' }, { path: 'media/0b7e2f4c-1111-4222-8333-444455556666.png' }] },
+      }),
+    );
+  });
+
+  it('makes another photo the main one', async () => {
+    renderRoutes(routes, `/admin/products/${PID}`, { signedIn: true });
+    const photos = await screen.findByRole('region', { name: 'Photos' });
+    fireEvent.change(within(photos).getByLabelText('Add photos'), { target: { files: [new File(['x'], 'b.png', { type: 'image/png' })] } });
+    const hover = await within(photos).findByRole('group', { name: 'Hover photo (second pose)' });
+    await waitFor(() => expect(hover).not.toHaveTextContent('Add the second pose'));
+    fireEvent.click(within(hover).getByRole('button', { name: 'Swap with main photo' }));
+    fireEvent.click(within(photos).getByRole('button', { name: 'Save photos' }));
+    await waitFor(() => expect(calls.find((c) => c.method === 'PUT' && c.url.endsWith('/images'))?.body).toEqual({ images: [{ path: 'media/0b7e2f4c-1111-4222-8333-444455556666.png' }, { path: 'catalog/pred.jpg', color: 'Red', alt: 'Predator' }] }));
+  });
+
+  it('refuses files that are not photos before uploading', async () => {
+    renderRoutes(routes, `/admin/products/${PID}`, { signedIn: true });
+    const photos = await screen.findByRole('region', { name: 'Photos' });
+    fireEvent.change(within(photos).getByLabelText('Add photos'), { target: { files: [new File(['x'], 'notes.txt', { type: 'text/plain' })] } });
+    expect(await screen.findByText('notes.txt is not a JPG, PNG or WebP photo.')).toBeTruthy();
+    expect(calls.some((c) => c.url === '/v1/admin/media')).toBe(false);
   });
 
   it('creates a product with its sizes', async () => {

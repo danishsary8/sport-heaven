@@ -125,7 +125,7 @@ export interface AdminProduct extends AdminProductRow {
   heroTagline: string | null;
   colors: { id: string; name: string; swatchHex: string | null; sort: number }[];
   variants: AdminVariant[];
-  images: { id: string; colorId: string | null; path: string; alt: string | null; sort: number }[];
+  images: { id: string; colorId: string | null; path: string; url?: string | null; alt: string | null; sort: number }[];
 }
 export interface Brand {
   id: string;
