@@ -330,3 +330,22 @@ input[type="search"]::-webkit-search-cancel-button { display: none; }
 .done-mark path { stroke-dasharray: 40; animation: tickIn 380ms 700ms cubic-bezier(0.65, 0, 0.35, 1) both; }
 @keyframes riseIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 .animate-rise { animation: riseIn 560ms cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: var(--d, 0ms); }
+
+/* Sheets close the way they opened (the panel stays mounted for this, inert). */
+@keyframes sheetInTop { from { transform: translateY(-16px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes sheetOutRight { to { transform: translateX(100%); } }
+@keyframes sheetOutLeft { to { transform: translateX(-100%); } }
+@keyframes sheetOutBottom { to { transform: translateY(100%); } }
+@keyframes sheetOutTop { to { transform: translateY(-16px); opacity: 0; } }
+@keyframes fadeOut { to { opacity: 0; } }
+/* Centred dialogs are centred with the separate `translate` property, so these only scale and fade. */
+@keyframes popIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes popOut { to { opacity: 0; transform: scale(0.97); } }
+.animate-sheet-top { animation: sheetInTop 260ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-sheet-out-right { animation: sheetOutRight 220ms cubic-bezier(0.7, 0, 0.84, 0) both; }
+.animate-sheet-out-left { animation: sheetOutLeft 220ms cubic-bezier(0.7, 0, 0.84, 0) both; }
+.animate-sheet-out-bottom { animation: sheetOutBottom 220ms cubic-bezier(0.7, 0, 0.84, 0) both; }
+.animate-sheet-out-top { animation: sheetOutTop 200ms ease-in both; }
+.animate-fade-out { animation: fadeOut 220ms ease-in both; }
+.animate-pop-in { animation: popIn 240ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-pop-out { animation: popOut 180ms ease-in both; }

@@ -55,7 +55,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose(): voi
   const { t } = useI18n();
   return (
     <Sheet open={open} onClose={onClose} side="top" title={t('search.title')} hideTitle>
-      {open && <SearchBody onClose={onClose} />}
+      <SearchBody onClose={onClose} />
     </Sheet>
   );
 }

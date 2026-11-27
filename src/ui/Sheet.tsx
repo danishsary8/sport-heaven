@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useI18n } from '../lib/i18n';
@@ -17,6 +17,10 @@ export interface SheetProps {
   footer?: ReactNode;
   className?: string;
 }
+
+const EXIT_MS = 240;
+const ENTER = { left: 'animate-sheet-left', right: 'animate-sheet-right', top: 'animate-sheet-top', bottom: 'animate-sheet-bottom', center: 'animate-pop-in' } as const;
+const EXIT = { left: 'animate-sheet-out-left', right: 'animate-sheet-out-right', top: 'animate-sheet-out-top', bottom: 'animate-sheet-out-bottom', center: 'animate-pop-out' } as const;
 
 /** A modal panel (menu, filters, bag, dialogs): traps focus, closes on Escape or backdrop, restores focus. */
 export function Sheet({ open, onClose, side = 'right', title, hideTitle, children, footer, className }: SheetProps) {
@@ -62,26 +66,41 @@ export function Sheet({ open, onClose, side = 'right', title, hideTitle, childre
     };
   }, [open]);
 
-  if (!open) return null;
+  // After closing, the panel stays for its exit animation: inert and no longer a dialog, then it is removed.
+  const [present, setPresent] = useState(open);
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setPresent(true);
+  }
+  useEffect(() => {
+    if (open || !present) return;
+    const id = setTimeout(() => setPresent(false), EXIT_MS);
+    return () => clearTimeout(id);
+  }, [open, present]);
+
+  if (!open && !present) return null;
+  const closing = !open;
 
   const position = {
-    left: 'inset-y-0 left-0 w-[min(88vw,380px)] animate-sheet-left',
-    right: 'inset-y-0 right-0 w-[min(92vw,440px)] animate-sheet-right',
-    top: 'inset-x-0 top-0 max-h-[92vh] rounded-b-[14px] animate-fade',
-    bottom: 'inset-x-0 bottom-0 max-h-[88vh] rounded-t-[14px] animate-sheet-bottom',
-    center: 'left-1/2 top-1/2 w-[min(92vw,520px)] max-h-[88vh] -translate-x-1/2 -translate-y-1/2 rounded-[10px] animate-fade',
+    left: 'inset-y-0 left-0 w-[min(88vw,380px)]',
+    right: 'inset-y-0 right-0 w-[min(92vw,440px)]',
+    top: 'inset-x-0 top-0 max-h-[92vh] rounded-b-[14px]',
+    bottom: 'inset-x-0 bottom-0 max-h-[88vh] rounded-t-[14px]',
+    center: 'left-1/2 top-1/2 w-[min(92vw,520px)] max-h-[88vh] -translate-x-1/2 -translate-y-1/2 rounded-[12px]',
   }[side];
+  const motion = (closing ? EXIT : ENTER)[side];
 
   return createPortal(
-    <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-obsidian/45 animate-fade" onClick={onClose} aria-hidden />
+    <div className={cx('fixed inset-0 z-50', closing && 'pointer-events-none')} data-sheet={closing ? 'closing' : 'open'} inert={closing || undefined}>
+      <div className={cx('absolute inset-0 bg-obsidian/45', closing ? 'animate-fade-out' : 'animate-fade')} onClick={onClose} aria-hidden />
       <div
         ref={panel}
-        role="dialog"
-        aria-modal="true"
+        role={closing ? undefined : 'dialog'}
+        aria-modal={closing ? undefined : 'true'}
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={cx('absolute flex flex-col bg-paper shadow-[0_10px_40px_rgba(14,17,19,0.25)] outline-none', position, className)}
+        className={cx('absolute flex flex-col bg-paper shadow-[0_10px_40px_rgba(14,17,19,0.25)] outline-none', position, motion, className)}
       >
         <div className={cx('flex items-center justify-between gap-4 px-5 pt-4 pb-3', hideTitle && 'absolute right-0 top-0 z-10')}>
           <h2 id={titleId} className={cx('font-display text-2xl font-bold leading-none', hideTitle && 'sr-only')}>

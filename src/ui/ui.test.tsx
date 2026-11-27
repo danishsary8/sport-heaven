@@ -115,6 +115,22 @@ describe('Sheet', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(document.activeElement).toBe(opener);
   });
+
+  it('slides out instead of vanishing: the closed panel stays briefly, inert, then is removed', () => {
+    vi.useFakeTimers();
+    try {
+      withI18n(<Harness />);
+      fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+      fireEvent.keyDown(document, { key: 'Escape' });
+      const leaving = document.querySelector('[data-sheet="closing"]');
+      expect(leaving).toBeTruthy();
+      expect(leaving).toHaveAttribute('inert');
+      act(() => vi.advanceTimersByTime(400));
+      expect(document.querySelector('[data-sheet]')).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
 
 describe('Seo', () => {
