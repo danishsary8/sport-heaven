@@ -7,6 +7,7 @@ import { AdminOnly } from '../AdminLayout';
 import { patch, post, put, useAdminMutation, useAdminQuery } from '../api';
 import type { AdminProduct, AdminProductListRow, AdminVariant, Brand, Category, CsvImportResult } from '../types';
 import { ProductsTable } from './ProductsTable';
+import { BulkPhotos } from './BulkPhotos';
 import { ProductImport } from './ProductImport';
 import { PhotoManager, tilesOf, type PhotoTile } from './PhotoManager';
 import { ChevronDown, Plus, Search } from 'lucide-react';
@@ -88,12 +89,15 @@ function ProductsList() {
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-semibold">
           <span>
             Import from a spreadsheet
-            <span className="block text-sm font-normal text-graphite">Add many new products at once, or update prices, from a CSV file</span>
+            <span className="block text-sm font-normal text-graphite">Add or update many products, photos or prices at once</span>
           </span>
           <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden />
         </summary>
         <div className="mt-4 flex flex-col gap-5 divide-y divide-dashed divide-[#C9C5BB]">
           <ProductImport />
+          <div className="pt-5">
+            <BulkPhotos />
+          </div>
           <div className="pt-5">
             <CsvImport />
           </div>

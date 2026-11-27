@@ -54,6 +54,76 @@ export interface ImportPlan {
 
 const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
 
+/** A photo cell that is a web link (downloaded by the server on import) rather than a stored path. */
+export const isPhotoLink = (v: string) => /^https:\/\//i.test(v);
+
+/**
+ * Makes `photos` (main, then hover) the product's first photos; its other photos stay after them with their
+ * colour and alt text. Null when the product already starts with exactly these photos.
+ */
+export function photosOp(p: AdminProduct, photos: string[]): ImportOp | null {
+  const current = [...p.images].sort((a, b) => a.sort - b.sort);
+  if (!photos.length || photos.every((path, i) => current[i]?.path === path)) return null;
+  const colour = (id: string | null) => p.colors.find((c) => c.id === id)?.name;
+  const rest = current.slice(photos.length).filter((c) => !photos.includes(c.path));
+  return {
+    method: 'PUT',
+    path: `/v1/admin/products/${p.id}/images`,
+    body: {
+      images: [...photos.map((path) => ({ path })), ...rest.map((c) => ({ path: c.path, ...(colour(c.colorId) ? { color: colour(c.colorId) } : {}), ...(c.alt ? { alt: c.alt } : {}) }))],
+    },
+  };
+}
+
+export interface PhotoFile {
+  name: string;
+  type: string;
+  size: number;
+}
+
+export interface PhotoGroup<F extends PhotoFile = PhotoFile> {
+  slug: string;
+  main?: F;
+  hover?: F;
+}
+
+const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const PHOTO_MAX_BYTES = 4 * 1024 * 1024;
+
+/**
+ * Groups photo files by product: "<web address>-1.webp" is the main photo, "-2" the hover photo (any of
+ * .jpg/.jpeg/.png/.webp, any letter case). Every file that cannot be used is named with the reason.
+ */
+export function groupPhotoFiles<F extends PhotoFile>(files: F[]): { groups: PhotoGroup<F>[]; problems: string[] } {
+  const groups = new Map<string, PhotoGroup<F>>();
+  const problems: string[] = [];
+  for (const f of files) {
+    const m = /^(.+)-([12])\.[a-z0-9]+$/i.exec(f.name.trim());
+    if (!m) {
+      problems.push(`${f.name}: name it like <web address>-1.webp (main) or -2.webp (hover)`);
+      continue;
+    }
+    if (!PHOTO_TYPES.includes(f.type)) {
+      problems.push(`${f.name}: only JPG, PNG or WebP photos`);
+      continue;
+    }
+    if (f.size > PHOTO_MAX_BYTES) {
+      problems.push(`${f.name}: larger than 4 MB`);
+      continue;
+    }
+    const slug = m[1]!.toLowerCase();
+    const key = m[2] === '1' ? 'main' : 'hover';
+    const g = groups.get(slug) ?? { slug };
+    if (g[key]) {
+      problems.push(`${f.name}: ${slug} already has a ${key === 'main' ? 'main' : 'hover'} photo in this batch`);
+      continue;
+    }
+    g[key] = f;
+    groups.set(slug, g);
+  }
+  return { groups: [...groups.values()], problems };
+}
+
 /**
  * Decides, per row, whether it adds a product or updates one already in the shop (found by its web address),
  * and lists what an update changes. For existing products, price and "was" price apply to every size; the
@@ -74,21 +144,11 @@ export function planImport(rows: ImportRow[], existing: Map<string, AdminProduct
       changes.push(lo === r.priceCents && hi === r.priceCents ? `"was" price ${r.compareAtCents === null ? 'removed' : `→ ${usd(r.compareAtCents)}`}` : `price ${was} → ${usd(r.priceCents)}`);
       ops.push({ method: 'PUT', path: `/v1/admin/products/${p.id}/prices`, body: { priceCents: r.priceCents, compareAtCents: r.compareAtCents } });
     }
-    const current = [...p.images].sort((a, b) => a.sort - b.sort);
-    if (r.photos.length && r.photos.some((path, i) => current[i]?.path !== path)) {
-      const colour = (id: string | null) => p.colors.find((c) => c.id === id)?.name;
-      const rest = current.slice(r.photos.length).filter((c) => !r.photos.includes(c.path));
-      changes.push(r.photos.length === 1 ? 'main photo' : 'main and hover photos');
-      ops.push({
-        method: 'PUT',
-        path: `/v1/admin/products/${p.id}/images`,
-        body: {
-          images: [
-            ...r.photos.map((path) => ({ path })),
-            ...rest.map((c) => ({ path: c.path, ...(colour(c.colorId) ? { color: colour(c.colorId) } : {}), ...(c.alt ? { alt: c.alt } : {}) })),
-          ],
-        },
-      });
+    const photoOp = photosOp(p, r.photos);
+    if (photoOp) {
+      const links = r.photos.filter(isPhotoLink).length;
+      changes.push(`${r.photos.length === 1 ? 'main photo' : 'main and hover photos'}${links ? ` (downloaded from the ${links === 1 ? 'link' : 'links'})` : ''}`);
+      ops.push(photoOp);
     }
     const patch: Record<string, unknown> = {};
     if (r.name && r.name !== p.nameI18n.en) {
@@ -154,6 +214,13 @@ const cents = (v: string): number | null => {
 };
 
 const PHOTO = /^[a-z0-9][a-z0-9/_.-]*$/;
+const validLink = (v: string) => {
+  try {
+    return new URL(v).protocol === 'https:' && v.length <= 2000;
+  } catch {
+    return false;
+  }
+};
 
 /**
  * Checks a new-product spreadsheet against the shop's brands and categories. Every problem names its line,
@@ -208,7 +275,8 @@ export function checkImport(text: string, brands: Brand[], categories: Category[
     if (compare === null) problems.push('compare_at must look like 150 or be empty');
     else if (compare !== undefined && price !== null && compare <= price) problems.push('compare_at must be higher than the price');
     if (description.length > 500) problems.push('description is longer than 500 characters');
-    if (photos.some((p) => !PHOTO.test(p) || p.split('/').includes('..'))) problems.push('photo paths look like catalog/name.jpg');
+    if (photos.some((p) => /^http:\/\//i.test(p))) problems.push('photo links must start with https://');
+    else if (photos.some((p) => (isPhotoLink(p) ? !validLink(p) : !PHOTO.test(p) || p.split('/').includes('..')))) problems.push('photo paths look like catalog/name.jpg, or a link like https://…');
     if (statusCell && !status) problems.push('status must be active, draft or archived (or empty)');
     if (matchSlug.length >= 2 && seen.has(matchSlug)) problems.push(`the same product is already on line ${seen.get(matchSlug)}`);
     else if (matchSlug.length >= 2) seen.set(matchSlug, line);

@@ -300,6 +300,53 @@ describe('admin products', () => {
     expect(calls.some((c) => c.url.includes(PID2) && c.method !== 'GET')).toBe(false);
   });
 
+  it('downloads photo links in the file, then uses them for the product', async () => {
+    server.use(
+      http.post(`${API}/v1/admin/media/from-url`, async ({ request }) => {
+        const { url } = (await request.clone().json()) as { url: string };
+        await rec(request);
+        return HttpResponse.json({ path: `media/${url.endsWith('front.webp') ? 'aaaaaaaa' : 'bbbbbbbb'}-1111-4222-8333-444455556666.webp`, url: '' }, { status: 201 });
+      }),
+    );
+    renderRoutes(routes, '/admin/products', { signedIn: true });
+    const csv = ['name,brand,category,colour,sizes,price,compare_at,main_photo,hover_photo,slug', 'Predator Elite FG,adidas,boots,Red,EU 39,255,280,https://cdn.example.com/front.webp,https://cdn.example.com/back.webp,predator'].join('\n');
+    fireEvent.change(await screen.findByLabelText('New products spreadsheet'), { target: { files: [new File([csv], 'links.csv', { type: 'text/csv' })] } });
+    const check = await screen.findByRole('region', { name: 'New products check' });
+    expect(await within(check).findByRole('row', { name: /Predator Elite FG/ })).toHaveTextContent('main and hover photos (downloaded from the links)');
+    fireEvent.click(within(check).getByRole('button', { name: 'Import 1 update' }));
+    expect(await within(check).findByText('1 updated')).toBeTruthy();
+    expect(calls.filter((c) => c.url === '/v1/admin/media/from-url').map((c) => c.body)).toEqual([{ url: 'https://cdn.example.com/front.webp' }, { url: 'https://cdn.example.com/back.webp' }]);
+    expect(calls).toContainEqual({
+      method: 'PUT',
+      url: `/v1/admin/products/${PID}/images`,
+      body: { images: [{ path: 'media/aaaaaaaa-1111-4222-8333-444455556666.webp' }, { path: 'media/bbbbbbbb-1111-4222-8333-444455556666.webp' }] },
+    });
+  });
+
+  it('adds photos to many products at once, matched by file name', async () => {
+    let n = 0;
+    server.use(
+      http.post(`${API}/v1/admin/media`, () => {
+        n += 1;
+        return HttpResponse.json({ path: `media/0000000${n}-1111-4222-8333-444455556666.webp`, url: '' }, { status: 201 });
+      }),
+    );
+    renderRoutes(routes, '/admin/products', { signedIn: true });
+    const files = [new File(['a'], 'predator-1.webp', { type: 'image/webp' }), new File(['b'], 'predator-2.webp', { type: 'image/webp' }), new File(['c'], 'nothing-here-1.webp', { type: 'image/webp' })];
+    fireEvent.change(await screen.findByLabelText('Photos named by product'), { target: { files } });
+    const check = await screen.findByRole('region', { name: 'Photos check' });
+    expect(await within(check).findByRole('row', { name: /predator/ })).toHaveTextContent('Predator Elite FG');
+    expect(within(check).getByRole('row', { name: /nothing-here/ })).toHaveTextContent('Not in the shop');
+    fireEvent.click(within(check).getByRole('button', { name: 'Add photos to 1 product' }));
+    expect(await within(check).findByText('Photos added to 1 product')).toBeTruthy();
+    expect(n).toBe(2);
+    expect(calls).toContainEqual({
+      method: 'PUT',
+      url: `/v1/admin/products/${PID}/images`,
+      body: { images: [{ path: 'media/00000001-1111-4222-8333-444455556666.webp' }, { path: 'media/00000002-1111-4222-8333-444455556666.webp' }] },
+    });
+  });
+
   it('clears the selection when the list changes, so hidden products are never changed', async () => {
     renderRoutes(routes, '/admin/products', { signedIn: true });
     fireEvent.click(await screen.findByRole('checkbox', { name: 'Select Predator Elite FG' }));

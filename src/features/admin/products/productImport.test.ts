@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { IMPORT_TEMPLATE, checkImport, parseCsv, planImport } from './productImport';
+import { IMPORT_TEMPLATE, checkImport, groupPhotoFiles, parseCsv, planImport } from './productImport';
 
 const BRANDS = [{ id: 'b1', slug: 'adidas', name: 'Adidas' }];
 const CATEGORIES = [{ id: 'c1', slug: 'boots', nameI18n: { en: 'Football Boots' } }];
@@ -48,7 +48,7 @@ describe('checkImport', () => {
       'Line 3: colour code must look like #D81E2B',
       'Line 3: add at least one size',
       'Line 3: price must look like 120 or 120.50',
-      'Line 3: photo paths look like catalog/name.jpg',
+      'Line 3: photo paths look like catalog/name.jpg, or a link like https://…',
       'Line 4: the same product is already on line 2',
     ]);
   });
@@ -155,5 +155,42 @@ describe('planImport (new or update)', () => {
   it('refuses an unknown status', () => {
     const { problems } = checkImport(`${HEAD2}\nCopa Pure 3 FG,Adidas,boots,White,,EU 40,120,,,,,copa-pure-3-fg,live`, BRANDS, CATEGORIES);
     expect(problems).toEqual(['Line 2: status must be active, draft or archived (or empty)']);
+  });
+});
+
+describe('photo links in the import', () => {
+  const HEAD2 = `${HEAD},slug,status`;
+  it('accepts https photo links and refuses plain http ones', () => {
+    const ok = checkImport(`${HEAD}\nCopa X,Adidas,boots,White,,EU 40,120,,,https://cdn.example.com/a.webp,catalog/b.jpg`, BRANDS, CATEGORIES);
+    expect(ok.problems).toEqual([]);
+    expect(ok.rows[0]!.photos).toEqual(['https://cdn.example.com/a.webp', 'catalog/b.jpg']);
+    const bad = checkImport(`${HEAD}\nCopa X,Adidas,boots,White,,EU 40,120,,,http://cdn.example.com/a.webp,`, BRANDS, CATEGORIES);
+    expect(bad.problems).toEqual(['Line 2: photo links must start with https://']);
+  });
+  it('says the photos will be downloaded', () => {
+    const { rows } = checkImport(`${HEAD2}\nCopa X,Adidas,boots,White,,EU 40,120,,,https://cdn.example.com/a.webp,,copa-x,`, BRANDS, CATEGORIES);
+    const p = { id: 'p9', slug: 'copa-x', nameI18n: { en: 'Copa X' }, descriptionI18n: null, status: 'active', colors: [], images: [], variants: [{ priceCents: 12000, compareAtCents: null }] } as unknown as Parameters<typeof planImport>[1] extends Map<string, infer P> ? P : never;
+    expect(planImport(rows, new Map([['copa-x', p]]))[0]!.changes).toEqual(['main photo (downloaded from the link)']);
+  });
+});
+
+describe('groupPhotoFiles', () => {
+  const f = (name: string, type = 'image/webp', size = 1000) => ({ name, type, size });
+  it('reads <web address>-1 as the main photo and -2 as the hover photo', () => {
+    const r = groupPhotoFiles([f('ac-milan-home-1.webp'), f('AC-Milan-Home-2.JPG', 'image/jpeg'), f('copa-1.png', 'image/png')]);
+    expect(r.problems).toEqual([]);
+    expect(r.groups.map((g) => [g.slug, g.main?.name, g.hover?.name])).toEqual([
+      ['ac-milan-home', 'ac-milan-home-1.webp', 'AC-Milan-Home-2.JPG'],
+      ['copa', 'copa-1.png', undefined],
+    ]);
+  });
+  it('names every file it cannot use', () => {
+    const r = groupPhotoFiles([f('front.webp'), f('copa-1.webp'), f('copa-1.jpg', 'image/jpeg'), f('copa-2.gif', 'image/gif'), f('big-1.webp', 'image/webp', 5 * 1024 * 1024)]);
+    expect(r.problems).toEqual([
+      'front.webp: name it like <web address>-1.webp (main) or -2.webp (hover)',
+      'copa-1.jpg: copa already has a main photo in this batch',
+      'copa-2.gif: only JPG, PNG or WebP photos',
+      'big-1.webp: larger than 4 MB',
+    ]);
   });
 });

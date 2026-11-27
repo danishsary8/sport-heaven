@@ -6,24 +6,14 @@ import { apiFetch, isApiError } from '../../../lib/api';
 import { formatUsd } from '../../../lib/i18n';
 import { Button, cx } from '../../../ui';
 import { post, useAdminQuery } from '../api';
-import type { AdminProduct, AdminProductListRow, Brand, Category } from '../types';
-import { IMPORT_TEMPLATE, checkImport, planImport, type ImportPlan, type ImportRow } from './productImport';
+import type { AdminProduct, Brand, Category } from '../types';
+import { findProducts } from './shopLookup';
+import { IMPORT_TEMPLATE, checkImport, isPhotoLink, planImport, type ImportPlan, type ImportRow } from './productImport';
 
 type Result = { line: number; ok: true; id: string; kind: 'new' | 'update' } | { line: number; ok: false; message: string };
 
 const KIND_LABEL: Record<ImportPlan['kind'], string> = { new: 'New', update: 'Update', same: 'No change' };
 const KIND_STYLE: Record<ImportPlan['kind'], string> = { new: 'bg-success/10 text-success', update: 'bg-[#E8EEFB] text-[#1C3F94]', same: 'bg-stone text-graphite' };
-
-/** Finds the shop products the file's rows point at (by web address), with their sizes and photos. */
-async function lookUp(rows: ImportRow[]): Promise<Map<string, AdminProduct>> {
-  const found = new Map<string, AdminProduct>();
-  for (const r of rows) {
-    const list = await apiFetch<{ products: AdminProductListRow[] }>('/v1/admin/products', { query: { q: r.matchSlug, pageSize: 10 } });
-    const hit = list.products.find((p) => p.slug === r.matchSlug);
-    if (hit) found.set(r.matchSlug, (await apiFetch<{ product: AdminProduct }>(`/v1/admin/products/${hit.id}`)).product);
-  }
-  return found;
-}
 
 /**
  * Products from a spreadsheet: rows for products already in the shop (matched by the slug column, or by the
@@ -37,6 +27,7 @@ export function ProductImport() {
   const categories = useAdminQuery<{ categories: Category[] }>(['categories'], '/v1/admin/categories');
   const [file, setFile] = useState<{ name: string; text: string } | null>(null);
   const [plans, setPlans] = useState<ImportPlan[] | null>(null);
+  const [found, setFound] = useState<Map<string, AdminProduct>>(new Map());
   const [lookupError, setLookupError] = useState<string | null>(null);
   const [results, setResults] = useState<Result[] | null>(null);
   const [busy, setBusy] = useState(false);
@@ -48,8 +39,12 @@ export function ProductImport() {
   useEffect(() => {
     if (!valid || !check) return;
     let live = true;
-    lookUp(check.rows)
-      .then((found) => live && setPlans(planImport(check.rows, found)))
+    findProducts(check.rows.map((r) => r.matchSlug))
+      .then((shop) => {
+        if (!live) return;
+        setFound(shop);
+        setPlans(planImport(check.rows, shop));
+      })
       .catch((e: unknown) => live && setLookupError(isApiError(e) ? e.message : 'Could not check the shop. Try again.'));
     return () => {
       live = false;
@@ -75,11 +70,17 @@ export function ProductImport() {
       const p = plan.find((x) => x.line === r.line)!;
       if (p.kind === 'same') continue;
       try {
+        // Photo links are downloaded by the server first; the stored copies are what the product uses.
+        const photos: string[] = [];
+        for (const ph of r.photos) photos.push(isPhotoLink(ph) ? (await post<{ path: string }>('/v1/admin/media/from-url', { url: ph })).path : ph);
+        const row = { ...r, photos };
         if (p.kind === 'new') {
-          const res = await post<{ product: AdminProduct }>('/v1/admin/products', r.body);
+          const body = { ...r.body, ...(photos.length ? { images: photos.map((path) => ({ path })) } : {}) };
+          const res = await post<{ product: AdminProduct }>('/v1/admin/products', body);
           out.push({ line: r.line, ok: true, id: res.product.id, kind: 'new' });
         } else {
-          for (const op of p.ops) await apiFetch(op.path, { method: op.method, body: op.body });
+          const ops = r.photos.some(isPhotoLink) ? planImport([row], found)[0]!.ops : p.ops;
+          for (const op of ops) await apiFetch(op.path, { method: op.method, body: op.body });
           out.push({ line: r.line, ok: true, id: p.productId!, kind: 'update' });
         }
       } catch (e) {
