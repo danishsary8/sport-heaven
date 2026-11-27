@@ -3,7 +3,7 @@ import type { accountEn } from './i18n';
 /** Khmer copy for this feature, loaded only when the shop is shown in Khmer. */
 export const accountKm: Record<keyof typeof accountEn, string> = {
   'signIn.title': 'ចូលគណនី',
-  'signIn.body': 'ប្រើលេខទូរស័ព្ទរបស់អ្នក។ សមាជិកទទួលបានពិន្ទុ អាសយដ្ឋានដែលបានរក្សាទុក និងប្រវត្តិការបញ្ជាទិញ។',
+  'signIn.body': 'ចូលគណនីដោយលេខទូរស័ព្ទ ឬ Google។ ពិន្ទុ អាសយដ្ឋាន និងការបញ្ជាទិញរបស់អ្នកកំពុងរង់ចាំ។',
   'signIn.phoneHint': 'លេខកម្ពុជាដូចជា 012 345 678។ យើងនឹងផ្ញើលេខកូដតាមសារ។',
   'signIn.send': 'ផ្ញើលេខកូដ',
   'signIn.sent': 'យើងបានផ្ញើលេខកូដទៅ {phone}។',
@@ -14,6 +14,10 @@ export const accountKm: Record<keyof typeof accountEn, string> = {
   'signIn.google': 'បន្តជាមួយ Google',
   'signIn.guest': 'បន្តជាភ្ញៀវ',
   'signIn.why': 'យើងប្រើលេខរបស់អ្នកសម្រាប់ចូលគណនី និងទាក់ទងអំពីការបញ្ជាទិញប៉ុណ្ណោះ។',
+  'signIn.panelTitle': 'ស្បែកជើងរបស់អ្នក។ អាវរបស់អ្នក។ ពិន្ទុរបស់អ្នក។',
+  'signIn.perk.points': 'ពិន្ទុលើការបញ្ជាទិញនីមួយៗ ប្រើបាននៅពេលទូទាត់',
+  'signIn.perk.addresses': 'អាសយដ្ឋានដឹកជញ្ជូនដែលបានរក្សាទុក',
+  'signIn.perk.orders': 'តាមដានការបញ្ជាទិញ និងប្តូរយកវិញងាយស្រួល',
   'signIn.merged': 'យើងបានបន្ថែមទំនិញ {n} មុខពីកាបូបមុនរបស់អ្នក។',
   'signIn.mergedOne': 'យើងបានបន្ថែមទំនិញ 1 មុខពីកាបូបមុនរបស់អ្នក។',
   'signIn.mergedCapped': 'យើងបានបន្ថែមទំនិញ {n} មុខពីកាបូបមុនរបស់អ្នក។ ចំនួនខ្លះត្រូវបានបន្ថយតាមស្តុកដែលមាន។',

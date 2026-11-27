@@ -11,4 +11,4 @@ export { Price } from './Price';
 export { Seo } from './Seo';
 export { Sheet } from './Sheet';
 export { EmptyState, ErrorState, QueryView, Skeleton, type QueryLike } from './States';
-export { ToastProvider, useToast } from './Toast';
+export { ToastProvider, useToast, type ToastAction, type ToastInput } from './Toast';

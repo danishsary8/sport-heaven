@@ -1,6 +1,6 @@
 export const accountEn = {
   'signIn.title': 'Sign in',
-  'signIn.body': 'Use your phone number. Members get their points, saved addresses and order history.',
+  'signIn.body': 'Sign in with your phone number or Google. Your points, addresses and orders are waiting.',
   'signIn.phoneHint': 'A Cambodian number like 012 345 678. We text you a code.',
   'signIn.send': 'Send code',
   'signIn.sent': 'We sent a code to {phone}.',
@@ -11,6 +11,10 @@ export const accountEn = {
   'signIn.google': 'Continue with Google',
   'signIn.guest': 'Continue as a guest',
   'signIn.why': 'We only use your number to sign you in and to contact you about your orders.',
+  'signIn.panelTitle': 'Your boots. Your kit. Your points.',
+  'signIn.perk.points': 'Points on every order, spent at checkout',
+  'signIn.perk.addresses': 'Saved delivery addresses',
+  'signIn.perk.orders': 'Order tracking and easy returns',
   'signIn.merged': 'We added {n} items from your earlier bag.',
   'signIn.mergedOne': 'We added 1 item from your earlier bag.',
   'signIn.mergedCapped': 'We added {n} items from your earlier bag. Some quantities were lowered to what is in stock.',

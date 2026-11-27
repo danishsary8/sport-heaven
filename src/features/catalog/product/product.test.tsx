@@ -133,7 +133,9 @@ describe('product page', () => {
     const related = await screen.findByRole('region', { name: 'You may also like' });
     fireEvent.click(within(related).getByRole('button', { name: 'Quick add Predator' }));
     const picker = await screen.findByRole('dialog', { name: 'Choose a size for Predator' });
-    expect(await within(picker).findByRole('button', { name: /EU 42/ })).toBeDisabled();
+    expect(await within(picker).findByRole('radio', { name: /EU 42/ })).toBeDisabled();
+    expect(within(picker).getByRole('button', { name: 'Choose a size first' })).toBeDisabled();
+    fireEvent.click(within(picker).getByRole('radio', { name: 'EU 40' }));
     fireEvent.click(within(picker).getByRole('button', { name: 'Add size EU 40 to bag' }));
     await waitFor(() => expect(added).toEqual([{ variantId: '11111111-1111-4111-8111-111111111111', qty: 1 }]));
     expect(await screen.findByText('Added to bag')).toBeTruthy();

@@ -5,6 +5,7 @@ import { useAuth } from '../../lib/auth';
 import { useI18n } from '../../lib/i18n';
 import { cx } from '../../ui';
 import { useBagCount } from '../cart/api';
+import { BAG_BUMP, BAG_OPEN } from '../cart/bagEvents';
 import { useMenu } from '../catalog/api';
 import { LangSwitch } from './LangSwitch';
 import { useMegaMenu } from './useMegaMenu';
@@ -31,6 +32,22 @@ export function Header() {
   const [bagOpen, setBagOpen] = useState(false);
   const [bagLoaded, setBagLoaded] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [bump, setBump] = useState(0);
+
+  // The add-to-bag flight lands here (the bag bounces), and alerts can open the bag drawer.
+  useEffect(() => {
+    const onBump = () => setBump((n) => n + 1);
+    const onOpen = () => {
+      setBagLoaded(true);
+      setBagOpen(true);
+    };
+    window.addEventListener(BAG_BUMP, onBump);
+    window.addEventListener(BAG_OPEN, onOpen);
+    return () => {
+      window.removeEventListener(BAG_BUMP, onBump);
+      window.removeEventListener(BAG_OPEN, onOpen);
+    };
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -123,6 +140,7 @@ export function Header() {
             to="/bag"
             className={cx(iconButton, '-mr-2')}
             aria-label={bagLabel}
+            data-bag-target
             onClick={(e) => {
               if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
               e.preventDefault();
@@ -130,9 +148,9 @@ export function Header() {
               setBagOpen(true);
             }}
           >
-            <ShoppingBag className="size-[22px]" aria-hidden />
+            <ShoppingBag key={bump} className={cx('size-[22px]', bump > 0 && 'animate-bag-bump')} aria-hidden />
             {count ? (
-              <span aria-hidden className="tabular absolute right-0.5 top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-vermilion px-1 text-[11px] font-bold text-paper">
+              <span key={count} aria-hidden className={cx('tabular absolute right-0.5 top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-vermilion px-1 text-[11px] font-bold text-paper ring-2 ring-paper', bump > 0 && 'animate-count-pop')}>
                 {count > 99 ? '99+' : count}
               </span>
             ) : null}

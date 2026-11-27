@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 import { isApiError } from '../../../lib/api';
 import { formatUsd, useI18n } from '../../../lib/i18n';
-import { Availability, Button, EmptyState, JsonLd, Price, QueryView, Seo, Skeleton, useToast } from '../../../ui';
+import { Availability, EmptyState, JsonLd, Price, QueryView, Seo, Skeleton } from '../../../ui';
 import { useAddToCart } from '../../cart/api';
+import { AddToBagButton, useAddedAlert } from '../../cart/AddToBagButton';
 import { useProduct, type ProductDetail, type Variant } from '../api';
 import { ProductCard } from '../ProductCard';
 import { Breadcrumbs } from './Breadcrumbs';
@@ -68,7 +69,6 @@ function initialColor(product: ProductDetail, fromUrl: string | null): string {
 
 function ProductView({ product }: { product: ProductDetail }) {
   const { t } = useI18n();
-  const toast = useToast();
   const [params, setParams] = useSearchParams();
   const color = initialColor(product, params.get('color'));
   const [size, setSize] = useState<string | null>(null);
@@ -90,21 +90,20 @@ function ProductView({ product }: { product: ProductDetail }) {
     setParams(next, { replace: true, preventScrollReset: true });
   };
 
+  const alert = useAddedAlert();
   const addToBag = () => {
-    if (!chosen || customPrint === 'invalid') return;
-    add.mutate(
-      { variantId: chosen.id, qty: 1, ...(customPrint ? { customPrint } : {}) },
-      {
-        onSuccess: () => toast.success(t('product.added')),
-        onError: (e) => toast.error(isApiError(e) ? e.message : t('common.error')),
+    if (!chosen || customPrint === 'invalid') return Promise.reject(new Error('not ready'));
+    return add.mutateAsync({ variantId: chosen.id, qty: 1, ...(customPrint ? { customPrint } : {}) }).then(
+      () => undefined,
+      (e: unknown) => {
+        alert.failed(e);
+        throw e;
       },
     );
   };
 
   const buy = (
-    <Button variant="buy" size="lg" block disabled={!chosen || chosen.availability === 'out' || customPrint === 'invalid'} loading={add.isPending} onClick={addToBag}>
-      {t('product.add')}
-    </Button>
+    <AddToBagButton label={t('product.add')} disabled={!chosen || chosen.availability === 'out' || customPrint === 'invalid'} onAdd={addToBag} onLanded={() => chosen && alert.added({ name: product.name, size: chosen.size, image: product.imageUrl })} />
   );
 
   const origin = typeof window === 'undefined' ? '' : window.location.origin;

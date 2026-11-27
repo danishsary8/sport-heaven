@@ -20,6 +20,7 @@ beforeEach(() => {
     http.get(`${API}/v1/cart`, () => HttpResponse.json({ cart: { lines: [] } })),
     http.get(`${API}/v1/catalog/home`, () => HttpResponse.json({ sections: [] })),
     http.get(`${API}/v1/catalog/filters`, () => HttpResponse.json(FILTERS)),
+    http.get(`${API}/v1/catalog/products`, () => HttpResponse.json({ products: [product(2, { name: 'Popular kit' })], total: 1, page: 1, pageSize: 4 })),
     http.get(`${API}/v1/search/suggest`, ({ request }) => {
       const q = new URL(request.url).searchParams.get('q') ?? '';
       suggestCalls.push(q);
