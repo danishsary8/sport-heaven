@@ -76,7 +76,10 @@ describe('buildMegaMenu', () => {
     ]);
     expect(menu.tiles.every((l) => l.note.length > 0)).toBe(true);
     expect(menu.intro).toMatch(/jacket/i);
-    expect(menu.columns).toEqual([{ title: 'mega.brands', links: [{ label: 'adidas', href: '/c/jackets?brand=adidas', count: 3 }] }]);
+    expect(menu.tiles.slice(0, 5).map((l) => l.art)).toEqual(['anthem', 'drill', 'rain', 'presentation', 'bench']);
+    expect(menu.columns.map((c) => c.title)).toEqual(['mega.f1.jackets', 'mega.brands']);
+    expect(menu.columns[0]!.links[0]).toEqual({ label: 'Scuderia Ferrari', href: '/c/f1?garmentType=jacket&q=Ferrari' });
+    expect(menu.columns[1]).toEqual({ title: 'mega.brands', links: [{ label: 'adidas', href: '/c/jackets?brand=adidas', count: 3 }] });
     // Without the F1 jackets collection the tile goes to F1 paddock jackets.
     expect(buildMegaMenu('jackets', [], [], t).tiles.at(-1)!.href).toBe('/c/f1?garmentType=jacket');
     expect(buildMegaMenu('jackets', [], [], t, 'km').tiles[0]!.label).not.toBe('Anthem / Walkout Jacket');

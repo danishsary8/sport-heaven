@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { useI18n } from '../../lib/i18n';
 import { Picture, cx } from '../../ui';
 import { useFilters, useMenu } from '../catalog/api';
-import { buildMegaMenu, type MenuTile } from './megaMenu';
+import { buildMegaMenu, type MenuTile, type TileArt } from './megaMenu';
 
 /**
  * The panel under the header for one category. Left: "Shop all", a line on how the category is organised,
@@ -126,6 +126,8 @@ function Tile({ tile, onNavigate }: { tile: MenuTile; onNavigate(): void }) {
       <span className="stage relative block aspect-square overflow-hidden rounded-[10px] shadow-[inset_0_0_0_1px_rgb(14_17_19/0.04)] transition-shadow group-hover:shadow-[inset_0_0_0_2px_#0E1113]">
         {tile.image ? (
           <Picture src={tile.image} alt="" sizes="140px" width={280} height={280} className="absolute inset-0" imgClassName="transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.07]" />
+        ) : tile.art ? (
+          <JacketArt kind={tile.art} />
         ) : (
           <span aria-hidden className="absolute inset-0 grid place-items-center p-3 text-center font-display text-[26px] font-bold leading-[0.95] text-obsidian/80">
             {tile.label}
@@ -138,5 +140,66 @@ function Tile({ tile, onNavigate }: { tile: MenuTile; onNavigate(): void }) {
       <span className="mt-2 text-[14px] font-semibold leading-tight underline-offset-4 group-hover:underline">{tile.label}</span>
       {tile.note && <span className="mt-0.5 line-clamp-2 text-[12.5px] leading-snug text-graphite">{tile.note}</span>}
     </Link>
+  );
+}
+
+/**
+ * A line drawing of a jacket type, for tiles that have no product photo. Each drawing shows what tells the
+ * type apart: the anthem panel, the half zip, the hood, the track stripes, the long quilted parka.
+ */
+function JacketArt({ kind }: { kind: TileArt }) {
+  const long = kind === 'bench';
+  const hem = long ? 94 : 84;
+  const cuff = long ? 74 : 70;
+  const hood = kind === 'rain' || kind === 'bench';
+  return (
+    <svg
+      viewBox="0 0 100 100"
+      aria-hidden
+      className="absolute inset-[14%] size-[72%] text-obsidian/75 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.07]"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {hood && <path d="M41 18 Q36 3 50 2 Q64 3 59 18" fill="currentColor" fillOpacity={0.1} />}
+      <path
+        d={`M41 17 L29 21 L13 ${cuff - 4} L22 ${cuff} L30 45 L30 ${hem} L70 ${hem} L70 45 L78 ${cuff} L87 ${cuff - 4} L71 21 L59 17 Q50 23 41 17 Z`}
+        fill="currentColor"
+        fillOpacity={0.07}
+      />
+      {!hood && <path d="M41 17 L41 12 Q50 16 59 12 L59 17" />}
+      {kind === 'drill' ? (
+        <>
+          <path d="M50 21 L50 46" />
+          <rect x={47.5} y={45} width={5} height={7} rx={1.5} fill="currentColor" />
+        </>
+      ) : (
+        <path d={`M50 21 L50 ${hem}`} />
+      )}
+      {kind === 'anthem' && (
+        <>
+          <path d="M30 36 L50 48 L70 36" />
+          <path d="M30 44 L50 56 L70 44" />
+        </>
+      )}
+      {kind === 'presentation' && (
+        <>
+          <path d="M27 24 L12.5 62" />
+          <path d="M73 24 L87.5 62" />
+          <circle cx={61} cy={31} r={3} />
+        </>
+      )}
+      {kind === 'rain' && (
+        <>
+          <path d="M46 19 L45 28" />
+          <path d="M54 19 L55 28" />
+          <path d="M34 62 L45 62" />
+          <path d="M55 62 L66 62" />
+        </>
+      )}
+      {long && [50, 62, 74, 86].map((y) => <path key={y} d={`M30 ${y} L70 ${y}`} strokeOpacity={0.55} />)}
+    </svg>
   );
 }

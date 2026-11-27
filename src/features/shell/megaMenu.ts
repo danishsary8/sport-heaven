@@ -20,9 +20,13 @@ export interface MenuLink {
   count?: number;
 }
 
+/** A drawn jacket shown on a tile that has no product photo (see `JacketArt` in MegaMenu). */
+export type TileArt = 'anthem' | 'drill' | 'rain' | 'presentation' | 'bench';
+
 export interface MenuTile extends MenuLink {
   note: string;
   image?: string;
+  art?: TileArt;
 }
 
 export interface MenuColumn {
@@ -199,6 +203,7 @@ interface Curated {
   note?: CopyKey;
   q: string;
   image?: string;
+  art?: TileArt;
   extra?: Record<string, string>;
 }
 
@@ -224,11 +229,11 @@ const ESSENTIALS: Curated[] = [
 
 /** Jacket types, found by the word in their names (put "anthem", "drill", … in the product name). */
 const JACKET_TYPES: Curated[] = [
-  { label: 'jacket.anthem', note: 'jacket.anthemNote', q: 'anthem' },
-  { label: 'jacket.drill', note: 'jacket.drillNote', q: 'drill' },
-  { label: 'jacket.rain', note: 'jacket.rainNote', q: 'rain' },
-  { label: 'jacket.presentation', note: 'jacket.presentationNote', q: 'presentation' },
-  { label: 'jacket.bench', note: 'jacket.benchNote', q: 'bench' },
+  { label: 'jacket.anthem', note: 'jacket.anthemNote', q: 'anthem', art: 'anthem' },
+  { label: 'jacket.drill', note: 'jacket.drillNote', q: 'drill', art: 'drill' },
+  { label: 'jacket.rain', note: 'jacket.rainNote', q: 'rain', art: 'rain' },
+  { label: 'jacket.presentation', note: 'jacket.presentationNote', q: 'presentation', art: 'presentation' },
+  { label: 'jacket.bench', note: 'jacket.benchNote', q: 'bench', art: 'bench' },
 ];
 
 /** Boot lines players ask for by name. */
@@ -274,6 +279,7 @@ function curatedTiles(category: string, list: Curated[], copy: (k: CopyKey) => s
     note: c.note ? copy(c.note) : '',
     href: categoryHref(category, { ...c.extra, q: c.q }),
     image: c.image,
+    ...(c.art ? { art: c.art } : {}),
   }));
 }
 
@@ -352,6 +358,8 @@ export function buildMegaMenu(category: string, facets: Facet[], collections: Me
         image: img('jacket_f1_mclaren_2026_1795194122903'),
       },
     ];
+    // Paddock jackets by team, so the panel has the same side column as the other menus.
+    columns.push({ title: 'mega.f1.jackets', links: F1_TEAMS.map((team) => ({ label: team.label, href: categoryHref('f1', { garmentType: 'jacket', q: team.q }) })) });
   } else if (category === 'essentials') {
     tilesTitle = 'mega.essType';
     tiles = curatedTiles(category, ESSENTIALS, copy);
