@@ -246,7 +246,7 @@ function Slide({ slide, active, first, load, position }: { slide: HeroSlide; act
           <div
             aria-hidden
             className={cx(
-              'absolute inset-0 -z-10 bg-[linear-gradient(to_top,rgb(14_17_19/0.94)_0%,rgb(14_17_19/0.55)_42%,rgb(14_17_19/0)_70%)]',
+              'absolute inset-0 -z-10 bg-[linear-gradient(to_top,rgb(14_17_19/0.95)_0%,rgb(14_17_19/0.78)_38%,rgb(14_17_19/0.25)_62%,rgb(14_17_19/0)_80%)]',
               end
                 ? 'lg:bg-[linear-gradient(270deg,rgb(14_17_19/0.92)_0%,rgb(14_17_19/0.7)_30%,rgb(14_17_19/0)_55%)]'
                 : 'lg:bg-[linear-gradient(90deg,rgb(14_17_19/0.92)_0%,rgb(14_17_19/0.7)_30%,rgb(14_17_19/0)_55%)]',

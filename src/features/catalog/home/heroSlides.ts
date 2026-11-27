@@ -29,7 +29,6 @@ export interface CampaignSlide {
   products: string[];
 }
 
-const c = (file: string) => `/assets/catalog/${file}`;
 const site = (file: string) => `/assets/site/${file}`;
 
 export const CAMPAIGN_SLIDES: readonly CampaignSlide[] = [
@@ -58,28 +57,27 @@ export const CAMPAIGN_SLIDES: readonly CampaignSlide[] = [
     products: [],
   },
   {
-    id: 'laliga',
-    title: 'hero.laliga.title',
-    body: 'hero.laliga.body',
-    cta: 'hero.laliga.cta',
-    href: '/c/jerseys?league=La+Liga',
+    id: 'retro',
+    title: 'hero.retro.title',
+    body: 'hero.retro.body',
+    cta: 'hero.retro.cta',
+    href: '/collections/retro-jerseys',
     tone: 'night',
-    image: site('hero_yamal_barca.jpg'),
+    image: site('hero_beckham_retro.jpg'),
     align: 'end',
-    valign: 'bottom',
-    focus: '38% 25%',
+    focus: '44% 20%',
     products: [],
   },
   {
-    id: 'brazil',
-    title: 'hero.brazil.title',
-    body: 'hero.brazil.body',
-    cta: 'hero.brazil.cta',
-    href: '/search?q=brazil',
+    id: 'boots',
+    title: 'hero.boots.title',
+    body: 'hero.boots.body',
+    cta: 'hero.boots.cta',
+    href: '/c/boots',
     tone: 'night',
-    image: site('hero_neymar_brazil.jpg'),
+    image: site('hero_neymar_boots.jpg'),
     align: 'start',
-    focus: '54% 22%',
+    focus: '58% 30%',
     products: [],
   },
   {
@@ -89,9 +87,10 @@ export const CAMPAIGN_SLIDES: readonly CampaignSlide[] = [
     cta: 'hero.new.cta',
     href: '/collections/new-arrivals',
     tone: 'night',
-    image: site('hero_bellingham_england.jpg'),
+    image: site('hero_yamal_barca.jpg'),
     align: 'end',
-    focus: '48% 25%',
+    valign: 'bottom',
+    focus: '38% 25%',
     products: [],
   },
   {
@@ -101,6 +100,19 @@ export const CAMPAIGN_SLIDES: readonly CampaignSlide[] = [
     cta: 'hero.f1.cta',
     href: '/c/f1',
     tone: 'night',
-    products: [c('jersey_f1_mclaren_2026_1795193990807.jpg'), c('jersey_f1_ferrari_white_1795193990486.jpg'), c('jersey_f1_redbull_2026_1795138745927.jpg')],
+    image: site('hero_hamilton_f1.jpg'),
+    align: 'start',
+    focus: '60% 8%',
+    products: [],
   },
 ];
+
+/**
+ * The photo and layout for the hero managed in the API ("Matchday gear for Phnom Penh"), used when
+ * that hero has no image of its own. An image set on the hero itself always wins.
+ */
+export const API_HERO_PHOTO: Pick<CampaignSlide, 'image' | 'align' | 'focus' | 'valign'> = {
+  image: site('hero_olise_bayern.jpg'),
+  align: 'start',
+  focus: '55% 4%',
+};

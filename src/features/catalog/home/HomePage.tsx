@@ -4,10 +4,10 @@ import { useHome, type HomeSection } from '../api';
 import { BrandRow } from './parts/BrandRow';
 import { CategoryGrid } from './parts/CategoryGrid';
 import { HeroCarousel, type HeroSlide } from './parts/HeroCarousel';
-import { CAMPAIGN_SLIDES } from './heroSlides';
+import { API_HERO_PHOTO, CAMPAIGN_SLIDES } from './heroSlides';
 import { ProductRail } from './parts/ProductRail';
 import { StoreStrip } from './parts/StoreStrip';
-import { readBrandRow, readCategoryGrid, readHero, readRail } from './sections';
+import { HERO_FALLBACK, readBrandRow, readCategoryGrid, readHero, readRail } from './sections';
 
 /** The home page: the sections staff arrange in the admin, in their order, then the stores band. */
 export function HomePage() {
@@ -66,7 +66,9 @@ function heroSlides(sections: HomeSection[], t: Translate): HeroSlide[] {
     .map((s) => {
       const h = readHero(s.payload);
       const cta = h.href.startsWith('/collections/new-arrivals') ? t('home.shopNew') : t('home.shopNow');
-      return { id: `api-${s.id}`, title: h.title, body: h.subtitle, cta, href: h.href, tone: 'photo', image: h.image, products: [] };
+      // No image of its own (readHero fell back to the default): use the campaign photo and its layout.
+      const style = h.image === HERO_FALLBACK ? API_HERO_PHOTO : { image: h.image };
+      return { id: `api-${s.id}`, title: h.title, body: h.subtitle, cta, href: h.href, tone: 'photo', products: [], ...style };
     });
   const campaign: HeroSlide[] = CAMPAIGN_SLIDES.map((c) => ({
     id: c.id,
