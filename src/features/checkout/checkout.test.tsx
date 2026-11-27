@@ -61,7 +61,7 @@ async function fillGuestDelivery() {
   fireEvent.change(screen.getByLabelText('Commune'), { target: { value: '120101' } });
   fireEvent.change(screen.getByLabelText('Street, house and floor'), { target: { value: 'St 51, house 12' } });
   fireEvent.click(await screen.findByRole('radio', { name: /Phnom Penh rider/ }));
-  fireEvent.click(screen.getByRole('radio', { name: /ABA KHQR/ }));
+  fireEvent.click(screen.getByRole('radio', { name: /^KHQR/ }));
   fireEvent.click(screen.getByRole('checkbox', { name: /I agree to the terms/ }));
 }
 
@@ -197,7 +197,7 @@ describe('checkout', () => {
     expect(await screen.findByRole('radio', { name: /St 51, house 12/ })).toBeChecked();
     expect(screen.getByLabelText('Full name')).toHaveValue('Dara Sok');
     fireEvent.click(await screen.findByRole('radio', { name: /Phnom Penh rider/ }));
-    fireEvent.click(screen.getByRole('radio', { name: /ABA KHQR/ }));
+    fireEvent.click(screen.getByRole('radio', { name: /^KHQR/ }));
     fireEvent.click(screen.getByRole('checkbox', { name: /I agree to the terms/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Place order' }));
     await waitFor(() => expect(orders.length).toBe(1));

@@ -1,11 +1,11 @@
 export const payEn = {
-  'pay.title': 'Pay with ABA KHQR',
+  'pay.title': 'Pay with KHQR',
   'pay.cardTitle': 'Pay by card',
   'pay.orderNumber': 'Order {number}',
   'pay.amount': 'Amount to pay',
   'pay.holding': "We're holding your items until {time}.",
   'pay.qrLabel': 'KHQR code for order {number}',
-  'pay.step1': 'Open ABA Mobile or any banking app that reads KHQR.',
+  'pay.step1': 'Open ABA, ACLEDA, Wing or any banking app that reads KHQR.',
   'pay.step2': 'Scan this code, or take a screenshot and upload it in the app.',
   'pay.step3': 'Check the amount and confirm. This page updates by itself.',
   'pay.openAba': 'Open the ABA app',

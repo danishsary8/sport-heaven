@@ -39,7 +39,7 @@ test('a guest finds boots, pays with KHQR and tracks the order', async ({ page, 
   await commune.selectOption({ index: 1 });
   await page.getByLabel('Street, house and floor').fill('St 51, house 12');
   await page.getByRole('radio', { name: /Phnom Penh rider/ }).check();
-  await page.getByRole('radio', { name: /ABA KHQR/ }).check();
+  await page.getByRole('radio', { name: /^KHQR/ }).check();
   await page.getByRole('checkbox', { name: /I agree to the terms/ }).check();
   await page.getByRole('button', { name: 'Place order' }).click();
 

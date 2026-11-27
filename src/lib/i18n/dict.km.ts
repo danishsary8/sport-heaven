@@ -73,7 +73,7 @@ export const km: Dict = {
   'footer.contact': 'ទាក់ទងយើង',
   'footer.terms': 'លក្ខខណ្ឌ',
   'footer.privacy': 'ឯកជនភាព',
-  'footer.payments': 'បង់ប្រាក់តាម ABA KHQR កាត ឬសាច់ប្រាក់ពេលមកយកទំនិញ។',
+  'footer.payments': 'បង់ប្រាក់តាម KHQR ពីកម្មវិធីធនាគារណាមួយ ឬសាច់ប្រាក់ពេលមកយកទំនិញ។',
   'footer.storesFallback': 'សែនសុខ ចោមកដុង និងសន្ធរមុខ ភ្នំពេញ',
   'footer.rights': '© {year} Sport Castle ភ្នំពេញ',
   'notFound.title': 'រកមិនឃើញទំព័រនេះទេ',

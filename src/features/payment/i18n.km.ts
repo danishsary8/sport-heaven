@@ -2,13 +2,13 @@ import type { payEn } from './i18n';
 
 /** Khmer copy for this feature, loaded only when the shop is shown in Khmer. */
 export const payKm: Record<keyof typeof payEn, string> = {
-  'pay.title': 'បង់ប្រាក់តាម ABA KHQR',
+  'pay.title': 'បង់ប្រាក់តាម KHQR',
   'pay.cardTitle': 'បង់ប្រាក់តាមកាត',
   'pay.orderNumber': 'ការបញ្ជាទិញ {number}',
   'pay.amount': 'ចំនួនទឹកប្រាក់ត្រូវបង់',
   'pay.holding': 'យើងកំពុងរក្សាទុកទំនិញរបស់អ្នករហូតដល់ម៉ោង {time}។',
   'pay.qrLabel': 'កូដ KHQR សម្រាប់ការបញ្ជាទិញ {number}',
-  'pay.step1': 'បើក ABA Mobile ឬកម្មវិធីធនាគារណាមួយដែលអាន KHQR។',
+  'pay.step1': 'បើក ABA, ACLEDA, Wing ឬកម្មវិធីធនាគារណាមួយដែលអាន KHQR។',
   'pay.step2': 'ស្កេនកូដនេះ ឬថតអេក្រង់ហើយបញ្ចូលក្នុងកម្មវិធី។',
   'pay.step3': 'ពិនិត្យចំនួនទឹកប្រាក់ ហើយបញ្ជាក់។ ទំព័រនេះធ្វើបច្ចុប្បន្នភាពដោយខ្លួនឯង។',
   'pay.openAba': 'បើកកម្មវិធី ABA',

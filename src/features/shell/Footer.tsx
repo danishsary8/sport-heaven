@@ -18,7 +18,7 @@ export function Footer() {
               Sport<span className="text-vermilion">·</span>Castle
             </p>
             <p className="mt-3 max-w-[44ch] text-[15px] text-paper/75">{t('footer.payments')}</p>
-            <PaymentMarks kinds={['khqr', 'visa', 'mastercard', 'cash']} className="mt-3" />
+            <PaymentMarks kinds={['khqr', 'cash']} className="mt-3" />
           </div>
           <LangSwitch tone="dark" className="self-start sm:self-auto" />
         </div>

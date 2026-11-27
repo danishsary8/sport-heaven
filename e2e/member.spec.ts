@@ -40,7 +40,7 @@ test('a member gets their guest bag, orders to a saved address and returns an it
   await expect(page.getByRole('radio', { name: /St 63, house 8/ })).toBeChecked();
   await page.getByLabel('Full name').fill('E2E Member');
   await page.getByRole('radio', { name: /Phnom Penh rider/ }).check();
-  await page.getByRole('radio', { name: /ABA KHQR/ }).check();
+  await page.getByRole('radio', { name: /^KHQR/ }).check();
   await page.getByRole('checkbox', { name: /I agree to the terms/ }).check();
   await page.getByRole('button', { name: 'Place order' }).click();
   await expect(page).toHaveURL(/\/pay\/SC-/);
