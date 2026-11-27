@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 import { isApiError } from '../../../lib/api';
-import { useI18n } from '../../../lib/i18n';
+import { formatUsd, useI18n } from '../../../lib/i18n';
 import { Availability, Button, EmptyState, JsonLd, Price, QueryView, Seo, Skeleton, useToast } from '../../../ui';
 import { useAddToCart } from '../../cart/api';
 import { useProduct, type ProductDetail, type Variant } from '../api';
 import { ProductCard } from '../ProductCard';
 import { Breadcrumbs } from './Breadcrumbs';
 import { Gallery } from './Gallery';
+import { ProductBadges, ServiceList } from './BuyBoxExtras';
 import { ProductDetails } from './ProductDetails';
 import { QuestionsSection } from './Questions';
 import { SizeGuideButton } from './SizeGuide';
@@ -129,25 +130,32 @@ function ProductView({ product }: { product: ProductDetail }) {
       <Seo title={product.name} description={product.description ?? undefined} canonical={`/p/${product.slug}`} image={product.imageUrl ?? undefined} />
       <JsonLd data={jsonLd} />
       <Breadcrumbs product={product} className="mx-auto max-w-[1320px] px-4 py-3 lg:px-8 lg:pb-0 lg:pt-6" />
-      <div className="mx-auto max-w-[1320px] lg:grid lg:grid-cols-[1.3fr_1fr] lg:gap-12 lg:px-8 lg:pt-5">
+      <div className="mx-auto max-w-[1320px] lg:grid lg:grid-cols-[minmax(0,1.15fr)_minmax(360px,1fr)] lg:gap-12 xl:gap-16 lg:px-8 lg:pt-5">
         {/* On desktop the photos stay in view while the buy box and details scroll past. */}
         <div className="lg:sticky lg:top-24 lg:self-start">
           <Gallery images={product.images} color={color} name={product.name} />
         </div>
 
         <div className="px-4 pt-5 lg:px-0 lg:pt-0">
+          <ProductBadges product={product} />
           <div className="flex items-start justify-between gap-3">
             <div>
-              <Link to={`/brands/${product.brand.slug}`} className="text-[15px] text-graphite hover:underline">
+              <Link to={`/brands/${product.brand.slug}`} className="text-[15px] font-medium text-graphite hover:text-obsidian hover:underline">
                 {product.brand.name}
               </Link>
               <h1 className="mt-1 text-[26px] font-semibold leading-[1.15] tracking-[-0.015em] lg:text-[32px]">{product.name}</h1>
             </div>
             <WishlistButton slug={product.slug} />
           </div>
-          <Price cents={priceCents} compareAtCents={compareAt} size="lg" className="mt-4" />
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <Price cents={priceCents} compareAtCents={compareAt} size="lg" />
+            {compareAt != null && compareAt > priceCents && (
+              <span className="rounded-full bg-vermilion/10 px-2.5 py-1 text-sm font-semibold text-vermilion">{t('product.save', { amount: formatUsd(compareAt - priceCents) })}</span>
+            )}
+          </div>
 
-          {product.colors.length > 0 && (
+          {/* A single colourway (most kits) needs no picker: its name is in the product name and details. */}
+          {product.colors.length > 1 && (
             <div className="mt-7 border-t border-stone pt-6">
               <p id="color-label" className="text-sm font-semibold">
                 {t('product.colour')}: <span className="font-normal text-graphite">{color}</span>
@@ -167,7 +175,7 @@ function ProductView({ product }: { product: ProductDetail }) {
             </div>
           )}
 
-          <div className="mt-6">
+          <div className={product.colors.length > 1 ? 'mt-6' : 'mt-7 border-t border-stone pt-6'}>
             <div className="flex items-baseline justify-between">
               <p id="size-label" className="text-sm font-semibold">
                 {t('product.size')}
@@ -210,7 +218,7 @@ function ProductView({ product }: { product: ProductDetail }) {
           {product.isCustomizable && <PrintStudio value={print} onChange={setPrint} swatch={product.colors.find((c) => c.name === color)?.swatchHex} />}
 
           <div className="mt-6 hidden lg:block">{buy}</div>
-          <p className="mt-3 text-sm text-graphite">{t('product.pickupNote')}</p>
+          <ServiceList />
 
           <StoreAvailability variant={chosen} />
           <ProductDetails product={product} />

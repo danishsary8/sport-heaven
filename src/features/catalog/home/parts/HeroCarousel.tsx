@@ -34,6 +34,23 @@ const TONES: Record<HeroSlide['tone'], string> = {
   light: 'stage text-obsidian',
 };
 
+const SLIDE_KEY = 'sc.heroSlide';
+
+/** The slide shown last in this tab (sessionStorage: a per-tab convenience, so failures are ignored). */
+function readSavedSlide(): number {
+  try {
+    return Number(sessionStorage.getItem(SLIDE_KEY)) || 0;
+  } catch {
+    return 0;
+  }
+}
+
+function saveSlide(i: number) {
+  try {
+    sessionStorage.setItem(SLIDE_KEY, String(i));
+  } catch {}
+}
+
 function usePrefersReducedMotion(): boolean {
   const query = typeof window !== 'undefined' && typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
   const [reduced, setReduced] = useState(() => query?.matches ?? false);
@@ -59,17 +76,19 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
   const { t } = useI18n();
   const reducedMotion = usePrefersReducedMotion();
   const count = slides.length;
-  const [index, setIndex] = useState(0);
+  // Coming back to the home page continues from the slide you left, instead of restarting.
+  const [index, setIndex] = useState(() => Math.min(readSavedSlide(), Math.max(count - 1, 0)));
   const [userPaused, setUserPaused] = useState(false);
   const [hovering, setHovering] = useState(false);
   const [focused, setFocused] = useState(false);
-  const [visited, setVisited] = useState<Set<number>>(() => new Set([0]));
+  const [visited, setVisited] = useState<Set<number>>(() => new Set([0, index]));
   const swipeStart = useRef<number | null>(null);
 
   const go = useCallback(
     (to: number) => {
       const next = ((to % count) + count) % count;
       setIndex(next);
+      saveSlide(next);
       setVisited((v) => (v.has(next) ? v : new Set(v).add(next)));
     },
     [count],

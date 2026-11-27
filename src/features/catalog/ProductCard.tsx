@@ -19,11 +19,23 @@ export function ProductCard({ product, priority = false, className, hash }: { pr
           alt=""
           sizes={CARD_SIZES}
           priority={priority}
-          imgClassName={cx('transition-[transform,opacity] duration-500 ease-out group-hover:scale-[1.035]', product.availability === 'out' && 'opacity-70')}
+          imgClassName={cx(
+            'transition-[transform,opacity] duration-500 ease-out group-hover:scale-[1.035]',
+            product.hoverImageUrl && '[@media(hover:hover)]:group-hover:opacity-0',
+            product.availability === 'out' && 'opacity-70',
+          )}
           className="block h-full w-full"
         />
+        {/* The second photo (usually the back of a shirt) fades in on hover. It loads with the card,
+            so the first hover is already smooth; touch screens never load it. */}
         {product.hoverImageUrl && (
-          <Picture src={product.hoverImageUrl} alt="" sizes={CARD_SIZES} className="absolute inset-0 hidden opacity-0 transition-opacity duration-300 group-hover:opacity-100 [@media(hover:hover)]:block" />
+          <Picture
+            src={product.hoverImageUrl}
+            alt=""
+            sizes={CARD_SIZES}
+            className="absolute inset-0 hidden [@media(hover:hover)]:block"
+            imgClassName="scale-[1.02] opacity-0 transition-[transform,opacity] duration-500 ease-out group-hover:scale-100 group-hover:opacity-100"
+          />
         )}
         {tag && (
           <span

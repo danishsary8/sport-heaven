@@ -113,7 +113,7 @@ describe('product page', () => {
     const { router } = renderRoutes(routes, '/p/f50');
     fireEvent.click(await screen.findByRole('radio', { name: 'Black' }));
     await waitFor(() => expect(router.state.location.search).toBe('?color=Black'));
-    expect(screen.getByRole('img', { name: 'Black boot' })).toBeTruthy();
+    expect(screen.getAllByRole('img', { name: 'Black boot' }).length).toBeGreaterThan(0);
   });
 
   it('lists answered questions and sends a new one for review', async () => {
