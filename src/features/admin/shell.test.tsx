@@ -50,6 +50,21 @@ describe('admin shell', () => {
     expect(within(nav).queryByRole('link', { name: 'Users' })).toBeNull();
   });
 
+  it('groups the admin menu by job, and hides groups staff cannot use', async () => {
+    server.use(...adminBase('admin'));
+    renderRoutes(routes, '/admin', { signedIn: true });
+    const nav = await screen.findByRole('navigation', { name: 'Admin' });
+    expect(within(nav).getAllByRole('heading').map((h) => h.textContent)).toEqual(['Sell', 'Catalogue', 'Customers', 'Setup']);
+    expect(within(nav).getByRole('link', { name: 'Overview' })).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('shows staff only the groups they use', async () => {
+    server.use(...adminBase('staff'));
+    renderRoutes(routes, '/admin', { signedIn: true });
+    const nav = await screen.findByRole('navigation', { name: 'Admin' });
+    expect(within(nav).getAllByRole('heading').map((h) => h.textContent)).toEqual(['Sell', 'Customers']);
+  });
+
   it("shows today's numbers and what is waiting, with links", async () => {
     server.use(...adminBase('admin'));
     renderRoutes(routes, '/admin', { signedIn: true });
