@@ -1,8 +1,10 @@
-import { Suspense } from 'react';
+import { Suspense, lazy } from 'react';
 import { PageFallback } from '../PageFallback';
 import { Outlet, ScrollRestoration } from 'react-router';
-import { Footer } from '../../features/shell/Footer';
 import { Header } from '../../features/shell/Header';
+
+// The footer sits below every page, so it loads after the first screen instead of with it.
+const Footer = lazy(() => import('../../features/shell/Footer').then((m) => ({ default: m.Footer })));
 
 export function StoreLayout() {
   return (
@@ -13,7 +15,9 @@ export function StoreLayout() {
           <Outlet />
         </Suspense>
       </main>
-      <Footer />
+      <Suspense fallback={null}>
+        <Footer />
+      </Suspense>
       <ScrollRestoration />
     </div>
   );
