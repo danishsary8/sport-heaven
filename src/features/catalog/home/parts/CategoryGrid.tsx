@@ -2,7 +2,7 @@ import { Link } from 'react-router';
 import { useI18n } from '../../../../lib/i18n';
 import { CONTAINER, Picture, cx } from '../../../../ui';
 import { useMenu } from '../../api';
-import { CATEGORY_IMAGES } from '../../categoryImages';
+import { CATEGORY_IMAGE_FOCUS, CATEGORY_IMAGES } from '../../categoryImages';
 import type { SlugListContent } from '../sections';
 import { SectionHead } from './SectionHead';
 
@@ -44,6 +44,7 @@ export function CategoryGrid({ content }: { content: SlugListContent }) {
                       wide && 'max-sm:left-auto max-sm:h-full max-sm:w-[58%] max-sm:[mask-image:linear-gradient(to_right,transparent,black_30%)]',
                     )}
                     imgClassName="object-cover object-[50%_65%] transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+                    imgStyle={CATEGORY_IMAGE_FOCUS[c.slug] ? { objectPosition: CATEGORY_IMAGE_FOCUS[c.slug] } : undefined}
                   />
                 )}
               </Link>
