@@ -81,6 +81,7 @@ function heroSlides(sections: HomeSection[], t: Translate): HeroSlide[] {
     align: c.align,
     focus: c.focus,
     valign: c.valign,
+    compact: c.compact,
     products: c.products,
   }));
   // Player campaigns open the carousel; the hero managed in the API follows them.

@@ -25,6 +25,8 @@ export interface CampaignSlide {
   focus?: string;
   /** Vertical text position on desktop; 'bottom' clears a raised arm or a face high in frame. */
   valign?: 'center' | 'bottom';
+  /** A smaller two-line headline, for photos with little free space beside the player. */
+  compact?: boolean;
   /** Product photos shown as cards on slides without a photo. */
   products: string[];
 }
@@ -54,6 +56,7 @@ export const CAMPAIGN_SLIDES: readonly CampaignSlide[] = [
     image: site('hero_ronaldo_ucl.jpg'),
     align: 'end',
     valign: 'bottom',
+    compact: true,
     focus: '36% 18%',
     products: [],
   },
@@ -78,7 +81,7 @@ export const CAMPAIGN_SLIDES: readonly CampaignSlide[] = [
     tone: 'night',
     image: site('hero_neymar_boots.jpg'),
     align: 'start',
-    focus: '52% 25%',
+    focus: '52% 6%',
     products: [],
   },
   {

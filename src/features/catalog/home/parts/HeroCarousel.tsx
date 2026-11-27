@@ -20,6 +20,8 @@ export interface HeroSlide {
   focus?: string;
   /** Where the text sits vertically on desktop: centred, or low (under a raised arm, say). */
   valign?: 'center' | 'bottom';
+  /** A smaller, wider headline (two lines) for photos with little free space. */
+  compact?: boolean;
   products: string[];
 }
 
@@ -323,7 +325,13 @@ function Slide({
           <Title
             className={cx(
               'hero-rise max-w-[13ch] font-display font-extrabold uppercase leading-[0.86] tracking-[-0.015em]',
-              photo ? 'text-[clamp(46px,10vw,96px)] [text-shadow:0_2px_24px_rgb(14_17_19/0.35)]' : 'text-[clamp(48px,11vw,128px)]',
+              // Photo headlines scale with the screen's height too, so short laptop screens (720–800px)
+              // keep the text block clear of the players.
+              photo
+                ? slide.compact
+                  ? 'max-w-[17ch] text-[clamp(40px,min(9vw,8.5vh),76px)] [text-shadow:0_2px_24px_rgb(14_17_19/0.35)]'
+                  : 'text-[clamp(44px,min(10vw,11vh),96px)] [text-shadow:0_2px_24px_rgb(14_17_19/0.35)]'
+                : 'text-[clamp(48px,min(11vw,13vh),128px)]',
             )}
             style={{ '--d': '80ms' } as CSSProperties}
           >

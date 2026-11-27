@@ -29,6 +29,14 @@ const SRCSET_WIDTHS = [480, 960, 1440];
 const JPEG = { quality: 78, mozjpeg: true };
 const WEBP = { quality: 75 };
 const AVIF = { quality: 50 };
+// Full-bleed home hero photos (site images named hero_*): one larger size and higher quality, so they
+// stay sharp on laptop and high-density screens. Product photos keep the lighter settings above.
+const HERO_PREFIX = 'hero_';
+const HERO_WIDTHS = [480, 960, 1440, 1920];
+const HERO_FALLBACK_WIDTH = 1920;
+const HERO_JPEG = { quality: 86, mozjpeg: true };
+const HERO_WEBP = { quality: 84 };
+const HERO_AVIF = { quality: 62 };
 const CONCURRENCY = 4;
 
 const exists = (p) => fs.stat(p).then(() => true, () => false);
@@ -86,13 +94,18 @@ async function processImage(src, outDir, stats) {
 
   // Never upscale: only emit widths the source can satisfy. A source narrower
   // than 480px still gets a -480 variant (at its native width).
-  let widths = SRCSET_WIDTHS.filter((w) => w <= srcWidth);
-  if (widths.length === 0) widths = [SRCSET_WIDTHS[0]];
+  const hero = base.startsWith(HERO_PREFIX);
+  const allWidths = hero ? HERO_WIDTHS : SRCSET_WIDTHS;
+  let widths = allWidths.filter((w) => w <= srcWidth);
+  if (widths.length === 0) widths = [allWidths[0]];
+  // Hero photos narrower than the largest size also get one at their full width (e.g. 1200), so wide
+  // screens use every pixel the photo has instead of dropping to the next size down.
+  if (hero && srcWidth < allWidths[allWidths.length - 1] && !widths.includes(srcWidth)) widths.push(srcWidth);
 
   const jobs = [
     {
       out: path.join(outDir, `${base}.jpg`),
-      width: Math.min(MAX_FALLBACK_WIDTH, srcWidth),
+      width: Math.min(hero ? HERO_FALLBACK_WIDTH : MAX_FALLBACK_WIDTH, srcWidth),
       fmt: 'jpg',
     },
     ...widths.flatMap((w) => [
@@ -109,9 +122,9 @@ async function processImage(src, outDir, stats) {
       continue;
     }
     let pipe = sharp(src).rotate().resize({ width: job.width, withoutEnlargement: true });
-    if (job.fmt === 'jpg') pipe = pipe.flatten({ background: '#ffffff' }).jpeg(JPEG);
-    else if (job.fmt === 'webp') pipe = pipe.webp(WEBP);
-    else pipe = pipe.avif(AVIF);
+    if (job.fmt === 'jpg') pipe = pipe.flatten({ background: '#ffffff' }).jpeg(hero ? HERO_JPEG : JPEG);
+    else if (job.fmt === 'webp') pipe = pipe.webp(hero ? HERO_WEBP : WEBP);
+    else pipe = pipe.avif(hero ? HERO_AVIF : AVIF);
     await pipe.toFile(job.out);
     const { size } = await fs.stat(job.out);
     stats.written += 1;
