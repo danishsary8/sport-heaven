@@ -1,5 +1,5 @@
 import { ArrowLeft, ArrowRight, ArrowLeftRight, ImagePlus, Trash2, Upload } from 'lucide-react';
-import { useRef, useState, type DragEvent, type ReactNode } from 'react';
+import { useRef, useState, type Dispatch, type DragEvent, type ReactNode, type SetStateAction } from 'react';
 import { apiFetch, isApiError } from '../../../lib/api';
 import { Button, cx, useToast } from '../../../ui';
 import { useAdminMutation, put } from '../api';
@@ -26,18 +26,13 @@ const signature = (tiles: PhotoTile[]) => JSON.stringify(tiles.map((t) => [t.pat
  * The product's photos as the shop uses them: the first is the main photo, the second is the pose shown when a
  * shopper hovers the card. Upload (pick or drop files), swap, reorder, set the colour, remove, then save once.
  */
-export function PhotoManager({ product, tiles, onChange }: { product: AdminProduct; tiles: PhotoTile[]; onChange(next: PhotoTile[]): void }) {
+export function PhotoManager({ product, tiles, onChange }: { product: AdminProduct; tiles: PhotoTile[]; onChange: Dispatch<SetStateAction<PhotoTile[]>> }) {
   const toast = useToast();
   const input = useRef<HTMLInputElement>(null);
   const [initial] = useState(() => signature(tilesOf(product)));
   const [dragging, setDragging] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
-  const latest = useRef(tiles);
-  latest.current = tiles;
-  const update = (fn: (t: PhotoTile[]) => PhotoTile[]) => {
-    latest.current = fn(latest.current);
-    onChange(latest.current);
-  };
+  const update = (fn: (t: PhotoTile[]) => PhotoTile[]) => onChange(fn);
   const save = useAdminMutation((body: unknown) => put(`/v1/admin/products/${product.id}/images`, body), [['product', product.id], ['products']]);
   const dirty = signature(tiles) !== initial;
   const uploading = tiles.some((t) => t.uploading);
