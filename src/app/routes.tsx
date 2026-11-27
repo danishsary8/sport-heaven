@@ -1,11 +1,13 @@
 import type { RouteObject } from 'react-router';
-import { lazy } from 'react';
+import { lazy, Suspense } from 'react';
 import { HomePage } from '../features/catalog/home/HomePage';
 import { NotFoundPage } from '../features/shell/NotFoundPage';
-import { CheckoutLayout } from './layouts/CheckoutLayout';
 import { StoreLayout } from './layouts/StoreLayout';
 import { RootBoundary } from './RootBoundary';
-import { RouteError } from './PageFallback';
+import { PageFallback, RouteError } from './PageFallback';
+
+// Checkout's own header (steps, secure note) loads only when someone goes to checkout.
+const CheckoutLayout = lazy(() => import('./layouts/CheckoutLayout').then((m) => ({ default: m.CheckoutLayout })));
 import { AccountPage } from './accountPages';
 
 const Listing = (name: 'ShopPage' | 'CategoryPage' | 'BrandPage' | 'CollectionPage') =>
@@ -85,7 +87,11 @@ export const routes: RouteObject[] = [
         ],
       },
       {
-        element: <CheckoutLayout />,
+        element: (
+          <Suspense fallback={<PageFallback />}>
+            <CheckoutLayout />
+          </Suspense>
+        ),
         children: [
           { path: 'checkout', element: <CheckoutPage /> },
           { path: 'checkout/return', element: <CardReturnPage /> },
