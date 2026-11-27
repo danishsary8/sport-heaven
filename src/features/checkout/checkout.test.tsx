@@ -116,6 +116,22 @@ describe('checkout', () => {
     expect(orders[0]!.body.address).toBeUndefined();
   });
 
+  it('explains when delivery has no way to pay (cash-only shop) and switches to pickup', async () => {
+    server.use(
+      http.post(`${API}/v1/checkout/quote`, async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        const methods = body.fulfillment === 'pickup' ? ['cash_on_pickup'] : [];
+        return HttpResponse.json({ ...cart([cartLine(1)]), ...QUOTE_EXTRA, paymentMethods: methods });
+      }),
+    );
+    renderRoutes(routes, '/checkout');
+    expect(await screen.findByText('Online payment is not available yet')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Pick up in store instead' }));
+    expect(screen.getByRole('radio', { name: /Pick up in store/ })).toBeChecked();
+    expect(await screen.findByRole('radio', { name: /Cash when you pick up/ })).toBeTruthy();
+    await waitFor(() => expect(screen.queryByText('Online payment is not available yet')).toBeNull());
+  });
+
   it("shows the server's field errors next to the fields", async () => {
     server.use(http.post(`${API}/v1/orders`, () => HttpResponse.json({ error: { code: 'validation_failed', message: 'Validation failed', details: [{ path: 'contact.phone', message: 'Enter a Cambodian mobile number.' }] } }, { status: 422 })));
     renderRoutes(routes, '/checkout');

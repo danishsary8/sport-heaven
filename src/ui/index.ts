@@ -4,6 +4,8 @@ export { cx } from './cx';
 export { Field, Select, TextArea } from './Field';
 export { CONTAINER, PageTitle, SectionTitle, type PageTitleSize } from './Heading';
 export { JsonLd } from './JsonLd';
+export { PaymentMark, PaymentMarks } from './PaymentMarks';
+export { METHOD_MARKS, type PaymentMarkKind } from './paymentMethods';
 export { Picture } from './Picture';
 export { Price } from './Price';
 export { Seo } from './Seo';

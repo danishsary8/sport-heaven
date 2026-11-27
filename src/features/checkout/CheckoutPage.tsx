@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router';
 import { isApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { formatKhr, formatUsd, useI18n, type DictKey } from '../../lib/i18n';
-import { Button, Field, PageTitle, Picture, QueryView, Seo, Skeleton, TextArea, cx } from '../../ui';
+import { Button, Field, METHOD_MARKS, PageTitle, PaymentMarks, Picture, QueryView, Seo, Skeleton, TextArea, cx } from '../../ui';
 import { useAddresses } from '../account/api';
 import { useCart, type Cart } from '../cart/api';
 import { PromoField } from '../cart/BagContents';
@@ -309,9 +309,22 @@ function CheckoutForm({ cart }: { cart: Cart }) {
                     <span className="font-semibold">{t(PAY_LABEL[m])}</span>
                     <span className="block text-sm text-graphite">{t(`${PAY_LABEL[m]}.hint` as DictKey)}</span>
                   </span>
+                  <PaymentMarks kinds={METHOD_MARKS[m] ?? []} />
                 </label>
               ))}
               {quote.isPending && <Skeleton className="h-14 w-full" />}
+              {/* No way to pay for this kind of order (e.g. the shop takes cash at pickup only for now). */}
+              {q && q.paymentMethods.length === 0 && (
+                <div role="status" className="rounded-[8px] border border-cobalt/25 bg-cobalt/[0.05] p-4">
+                  <p className="font-semibold text-cobalt">{t('co.noPay.title')}</p>
+                  <p className="mt-1 text-[15px] text-obsidian/90">{fulfillment === 'delivery' ? t('co.noPay.delivery') : t('co.noPay.other')}</p>
+                  {fulfillment === 'delivery' && (
+                    <Button variant="secondary" size="sm" className="mt-3" onClick={() => setFulfillment('pickup')}>
+                      {t('co.noPay.switch')}
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
             {errors.paymentMethod && <p className="mt-1.5 text-sm font-medium text-vermilion">{errors.paymentMethod}</p>}
           </fieldset>
