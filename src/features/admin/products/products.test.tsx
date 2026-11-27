@@ -367,30 +367,6 @@ describe('admin products', () => {
     });
   });
 
-  it('adds photos to many products at once, matched by file name', async () => {
-    let n = 0;
-    server.use(
-      http.post(`${API}/v1/admin/media`, () => {
-        n += 1;
-        return HttpResponse.json({ path: `media/0000000${n}-1111-4222-8333-444455556666.webp`, url: '' }, { status: 201 });
-      }),
-    );
-    renderRoutes(routes, '/admin/products', { signedIn: true });
-    const files = [new File(['a'], 'predator-1.webp', { type: 'image/webp' }), new File(['b'], 'predator-2.webp', { type: 'image/webp' }), new File(['c'], 'nothing-here-1.webp', { type: 'image/webp' })];
-    fireEvent.change(await screen.findByLabelText('Photos named by product'), { target: { files } });
-    const check = await screen.findByRole('region', { name: 'Photos check' });
-    expect(await within(check).findByRole('row', { name: /predator/ })).toHaveTextContent('Predator Elite FG');
-    expect(within(check).getByRole('row', { name: /nothing-here/ })).toHaveTextContent('Not in the shop');
-    fireEvent.click(within(check).getByRole('button', { name: 'Add photos to 1 product' }));
-    expect(await within(check).findByText('Photos added to 1 product')).toBeTruthy();
-    expect(n).toBe(2);
-    expect(calls).toContainEqual({
-      method: 'PUT',
-      url: `/v1/admin/products/${PID}/images`,
-      body: { images: [{ path: 'media/00000001-1111-4222-8333-444455556666.webp' }, { path: 'media/00000002-1111-4222-8333-444455556666.webp' }] },
-    });
-  });
-
   it('clears the selection when the list changes, so hidden products are never changed', async () => {
     renderRoutes(routes, '/admin/products', { signedIn: true });
     fireEvent.click(await screen.findByRole('checkbox', { name: 'Select Predator Elite FG' }));

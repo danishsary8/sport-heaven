@@ -7,7 +7,6 @@ import { AdminOnly } from '../AdminLayout';
 import { patch, post, put, useAdminMutation, useAdminQuery } from '../api';
 import type { AdminProduct, AdminProductListRow, AdminVariant, Brand, Category, CsvImportResult } from '../types';
 import { ProductsTable } from './ProductsTable';
-import { BulkPhotos } from './BulkPhotos';
 import { ProductImport } from './ProductImport';
 import { PhotoManager, tilesOf, type PhotoTile } from './PhotoManager';
 import { ChevronDown, Plus, Search } from 'lucide-react';
@@ -95,9 +94,6 @@ function ProductsList() {
         </summary>
         <div className="mt-4 flex flex-col gap-5 divide-y divide-dashed divide-[#C9C5BB]">
           <ProductImport />
-          <div className="pt-5">
-            <BulkPhotos />
-          </div>
           <div className="pt-5">
             <CsvImport />
           </div>

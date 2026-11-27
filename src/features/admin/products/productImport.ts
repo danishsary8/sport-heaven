@@ -75,55 +75,6 @@ export function photosOp(p: AdminProduct, photos: string[]): ImportOp | null {
   };
 }
 
-export interface PhotoFile {
-  name: string;
-  type: string;
-  size: number;
-}
-
-export interface PhotoGroup<F extends PhotoFile = PhotoFile> {
-  slug: string;
-  main?: F;
-  hover?: F;
-}
-
-const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const PHOTO_MAX_BYTES = 4 * 1024 * 1024;
-
-/**
- * Groups photo files by product: "<web address>-1.webp" is the main photo, "-2" the hover photo (any of
- * .jpg/.jpeg/.png/.webp, any letter case). Every file that cannot be used is named with the reason.
- */
-export function groupPhotoFiles<F extends PhotoFile>(files: F[]): { groups: PhotoGroup<F>[]; problems: string[] } {
-  const groups = new Map<string, PhotoGroup<F>>();
-  const problems: string[] = [];
-  for (const f of files) {
-    const m = /^(.+)-([12])\.[a-z0-9]+$/i.exec(f.name.trim());
-    if (!m) {
-      problems.push(`${f.name}: name it like <web address>-1.webp (main) or -2.webp (hover)`);
-      continue;
-    }
-    if (!PHOTO_TYPES.includes(f.type)) {
-      problems.push(`${f.name}: only JPG, PNG or WebP photos`);
-      continue;
-    }
-    if (f.size > PHOTO_MAX_BYTES) {
-      problems.push(`${f.name}: larger than 4 MB`);
-      continue;
-    }
-    const slug = m[1]!.toLowerCase();
-    const key = m[2] === '1' ? 'main' : 'hover';
-    const g = groups.get(slug) ?? { slug };
-    if (g[key]) {
-      problems.push(`${f.name}: ${slug} already has a ${key === 'main' ? 'main' : 'hover'} photo in this batch`);
-      continue;
-    }
-    g[key] = f;
-    groups.set(slug, g);
-  }
-  return { groups: [...groups.values()], problems };
-}
-
 /**
  * Decides, per row, whether it adds a product or updates one already in the shop (found by its web address),
  * and lists what an update changes. For existing products, price and "was" price apply to every size; the

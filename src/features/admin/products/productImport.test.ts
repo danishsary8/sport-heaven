@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { IMPORT_TEMPLATE, checkImport, groupPhotoFiles, parseCsv, planImport } from './productImport';
+import { IMPORT_TEMPLATE, checkImport, parseCsv, planImport } from './productImport';
 
 const BRANDS = [{ id: 'b1', slug: 'adidas', name: 'Adidas' }];
 const CATEGORIES = [{ id: 'c1', slug: 'boots', nameI18n: { en: 'Football Boots' } }];
@@ -174,23 +174,3 @@ describe('photo links in the import', () => {
   });
 });
 
-describe('groupPhotoFiles', () => {
-  const f = (name: string, type = 'image/webp', size = 1000) => ({ name, type, size });
-  it('reads <web address>-1 as the main photo and -2 as the hover photo', () => {
-    const r = groupPhotoFiles([f('ac-milan-home-1.webp'), f('AC-Milan-Home-2.JPG', 'image/jpeg'), f('copa-1.png', 'image/png')]);
-    expect(r.problems).toEqual([]);
-    expect(r.groups.map((g) => [g.slug, g.main?.name, g.hover?.name])).toEqual([
-      ['ac-milan-home', 'ac-milan-home-1.webp', 'AC-Milan-Home-2.JPG'],
-      ['copa', 'copa-1.png', undefined],
-    ]);
-  });
-  it('names every file it cannot use', () => {
-    const r = groupPhotoFiles([f('front.webp'), f('copa-1.webp'), f('copa-1.jpg', 'image/jpeg'), f('copa-2.gif', 'image/gif'), f('big-1.webp', 'image/webp', 5 * 1024 * 1024)]);
-    expect(r.problems).toEqual([
-      'front.webp: name it like <web address>-1.webp (main) or -2.webp (hover)',
-      'copa-1.jpg: copa already has a main photo in this batch',
-      'copa-2.gif: only JPG, PNG or WebP photos',
-      'big-1.webp: larger than 4 MB',
-    ]);
-  });
-});
