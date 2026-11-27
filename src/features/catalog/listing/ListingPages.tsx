@@ -1,7 +1,9 @@
-import { useParams } from 'react-router';
+import { useParams, useSearchParams } from 'react-router';
 import { useI18n } from '../../../lib/i18n';
 import { Seo } from '../../../ui';
 import { useCollection, useMenu } from '../api';
+import { valueLabel } from '../filterLabels';
+import { subCategory } from './facets';
 import { ListingView } from './ListingView';
 
 export function ShopPage() {
@@ -15,13 +17,18 @@ export function ShopPage() {
 }
 
 export function CategoryPage() {
+  const { t } = useI18n();
   const { category = '' } = useParams();
+  const [params] = useSearchParams();
   const menu = useMenu();
   const name = menu.data?.categories.find((c) => c.slug === category)?.name ?? humanise(category);
+  // /c/jerseys?league=Premier League is titled "Premier League", with the category as the intro.
+  const sub = subCategory(params);
+  const title = sub ? valueLabel(sub.key, sub.value, t) : name;
   return (
     <>
-      <Seo title={name} canonical={`/c/${category}`} />
-      <ListingView key={category} title={name} base={{ category }} />
+      <Seo title={sub ? `${title} | ${name}` : name} canonical={`/c/${category}`} />
+      <ListingView key={category} title={title} intro={sub ? name : undefined} base={{ category }} />
     </>
   );
 }

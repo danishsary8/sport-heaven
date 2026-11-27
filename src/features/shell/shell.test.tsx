@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { routes } from '../../app/routes';
@@ -46,6 +46,30 @@ describe('app shell', () => {
     expect(await within(nav).findByRole('link', { name: 'Boots' })).toHaveAttribute('href', '/c/boots');
     expect(await screen.findByRole('link', { name: 'Bag, 3 items' })).toBeTruthy();
     expect((await screen.findAllByText(/Sen Sok/)).length).toBeGreaterThan(0);
+  });
+
+  it('opens a category mega menu with sub-categories from the API, and closes it with Escape', async () => {
+    server.use(
+      http.get(`${API}/v1/catalog/filters`, () =>
+        HttpResponse.json({
+          total: 20,
+          facets: [
+            { key: 'surface', label: 'Surface', type: 'checkbox', options: [{ value: 'FG', label: 'FG', count: 8, selected: false }] },
+            { key: 'brand', label: 'Brand', type: 'checkbox', options: [{ value: 'nike', label: 'Nike', count: 5, selected: false }] },
+          ],
+        }),
+      ),
+    );
+    renderRoutes(routes, '/');
+    const nav = await screen.findByRole('navigation', { name: 'Main' });
+    const toggle = await within(nav).findByRole('button', { name: 'Show Boots categories' });
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(await within(nav).findByRole('link', { name: /Firm ground \(FG\)/ })).toHaveAttribute('href', '/c/boots?surface=FG');
+    expect(within(nav).getByRole('link', { name: /Nike/ })).toHaveAttribute('href', '/c/boots?brand=nike');
+    expect(within(nav).getByRole('link', { name: 'Shop all Boots' })).toHaveAttribute('href', '/c/boots');
+    fireEvent.keyDown(toggle, { key: 'Escape' });
+    expect(within(nav).queryByRole('link', { name: 'Shop all Boots' })).toBeNull();
   });
 
   it('still renders the header when the bag cannot be loaded', async () => {

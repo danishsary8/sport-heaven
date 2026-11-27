@@ -7,6 +7,7 @@ import { isApiError } from '../../../lib/api';
 import { useFilters, useProducts, type Facet, type ListingQuery } from '../api';
 import { ProductCard, ProductCardSkeleton } from '../ProductCard';
 import { FilterPanel } from './FilterPanel';
+import { usefulFacets } from './facets';
 import { clearFilters, hasFilters, queryFromSearch, setPrice, toggleValue } from './params';
 
 const SORTS = ['popular', 'new', 'price_asc', 'price_desc', 'discount'] as const;
@@ -63,7 +64,8 @@ export function ListingView({
 
   const total = products.data?.pages[0]?.total;
   const items = products.data?.pages.flatMap((p) => p.products) ?? [];
-  const facets = filters.data?.facets ?? [];
+  const allFacets = filters.data?.facets ?? [];
+  const facets = usefulFacets(allFacets);
   const fixed = Object.keys(base);
   const filtered = hasFilters(params, fixed);
 
@@ -90,7 +92,7 @@ export function ListingView({
           <SlidersHorizontal className="size-4" aria-hidden />
           {t('listing.filter')}
         </Button>
-        <ActiveChips facets={facets} params={params} fixed={fixed} onChange={(n) => setParams(n, { preventScrollReset: true })} />
+        <ActiveChips facets={allFacets} params={params} fixed={fixed} onChange={(n) => setParams(n, { preventScrollReset: true })} />
         <label className="ml-auto flex items-center gap-2 text-sm">
           <span className="text-graphite">{t('listing.sort')}</span>
           <select

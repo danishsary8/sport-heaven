@@ -2,7 +2,7 @@ import { Link } from 'react-router';
 import { useI18n } from '../../../../lib/i18n';
 import { CONTAINER, Picture, cx } from '../../../../ui';
 import { useMenu } from '../../api';
-import { CATEGORY_IMAGES } from '../categoryImages';
+import { CATEGORY_IMAGES } from '../../categoryImages';
 import type { SlugListContent } from '../sections';
 import { SectionHead } from './SectionHead';
 

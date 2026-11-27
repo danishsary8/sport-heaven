@@ -1,16 +1,20 @@
-import { Menu, Search, ShoppingBag, User } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { ChevronDown, Menu, Search, ShoppingBag, User } from 'lucide-react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router';
 import { useAuth } from '../../lib/auth';
 import { useI18n } from '../../lib/i18n';
 import { cx } from '../../ui';
 import { useBagCount } from '../cart/api';
-import { BagDrawer } from '../cart/BagDrawer';
 import { useMenu } from '../catalog/api';
-import { SearchOverlay } from '../catalog/search/SearchOverlay';
 import { LangSwitch } from './LangSwitch';
-import { MobileMenu } from './MobileMenu';
+import { useMegaMenu } from './useMegaMenu';
 import { Wordmark } from './Wordmark';
+
+// Only needed once someone opens a category, so it loads then (keeps the first page light).
+const MobileMenu = lazy(() => import('./MobileMenu').then((m) => ({ default: m.MobileMenu })));
+const SearchOverlay = lazy(() => import('../catalog/search/SearchOverlay').then((m) => ({ default: m.SearchOverlay })));
+const BagDrawer = lazy(() => import('../cart/BagDrawer').then((m) => ({ default: m.BagDrawer })));
+const MegaMenuPanel = lazy(() => import('./MegaMenu').then((m) => ({ default: m.MegaMenuPanel })));
 
 const iconButton = 'relative grid size-11 place-items-center rounded-full hover:bg-stone';
 
@@ -20,8 +24,12 @@ export function Header() {
   const menu = useMenu();
   const count = useBagCount();
   const [open, setOpen] = useState(false);
+  // The phone menu's code loads on the first tap and stays mounted after that (so it can animate closed).
+  const [menuLoaded, setMenuLoaded] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchLoaded, setSearchLoaded] = useState(false);
   const [bagOpen, setBagOpen] = useState(false);
+  const [bagLoaded, setBagLoaded] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -31,6 +39,10 @@ export function Header() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  const categories = (menu.data?.categories ?? []).slice(0, 7);
+  const mega = useMegaMenu();
+  const openCategory = categories.find((c) => c.slug === mega.open);
+
   const bagLabel = count ? t('nav.bagWithCount', { n: count }) : t('nav.bag');
 
   return (
@@ -39,28 +51,54 @@ export function Header() {
         {t('nav.skip')}
       </a>
       <div className="mx-auto flex h-14 max-w-[1320px] items-center gap-2 px-4 lg:h-16 lg:px-8">
-        <button type="button" className={cx(iconButton, '-ml-2 lg:hidden')} aria-label={t('nav.menu')} aria-expanded={open} onClick={() => setOpen(true)}>
+        <button type="button" className={cx(iconButton, '-ml-2 lg:hidden')} aria-label={t('nav.menu')} aria-expanded={open} onClick={() => {
+            setMenuLoaded(true);
+            setOpen(true);
+          }}>
           <Menu className="size-6" aria-hidden />
         </button>
         <Wordmark className="mr-6 shrink-0" />
-        <nav aria-label={t('nav.main')} className="hidden min-w-0 flex-1 lg:block">
-          <ul className="flex items-center gap-6">
-            {(menu.data?.categories ?? []).slice(0, 7).map((c) => (
-              <li key={c.slug}>
-                <NavLink
-                  to={`/c/${c.slug}`}
-                  className={({ isActive }) => cx('whitespace-nowrap text-[15px] font-semibold underline-offset-[6px] hover:underline', isActive && 'underline decoration-2')}
-                >
-                  {c.name}
-                </NavLink>
-              </li>
-            ))}
-            <li>
+        <nav aria-label={t('nav.main')} className="hidden min-w-0 flex-1 lg:block" onMouseLeave={mega.leave} onKeyDown={mega.onKeyDown}>
+          <ul className="flex items-center gap-1">
+            {categories.map((c) => {
+              const open = mega.open === c.slug;
+              return (
+                <li key={c.slug} className="flex items-center" onMouseEnter={() => mega.enter(c.slug)}>
+                  <NavLink
+                    to={`/c/${c.slug}`}
+                    className={({ isActive }) =>
+                      cx(
+                        'whitespace-nowrap py-5 pl-2.5 text-[15px] font-semibold underline-offset-[6px] hover:underline',
+                        (isActive || open) && 'underline decoration-2',
+                      )
+                    }
+                  >
+                    {c.name}
+                  </NavLink>
+                  <button
+                    type="button"
+                    aria-expanded={open}
+                    aria-controls={open ? `mega-${c.slug}` : undefined}
+                    aria-label={t('mega.open', { name: c.name })}
+                    onClick={() => mega.toggle(c.slug)}
+                    className="grid size-6 place-items-center rounded text-graphite hover:text-obsidian"
+                  >
+                    <ChevronDown className={cx('size-3.5 transition-transform', open && 'rotate-180')} aria-hidden />
+                  </button>
+                </li>
+              );
+            })}
+            <li className="ml-2" onMouseEnter={() => mega.enter(null)}>
               <NavLink to="/stores" className="whitespace-nowrap text-[15px] font-semibold text-cobalt underline-offset-[6px] hover:underline">
                 {t('nav.stores')}
               </NavLink>
             </li>
           </ul>
+          {openCategory && (
+            <Suspense fallback={null}>
+              <MegaMenuPanel id={`mega-${openCategory.slug}`} category={openCategory.slug} name={openCategory.name} onNavigate={mega.close} />
+            </Suspense>
+          )}
         </nav>
         <div className="ml-auto flex items-center gap-0.5">
           <div className="mr-2 hidden lg:block">
@@ -72,6 +110,7 @@ export function Header() {
             aria-label={t('nav.search')}
             onClick={(e) => {
               if (e.metaKey || e.ctrlKey) return void window.open('/search', '_blank');
+              setSearchLoaded(true);
               setSearchOpen(true);
             }}
           >
@@ -87,6 +126,7 @@ export function Header() {
             onClick={(e) => {
               if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
               e.preventDefault();
+              setBagLoaded(true);
               setBagOpen(true);
             }}
           >
@@ -99,9 +139,21 @@ export function Header() {
           </Link>
         </div>
       </div>
-      <MobileMenu open={open} onClose={() => setOpen(false)} />
-      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
-      <BagDrawer open={bagOpen} onClose={() => setBagOpen(false)} />
+      {menuLoaded && (
+        <Suspense fallback={null}>
+          <MobileMenu open={open} onClose={() => setOpen(false)} />
+        </Suspense>
+      )}
+      {searchLoaded && (
+        <Suspense fallback={null}>
+          <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
+        </Suspense>
+      )}
+      {bagLoaded && (
+        <Suspense fallback={null}>
+          <BagDrawer open={bagOpen} onClose={() => setBagOpen(false)} />
+        </Suspense>
+      )}
     </header>
   );
 }
