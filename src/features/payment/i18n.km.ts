@@ -3,6 +3,8 @@ import type { payEn } from './i18n';
 /** Khmer copy for this feature, loaded only when the shop is shown in Khmer. */
 export const payKm: Record<keyof typeof payEn, string> = {
   'pay.title': 'បង់ប្រាក់តាម KHQR',
+  'pay.live': 'កំពុងរង់ចាំការបង់ប្រាក់របស់អ្នក',
+  'pay.scanAny': 'ស្កេនដោយកម្មវិធីធនាគារណាមួយនៅកម្ពុជា',
   'pay.cardTitle': 'បង់ប្រាក់តាមកាត',
   'pay.orderNumber': 'ការបញ្ជាទិញ {number}',
   'pay.amount': 'ចំនួនទឹកប្រាក់ត្រូវបង់',

@@ -33,10 +33,11 @@ export function TrackPage() {
     <section className="mx-auto max-w-[1120px] px-4 pb-16 pt-8 lg:px-8 lg:pt-12">
       <Seo title={t('nav.track')} noindex />
       <PageTitle>{t('nav.track')}</PageTitle>
-      <form onSubmit={submit} noValidate className="mt-6 grid max-w-[720px] gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-start">
+      <p className="mt-2 max-w-[60ch] text-graphite">{t('track.intro')}</p>
+      <form onSubmit={submit} noValidate className="mt-6 grid max-w-[820px] gap-4 rounded-[16px] bg-chalk p-5 sm:grid-cols-[1fr_1fr_auto] sm:items-start sm:p-6">
         <Field label={t('track.number')} value={number} onChange={(e) => setNumber(e.target.value)} error={errors.number} autoCapitalize="characters" autoComplete="off" maxLength={40} hint={t('track.numberHint')} />
         <Field label={t('track.phone')} value={phone} onChange={(e) => setPhone(e.target.value)} error={errors.phone} type="tel" inputMode="tel" autoComplete="tel" maxLength={40} />
-        <Button type="submit" variant="primary" loading={track.isPending} className="sm:mt-[26px]">
+        <Button type="submit" variant="primary" loading={track.isPending} className="rounded-[10px] sm:mt-[26px]">
           {t('track.find')}
         </Button>
       </form>
@@ -46,14 +47,14 @@ export function TrackPage() {
         </p>
       )}
       {o && (
-        <div className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-[minmax(0,1fr)_340px]">
-          <div className="flex flex-col gap-5">
+        <div className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-8">
+          <div className="flex h-fit flex-col gap-5 rounded-[16px] border border-stone p-5 sm:p-6">
             <div className="flex flex-wrap items-center gap-3">
-              <h2 className="font-display text-3xl font-bold">{t('order.title', { number: o.number })}</h2>
+              <h2 className="font-display text-[30px] font-bold leading-none">{t('order.title', { number: o.number })}</h2>
               <StatusBadge status={o.status} />
             </div>
             {track.data?.orderAccessToken && o.status === 'pending_payment' && (
-              <Link to={`/pay/${o.number}`} className="inline-flex h-12 w-fit items-center rounded-[6px] bg-vermilion px-6 font-semibold text-paper">
+              <Link to={`/pay/${o.number}`} className="inline-flex h-12 w-fit items-center rounded-[10px] bg-vermilion px-6 font-semibold text-paper hover:bg-[#A91D25]">
                 {t('order.payNow')}
               </Link>
             )}
@@ -63,11 +64,17 @@ export function TrackPage() {
               </Link>
             )}
             <OrderItems items={o.items} />
-            <OrderTotals pricing={o.pricing} />
+            <div className="border-t border-dashed border-[#C9C5BB] pt-4">
+              <OrderTotals pricing={o.pricing} />
+            </div>
           </div>
-          <aside className="flex flex-col gap-6">
-            <Timeline timeline={o.timeline} />
-            <Fulfilment order={o} />
+          <aside className="flex flex-col gap-4">
+            <div className="rounded-[16px] bg-chalk p-5 sm:p-6">
+              <Timeline timeline={o.timeline} />
+            </div>
+            <div className="rounded-[16px] border border-stone p-5 sm:p-6">
+              <Fulfilment order={o} />
+            </div>
           </aside>
         </div>
       )}

@@ -293,3 +293,40 @@ input[type="search"]::-webkit-search-cancel-button { display: none; }
 .otp-cell[data-active="true"] { box-shadow: 0 0 0 2px var(--color-obsidian); }
 @keyframes caretBlink { 50% { opacity: 0; } }
 .otp-caret { animation: caretBlink 1s steps(1) infinite; }
+
+/* Checkout ------------------------------------------------------------------------------------ */
+/* The order summary is a till receipt: its bottom edge is torn in small teeth. */
+.receipt {
+  --tooth: 10px;
+  padding-bottom: calc(var(--tooth) + 1.25rem);
+  -webkit-mask:
+    linear-gradient(#000 0 0) top / 100% calc(100% - var(--tooth)) no-repeat,
+    conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / calc(var(--tooth) * 2) var(--tooth) repeat-x;
+  mask:
+    linear-gradient(#000 0 0) top / 100% calc(100% - var(--tooth)) no-repeat,
+    conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / calc(var(--tooth) * 2) var(--tooth) repeat-x;
+}
+
+/* The confirmation's order number is a match-ticket stub: punched notches on both sides of the tear line. */
+.ticket {
+  -webkit-mask:
+    radial-gradient(circle 9px at 0 50%, #0000 98%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle 9px at 100% 50%, #0000 98%, #000) right / 51% 100% no-repeat;
+  mask:
+    radial-gradient(circle 9px at 0 50%, #0000 98%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle 9px at 100% 50%, #0000 98%, #000) right / 51% 100% no-repeat;
+}
+
+/* "Waiting for the bank": a soft ring that keeps leaving the dot. */
+@keyframes livePing { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(2.6); opacity: 0; } }
+.live-dot { position: relative; }
+.live-dot::after { content: ""; position: absolute; inset: 0; border-radius: 999px; background: inherit; animation: livePing 1.6s cubic-bezier(0, 0, 0.2, 1) infinite; }
+
+/* The confirmation tick: the circle closes, then the tick is drawn. The page's one entrance. */
+@keyframes ringDraw { from { stroke-dashoffset: 158; } to { stroke-dashoffset: 0; } }
+@keyframes tickIn { from { stroke-dashoffset: 40; } to { stroke-dashoffset: 0; } }
+@keyframes ringFill { from { fill-opacity: 0; } to { fill-opacity: 1; } }
+.done-mark circle { stroke-dasharray: 158; animation: ringDraw 620ms cubic-bezier(0.65, 0, 0.35, 1) both, ringFill 300ms 560ms ease-out both; }
+.done-mark path { stroke-dasharray: 40; animation: tickIn 380ms 700ms cubic-bezier(0.65, 0, 0.35, 1) both; }
+@keyframes riseIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.animate-rise { animation: riseIn 560ms cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: var(--d, 0ms); }

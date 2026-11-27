@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { MapPin, Store, Truck } from 'lucide-react';
+import { Check, CircleAlert, Clock3, Lock, MapPin, Store, Truck, UserRound } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { isApiError } from '../../lib/api';
@@ -35,7 +35,7 @@ export function CheckoutPage() {
   const { t } = useI18n();
   const cart = useCart();
   return (
-    <div className="mx-auto max-w-[1120px] px-4 pb-16 pt-6 lg:px-8 lg:pt-10">
+    <div className="mx-auto max-w-[1180px] px-4 pb-16 pt-6 lg:px-8 lg:pt-8">
       <Seo title={t('co.title')} noindex />
       <PageTitle>{t('co.title')}</PageTitle>
       <QueryView query={cart} skeleton={<Skeleton className="mt-6 h-96 w-full" />} isEmpty={(d) => d.cart.lines.length === 0} empty={<EmptyBag />}>
@@ -190,24 +190,36 @@ function CheckoutForm({ cart }: { cart: Cart }) {
     );
   };
 
+  const emailOk = !contact.email.trim() || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email.trim());
+  const contactDone = !!contact.name.trim() && looksLikePhone(contact.phone) && emailOk;
+  const placeDone =
+    fulfillment === 'pickup'
+      ? !!pickupBranchId
+      : !!shippingMethodId && (useSaved ? !!chosenSaved : !!(address.provinceCode && address.districtCode && address.communeCode && address.street.trim()));
+  const itemCount = cart.lines.reduce((n, l) => n + l.qty, 0);
+
   return (
-    <form onSubmit={submit} noValidate className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-[minmax(0,1fr)_380px]">
-      <div className="flex min-w-0 flex-col gap-8">
+    <form onSubmit={submit} noValidate className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-12">
+      <div className="flex min-w-0 flex-col gap-5">
         {formError && (
-          <p role="alert" className="rounded-[6px] border border-vermilion bg-vermilion/5 px-4 py-3 font-medium text-vermilion">
+          <p role="alert" className="flex items-start gap-2.5 rounded-[12px] bg-vermilion/[0.07] px-4 py-3 font-medium text-vermilion">
+            <CircleAlert className="mt-0.5 size-5 shrink-0" aria-hidden />
             {formError}
           </p>
         )}
         {status !== 'member' && (
-          <p className="text-[15px]">
-            {t('co.haveAccount')}{' '}
-            <Link to="/sign-in" state={{ from: '/checkout' }} className="font-semibold underline underline-offset-4">
-              {t('nav.signIn')}
-            </Link>
+          <p className="flex items-start gap-2.5 rounded-[12px] bg-chalk px-4 py-3 text-[15px]">
+            <UserRound className="mt-0.5 size-4 shrink-0 text-graphite" aria-hidden />
+            <span>
+              {t('co.haveAccount')}{' '}
+              <Link to="/sign-in" state={{ from: '/checkout' }} className="font-semibold underline underline-offset-4">
+                {t('nav.signIn')}
+              </Link>
+            </span>
           </p>
         )}
 
-        <Step title={t('co.contact')}>
+        <Step n={1} done={contactDone} title={t('co.contact')}>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field id="contact.name" label={t('co.name')} value={contact.name} onChange={(e) => setContact({ ...contact, name: e.target.value })} error={errors['contact.name']} autoComplete="name" maxLength={120} />
             <Field id="contact.phone" label={t('co.phone')} type="tel" inputMode="tel" value={contact.phone} onChange={(e) => setContact({ ...contact, phone: e.target.value })} error={errors['contact.phone']} autoComplete="tel" maxLength={40} />
@@ -225,21 +237,20 @@ function CheckoutForm({ cart }: { cart: Cart }) {
           </div>
         </Step>
 
-        <Step title={t('co.howToGet')}>
+        <Step n={2} done={placeDone} title={t('co.howToGet')}>
           <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label={t('co.howToGet')}>
             <BigChoice name="fulfillment" checked={fulfillment === 'delivery'} onChange={() => setFulfillment('delivery')} icon={<Truck className="size-5" aria-hidden />} title={t('co.delivery')} body={t('co.deliveryBody')} />
             <BigChoice name="fulfillment" checked={fulfillment === 'pickup'} onChange={() => setFulfillment('pickup')} icon={<Store className="size-5" aria-hidden />} title={t('co.pickup')} body={t('co.pickupBody')} />
           </div>
 
           {fulfillment === 'delivery' ? (
-            <div className="mt-5 flex flex-col gap-5">
+            <div className="mt-6 flex flex-col gap-6">
               {status === 'member' && saved.length > 0 && (
                 <fieldset data-field="addressId">
                   <legend className="mb-2 text-sm font-semibold">{t('co.savedAddresses')}</legend>
                   <div className="flex flex-col gap-2">
                     {saved.map((a) => (
-                      <label key={a.id} className={cx('flex cursor-pointer gap-3 rounded-[8px] border p-3', addressId === a.id ? 'border-obsidian' : 'border-stone')}>
-                        <input type="radio" name="address" className="mt-1 size-[18px] accent-obsidian" checked={addressId === a.id} onChange={() => setAddressId(a.id)} />
+                      <Option key={a.id} name="address" checked={addressId === a.id} onChange={() => setAddressId(a.id)} align="start">
                         <span className="text-[15px]">
                           <span className="font-semibold">{a.label}</span>
                           <span className="block">{a.street}</span>
@@ -247,12 +258,11 @@ function CheckoutForm({ cart }: { cart: Cart }) {
                             {[placeName(a.commune, lang), placeName(a.district, lang), placeName(a.province, lang)].join(', ')}
                           </span>
                         </span>
-                      </label>
+                      </Option>
                     ))}
-                    <label className={cx('flex cursor-pointer items-center gap-3 rounded-[8px] border p-3', addressId === 'new' ? 'border-obsidian' : 'border-stone')}>
-                      <input type="radio" name="address" className="size-[18px] accent-obsidian" checked={addressId === 'new'} onChange={() => setAddressId('new')} />
+                    <Option name="address" checked={addressId === 'new'} onChange={() => setAddressId('new')}>
                       <span className="font-semibold">{t('co.newAddress')}</span>
-                    </label>
+                    </Option>
                   </div>
                 </fieldset>
               )}
@@ -261,20 +271,22 @@ function CheckoutForm({ cart }: { cart: Cart }) {
               <fieldset data-field="shippingMethodId">
                 <legend className="mb-2 text-sm font-semibold">{t('co.deliveryOption')}</legend>
                 {!provinceCode ? (
-                  <p className="text-sm text-graphite">{t('co.chooseProvinceFirst')}</p>
+                  <p className="flex items-center gap-2 rounded-[10px] border border-dashed border-[#C9C5BB] px-4 py-3 text-sm text-graphite">
+                    <MapPin className="size-4" aria-hidden />
+                    {t('co.chooseProvinceFirst')}
+                  </p>
                 ) : available.length === 0 && q ? (
-                  <p className="text-sm text-graphite">{t('bag.noDelivery')}</p>
+                  <p className="rounded-[10px] bg-chalk px-4 py-3 text-sm text-graphite">{t('bag.noDelivery')}</p>
                 ) : (
                   <div className="flex flex-col gap-2">
                     {available.map((o) => (
-                      <label key={o.methodId} className={cx('flex cursor-pointer items-center gap-3 rounded-[8px] border p-3', shippingMethodId === o.methodId ? 'border-obsidian' : 'border-stone')}>
-                        <input type="radio" name="shipping" className="size-[18px] accent-obsidian" checked={shippingMethodId === o.methodId} onChange={() => setShipping(o.methodId)} />
+                      <Option key={o.methodId} name="shipping" checked={shippingMethodId === o.methodId} onChange={() => setShipping(o.methodId)}>
                         <span className="flex-1">
                           <span className="font-semibold">{o.name}</span>
                           {o.eta && <span className="block text-sm text-graphite">{o.eta}</span>}
                         </span>
-                        <span className="tabular font-semibold">{o.feeCents === 0 ? t('bag.free') : o.feeCents != null ? formatUsd(o.feeCents) : ''}</span>
-                      </label>
+                        <span className={cx('tabular font-semibold', o.feeCents === 0 && 'text-success')}>{o.feeCents === 0 ? t('bag.free') : o.feeCents != null ? formatUsd(o.feeCents) : ''}</span>
+                      </Option>
                     ))}
                   </div>
                 )}
@@ -282,15 +294,14 @@ function CheckoutForm({ cart }: { cart: Cart }) {
               </fieldset>
             </div>
           ) : (
-            <fieldset data-field="pickupBranchId" className="mt-5">
+            <fieldset data-field="pickupBranchId" className="mt-6">
               <legend className="mb-2 text-sm font-semibold">{t('co.pickupStore')}</legend>
-              <div className="flex flex-col gap-2">
+              <div className="grid gap-2 sm:grid-cols-2">
                 {(q?.pickupBranches ?? []).map((b) => (
-                  <label key={b.id} className={cx('flex cursor-pointer items-center gap-3 rounded-[8px] border p-3', pickupBranchId === b.id ? 'border-cobalt' : 'border-stone')}>
-                    <input type="radio" name="pickup" className="size-[18px] accent-[#032EA1]" checked={pickupBranchId === b.id} onChange={() => setPickup(b.id)} aria-label={b.name} />
-                    <MapPin className="size-4 text-cobalt" aria-hidden />
+                  <Option key={b.id} name="pickup" checked={pickupBranchId === b.id} onChange={() => setPickup(b.id)} ariaLabel={b.name} tone="cobalt">
+                    <MapPin className="size-4 shrink-0 text-cobalt" aria-hidden />
                     <span className="font-semibold">{b.name}</span>
-                  </label>
+                  </Option>
                 ))}
               </div>
               {errors.pickupBranchId && <p className="mt-1.5 text-sm font-medium text-vermilion">{errors.pickupBranchId}</p>}
@@ -298,24 +309,23 @@ function CheckoutForm({ cart }: { cart: Cart }) {
           )}
         </Step>
 
-        <Step title={t('co.payment')}>
+        <Step n={3} done={!!paymentMethod} title={t('co.payment')}>
           <fieldset data-field="paymentMethod">
             <legend className="sr-only">{t('co.payment')}</legend>
             <div className="flex flex-col gap-2">
               {(q?.paymentMethods ?? []).map((m) => (
-                <label key={m} className={cx('flex cursor-pointer items-center gap-3 rounded-[8px] border p-3', paymentMethod === m ? 'border-obsidian' : 'border-stone')}>
-                  <input type="radio" name="payment" className="size-[18px] accent-obsidian" checked={paymentMethod === m} onChange={() => setPayment(m)} />
+                <Option key={m} name="payment" checked={paymentMethod === m} onChange={() => setPayment(m)}>
                   <span className="flex-1">
                     <span className="font-semibold">{t(PAY_LABEL[m])}</span>
                     <span className="block text-sm text-graphite">{t(`${PAY_LABEL[m]}.hint` as DictKey)}</span>
                   </span>
                   <PaymentMarks kinds={METHOD_MARKS[m] ?? []} />
-                </label>
+                </Option>
               ))}
-              {quote.isPending && <Skeleton className="h-14 w-full" />}
+              {quote.isPending && <Skeleton className="h-16 w-full rounded-[12px]" />}
               {/* No way to pay for this kind of order (e.g. the shop takes cash at pickup only for now). */}
               {q && q.paymentMethods.length === 0 && (
-                <div role="status" className="rounded-[8px] border border-cobalt/25 bg-cobalt/[0.05] p-4">
+                <div role="status" className="rounded-[12px] border border-cobalt/25 bg-cobalt/[0.05] p-4">
                   <p className="font-semibold text-cobalt">{t('co.noPay.title')}</p>
                   <p className="mt-1 text-[15px] text-obsidian/90">{fulfillment === 'delivery' ? t('co.noPay.delivery') : t('co.noPay.other')}</p>
                   {fulfillment === 'delivery' && (
@@ -330,43 +340,55 @@ function CheckoutForm({ cart }: { cart: Cart }) {
           </fieldset>
         </Step>
 
-        <Step title={t('co.extra')}>
+        <Step n={4} title={t('co.extra')} optional>
           <TextArea id="note" label={t('co.note')} value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} hint={t('co.noteHint')} />
         </Step>
       </div>
 
-      <aside aria-label={t('bag.summary')} className="flex h-fit flex-col gap-4 rounded-[8px] border border-stone bg-chalk p-5 lg:sticky lg:top-6 lg:p-6">
-        <h2 className="font-display text-2xl font-bold">{t('bag.summary')}</h2>
-        <ul className="flex flex-col gap-3 border-b border-stone pb-4 text-[15px]">
-          {cart.lines.map((l) => (
-            <li key={l.id} className="flex items-start gap-3">
-              <Picture src={l.imageUrl} alt="" sizes="48px" width={48} height={64} className="stage block h-16 w-12 shrink-0 overflow-hidden rounded-[4px]" />
-              <span className="min-w-0 flex-1">
-                <span className="line-clamp-2 leading-snug">
-                  {l.qty} × {l.productName}
+      <aside aria-label={t('bag.summary')} className="h-fit lg:sticky lg:top-6">
+        <div className="receipt flex flex-col gap-4 rounded-t-[16px] bg-chalk p-5 shadow-[inset_0_0_0_1px_#EAE7DF] lg:p-6">
+          <div className="flex items-baseline justify-between">
+            <h2 className="font-display text-[28px] font-bold leading-none">{t('bag.summary')}</h2>
+            <span className="text-sm text-graphite">{t('co.itemCount', { n: itemCount })}</span>
+          </div>
+          <ul className="flex flex-col gap-3 border-b border-dashed border-[#C9C5BB] pb-4 text-[15px]">
+            {cart.lines.map((l) => (
+              <li key={l.id} className="flex items-center gap-3">
+                <span className="relative shrink-0">
+                  <Picture src={l.imageUrl} alt="" sizes="52px" width={52} height={68} className="stage block h-[68px] w-[52px] overflow-hidden rounded-[8px]" />
+                  {l.qty > 1 && <span className="tabular absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full bg-obsidian text-[11px] font-bold text-paper ring-2 ring-chalk">{l.qty}</span>}
                 </span>
-                <span className="mt-0.5 block text-sm text-graphite">{lineDetails(l, t)}</span>
-              </span>
-              <span className="tabular shrink-0 font-medium">{formatUsd(l.lineTotalCents)}</span>
-            </li>
-          ))}
-        </ul>
-        <PromoField cart={q?.cart ?? cart} />
-        <Totals quote={q} cart={cart} known={fulfillment === 'pickup' || !!shippingMethodId} />
-        <label data-field="acceptTerms" className="flex cursor-pointer items-start gap-3 text-[15px]">
-          <input id="acceptTerms" type="checkbox" className="mt-0.5 size-5 accent-obsidian" checked={terms} onChange={(e) => setTerms(e.target.checked)} aria-invalid={errors.acceptTerms ? true : undefined} />
-          <span>
-            {t('co.terms')}{' '}
-            <Link to="/help/terms" target="_blank" className="underline underline-offset-4">
-              {t('footer.terms')}
-            </Link>
-          </span>
-        </label>
-        {errors.acceptTerms && <p className="-mt-2 text-sm font-medium text-vermilion">{errors.acceptTerms}</p>}
-        <Button type="submit" variant="buy" size="lg" block loading={place.isPending}>
-          {t('co.place')}
-        </Button>
-        <p className="text-sm text-graphite">{t('co.holdNote')}</p>
+                <span className="min-w-0 flex-1">
+                  <span className="line-clamp-2 leading-snug">
+                    {l.qty} × {l.productName}
+                  </span>
+                  <span className="mt-0.5 block text-sm text-graphite">{lineDetails(l, t)}</span>
+                </span>
+                <span className="tabular shrink-0 font-medium">{formatUsd(l.lineTotalCents)}</span>
+              </li>
+            ))}
+          </ul>
+          <PromoField cart={q?.cart ?? cart} />
+          <Totals quote={q} cart={cart} known={fulfillment === 'pickup' || !!shippingMethodId} />
+          <label data-field="acceptTerms" className={cx('flex cursor-pointer items-start gap-3 rounded-[10px] p-3 text-[15px] transition-colors', errors.acceptTerms ? 'bg-vermilion/[0.07]' : 'bg-paper')}>
+            <input id="acceptTerms" type="checkbox" className="mt-0.5 size-5 shrink-0 accent-obsidian" checked={terms} onChange={(e) => setTerms(e.target.checked)} aria-invalid={errors.acceptTerms ? true : undefined} />
+            <span>
+              {t('co.terms')}{' '}
+              <Link to="/help/terms" target="_blank" className="underline underline-offset-4">
+                {t('footer.terms')}
+              </Link>
+            </span>
+          </label>
+          {errors.acceptTerms && <p className="-mt-2 text-sm font-medium text-vermilion">{errors.acceptTerms}</p>}
+          <Button type="submit" variant="buy" size="lg" block loading={place.isPending} className="rounded-[10px]">
+            {!place.isPending && <Lock className="size-4" aria-hidden />}
+            {t('co.place')}
+          </Button>
+          <p className="flex items-start gap-2 text-sm text-graphite">
+            <Clock3 className="mt-0.5 size-4 shrink-0" aria-hidden />
+            {t('co.holdNote')}
+          </p>
+        </div>
       </aside>
     </form>
   );
@@ -376,7 +398,7 @@ function Totals({ quote, cart, known }: { quote: Quote | undefined; cart: Cart; 
   const { t, lang } = useI18n();
   const p = quote?.cart.pricing ?? cart.pricing;
   return (
-    <dl className="flex flex-col gap-1.5 border-t border-stone pt-3 text-[15px]">
+    <dl className="flex flex-col gap-1.5 text-[15px]">
       <div className="flex justify-between">
         <dt>{t('bag.items')}</dt>
         <dd className="tabular">{formatUsd(p.merchandiseCents)}</dd>
@@ -389,21 +411,34 @@ function Totals({ quote, cart, known }: { quote: Quote | undefined; cart: Cart; 
       ))}
       <div className="flex justify-between">
         <dt>{t('bag.delivery')}</dt>
-        <dd className="tabular">{!known || !quote ? <span className="text-graphite">{t('co.chooseDelivery')}</span> : p.shippingCents ? formatUsd(p.shippingCents) : t('bag.free')}</dd>
+        <dd className="tabular">{!known || !quote ? <span className="text-graphite">{t('co.chooseDelivery')}</span> : p.shippingCents ? formatUsd(p.shippingCents) : <span className="font-semibold text-success">{t('bag.free')}</span>}</dd>
       </div>
-      <div className="mt-1 flex justify-between border-t border-stone pt-2 text-lg font-semibold">
-        <dt>{t('co.total')}</dt>
-        <dd className="tabular">{formatUsd(p.totalCents)}</dd>
+      <div className="mt-2 flex items-baseline justify-between border-t border-dashed border-[#C9C5BB] pt-3">
+        <dt className="text-[15px] font-semibold">{t('co.total')}</dt>
+        <dd className="text-right">
+          <span className="tabular block font-display text-[34px] font-bold leading-none">{formatUsd(p.totalCents)}</span>
+          {known && quote && <span className="tabular mt-1 block text-sm text-graphite">{formatKhr(p.totalKhr, lang)}</span>}
+        </dd>
       </div>
-      {known && quote && <p className="text-right text-sm text-graphite tabular">{formatKhr(p.totalKhr, lang)}</p>}
     </dl>
   );
 }
 
-function Step({ title, children }: { title: string; children: ReactNode }) {
+/** A numbered part of the form; its number becomes a tick once it is filled in. */
+function Step({ n, title, done = false, optional = false, children }: { n: number; title: string; done?: boolean; optional?: boolean; children: ReactNode }) {
+  const { t } = useI18n();
   return (
-    <section>
-      <h2 className="mb-4 font-display text-3xl font-bold">{title}</h2>
+    <section aria-labelledby={`step-${n}`} className="rounded-[16px] border border-stone bg-paper p-5 shadow-[0_1px_2px_rgb(14_17_19/0.04)] sm:p-6">
+      <div className="mb-5 flex items-center gap-3">
+        <span aria-hidden className={cx('grid size-8 shrink-0 place-items-center rounded-full font-display text-lg font-bold transition-colors', done ? 'bg-success text-paper' : 'bg-obsidian text-paper')}>
+          {done ? <Check className="size-4" strokeWidth={3} /> : n}
+        </span>
+        <h2 id={`step-${n}`} className="font-display text-[28px] font-bold leading-none">
+          {title}
+        </h2>
+        {optional && <span className="ml-auto text-sm text-graphite">{t('co.optional')}</span>}
+        {done && <span className="sr-only">{t('steps.finished')}</span>}
+      </div>
       {children}
     </section>
   );
@@ -413,8 +448,8 @@ function Chip({ name, checked, onChange, children }: { name: string; checked: bo
   return (
     <label
       className={cx(
-        'cursor-pointer rounded-full border px-4 py-2 text-sm font-semibold has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-obsidian',
-        checked ? 'border-obsidian bg-obsidian text-paper' : 'border-[#C9C5BB]',
+        'cursor-pointer rounded-full border px-4 py-2 text-sm font-semibold transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-obsidian',
+        checked ? 'border-obsidian bg-obsidian text-paper' : 'border-[#C9C5BB] hover:border-obsidian',
       )}
     >
       <input type="radio" name={name} className="sr-only" checked={checked} onChange={onChange} />
@@ -423,15 +458,70 @@ function Chip({ name, checked, onChange, children }: { name: string; checked: bo
   );
 }
 
+/** One choice in a list (address, delivery option, store, payment): a card with its own radio dot. */
+function Option({
+  name,
+  checked,
+  onChange,
+  children,
+  ariaLabel,
+  align = 'center',
+  tone = 'obsidian',
+}: {
+  name: string;
+  checked: boolean;
+  onChange(): void;
+  children: ReactNode;
+  ariaLabel?: string;
+  align?: 'center' | 'start';
+  tone?: 'obsidian' | 'cobalt';
+}) {
+  const ring = tone === 'cobalt' ? 'border-cobalt bg-cobalt/[0.04] shadow-[0_0_0_1px_#032EA1]' : 'border-obsidian bg-chalk/60 shadow-[0_0_0_1px_#0E1113]';
+  return (
+    <label
+      className={cx(
+        'flex cursor-pointer gap-3 rounded-[12px] border p-3.5 transition-[border-color,background-color,box-shadow] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-obsidian',
+        align === 'center' ? 'items-center' : 'items-start',
+        checked ? ring : 'border-[#DEDAD0] hover:border-[#A29E94]',
+      )}
+    >
+      <input type="radio" name={name} className="sr-only" checked={checked} onChange={onChange} aria-label={ariaLabel} />
+      <span
+        aria-hidden
+        className={cx(
+          'grid size-5 shrink-0 place-items-center rounded-full border-2 transition-colors',
+          align === 'start' && 'mt-0.5',
+          checked ? (tone === 'cobalt' ? 'border-cobalt' : 'border-obsidian') : 'border-[#C9C5BB]',
+        )}
+      >
+        <span className={cx('size-2.5 rounded-full transition-transform', tone === 'cobalt' ? 'bg-cobalt' : 'bg-obsidian', checked ? 'scale-100' : 'scale-0')} />
+      </span>
+      {children}
+    </label>
+  );
+}
+
 function BigChoice({ name, checked, onChange, icon, title, body }: { name: string; checked: boolean; onChange(): void; icon: ReactNode; title: string; body: string }) {
   return (
-    <label className={cx('flex cursor-pointer gap-3 rounded-[8px] border-2 p-4 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-obsidian', checked ? 'border-obsidian' : 'border-stone')}>
+    <label
+      className={cx(
+        'relative flex cursor-pointer gap-3 rounded-[14px] border p-4 transition-[border-color,background-color,box-shadow] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-obsidian',
+        checked ? 'border-obsidian bg-chalk/60 shadow-[0_0_0_1px_#0E1113]' : 'border-[#DEDAD0] hover:border-[#A29E94]',
+      )}
+    >
       <input type="radio" name={name} className="sr-only" checked={checked} onChange={onChange} />
-      {icon}
-      <span>
+      <span aria-hidden className={cx('grid size-10 shrink-0 place-items-center rounded-full transition-colors', checked ? 'bg-obsidian text-paper' : 'bg-stone text-obsidian')}>
+        {icon}
+      </span>
+      <span className="pr-6">
         <span className="block font-semibold">{title}</span>
         <span className="block text-sm text-graphite">{body}</span>
       </span>
+      {checked && (
+        <span aria-hidden className="absolute right-3 top-3 grid size-5 place-items-center rounded-full bg-obsidian text-paper">
+          <Check className="size-3" strokeWidth={3} />
+        </span>
+      )}
     </label>
   );
 }

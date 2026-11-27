@@ -3,6 +3,14 @@ import type { ordersEn } from './i18n';
 /** Khmer copy for this feature, loaded only when the shop is shown in Khmer. */
 export const ordersKm: Record<keyof typeof ordersEn, string> = {
   'order.title': 'ការបញ្ជាទិញ {number}',
+  'order.number': 'លេខបញ្ជាទិញ',
+  'order.copy': 'ចម្លងលេខ',
+  'order.copied': 'បានចម្លងលេខបញ្ជាទិញ',
+  'order.keepShopping': 'បន្តទិញទំនិញ',
+  'order.nextDelivery': 'យើងនឹងទូរស័ព្ទ ឬផ្ញើសារមកអ្នក មុនអ្នកដឹកចេញដំណើរ។ រក្សាលេខបញ្ជាទិញដើម្បីតាមដាន។',
+  'order.nextPickup': 'យកលេខបញ្ជាទិញមកហាង។ យើងរក្សាទុកទំនិញសម្រាប់អ្នកនៅទីនោះ។',
+  'order.placedOn': 'បានបញ្ជាទិញ {date}',
+  'order.unpaidNote': 'ការបញ្ជាទិញនេះកំពុងរង់ចាំការបង់ប្រាក់។ ទំនិញរបស់អ្នកត្រូវបានរក្សាទុកមួយរយៈខ្លី។',
   'order.thanks': 'សូមអរគុណ។ ការបញ្ជាទិញរបស់អ្នកត្រូវបានបញ្ជាក់។',
   'order.thanksPickup': 'សូមអរគុណ។ ទំនិញរបស់អ្នកត្រូវបានរក្សាទុក។ សូមបង់ប្រាក់ពេលមកយកនៅហាង។',
   'order.payNow': 'បង់ប្រាក់ឥឡូវនេះ',
@@ -31,6 +39,7 @@ export const ordersKm: Record<keyof typeof ordersEn, string> = {
   'status.cancelled': 'បានលុបចោល',
   'status.expired': 'ការរក្សាទុកបានផុតកំណត់',
   'track.number': 'លេខបញ្ជាទិញ',
+  'track.intro': 'បញ្ចូលលេខបញ្ជាទិញ និងលេខទូរស័ព្ទដែលអ្នកបានប្រើពេលបញ្ជាទិញ។',
   'track.numberHint': 'វាចាប់ផ្តើមដោយ SC ឧទាហរណ៍ SC-260001។',
   'track.phone': 'លេខទូរស័ព្ទដែលបានប្រើសម្រាប់ការបញ្ជាទិញ',
   'track.find': 'ស្វែងរកការបញ្ជាទិញ',

@@ -25,15 +25,22 @@ export function Timeline({ timeline = [] }: { timeline?: { at: string; to: strin
   const { t, lang } = useI18n();
   const steps = timeline.filter((s) => s.to);
   return (
-    <ol aria-label={t('order.progress')} className="flex flex-col gap-3">
+    <ol aria-label={t('order.progress')} className="flex flex-col">
       {steps.map((s, i) => {
         const last = i === steps.length - 1;
         return (
-          <li key={`${s.at}-${s.to}`} className="flex gap-3">
-            {last ? <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-cobalt" aria-hidden /> : <Circle className="mt-0.5 size-5 shrink-0 text-cobalt/50" aria-hidden />}
-            <span>
-              <span className={cx('block', last && 'font-semibold')}>{statusLabel(s.to!, t)}</span>
-              <span className="block text-sm text-graphite">{formatDate(s.at, lang, { hour: '2-digit', minute: '2-digit' })}</span>
+          <li key={`${s.at}-${s.to}`} className="relative flex gap-3 pb-5 last:pb-0">
+            {!last && <span aria-hidden className="absolute bottom-0 left-[11px] top-6 w-[2px] rounded-full bg-cobalt/25" />}
+            {last ? (
+              <CheckCircle2 className="relative size-6 shrink-0 fill-cobalt text-paper" aria-hidden />
+            ) : (
+              <span aria-hidden className="relative grid size-6 shrink-0 place-items-center">
+                <Circle className="size-3.5 fill-cobalt/40 text-cobalt/40" />
+              </span>
+            )}
+            <span className="pt-0.5">
+              <span className={cx('block leading-tight', last ? 'font-semibold' : 'text-obsidian/80')}>{statusLabel(s.to!, t)}</span>
+              <span className="mt-0.5 block text-sm text-graphite">{formatDate(s.at, lang, { hour: '2-digit', minute: '2-digit' })}</span>
             </span>
           </li>
         );
@@ -48,7 +55,7 @@ export function OrderItems({ items }: { items: OrderView['items'] }) {
     <ul className="divide-y divide-stone">
       {items.map((it) => (
         <li key={it.id} className="flex gap-3 py-3">
-          <Picture src={it.imageUrl} alt="" sizes="64px" width={64} height={85} className="block h-[85px] w-16 shrink-0 overflow-hidden rounded-[6px] bg-stone" />
+          <Picture src={it.imageUrl} alt="" sizes="64px" width={64} height={85} className="stage block h-[85px] w-16 shrink-0 overflow-hidden rounded-[10px]" />
           <div className="min-w-0 flex-1">
             <p className="font-medium leading-snug">{it.name}</p>
             <p className="text-sm text-graphite">{lineDetails(it, t)}</p>
@@ -78,13 +85,15 @@ export function OrderTotals({ pricing }: { pricing: OrderView['pricing'] }) {
       ))}
       <div className="flex justify-between">
         <dt>{t('bag.delivery')}</dt>
-        <dd className="tabular">{pricing.shippingCents ? formatUsd(pricing.shippingCents) : t('bag.free')}</dd>
+        <dd className="tabular">{pricing.shippingCents ? formatUsd(pricing.shippingCents) : <span className="font-semibold text-success">{t('bag.free')}</span>}</dd>
       </div>
-      <div className="mt-1 flex justify-between border-t border-stone pt-2 text-lg font-semibold">
-        <dt>{t('co.total')}</dt>
-        <dd className="tabular">{formatUsd(pricing.totalCents)}</dd>
+      <div className="mt-2 flex items-baseline justify-between pt-1">
+        <dt className="font-semibold">{t('co.total')}</dt>
+        <dd className="text-right">
+          <span className="tabular block font-display text-[30px] font-bold leading-none">{formatUsd(pricing.totalCents)}</span>
+          <span className="tabular mt-1 block text-sm text-graphite">{formatKhr(pricing.totalKhr, lang)}</span>
+        </dd>
       </div>
-      <p className="text-right text-sm text-graphite tabular">{formatKhr(pricing.totalKhr, lang)}</p>
     </dl>
   );
 }

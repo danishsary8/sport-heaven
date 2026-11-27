@@ -1,5 +1,6 @@
 export const cartEn = {
   'bag.title': 'Your bag',
+  'bag.weAccept': 'We accept',
   'bag.summary': 'Order summary',
   'bag.empty': 'Your bag is empty',
   'bag.emptyBody': 'Find your boots, kit or teamwear and add it here.',

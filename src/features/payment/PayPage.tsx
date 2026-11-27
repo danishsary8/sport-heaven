@@ -5,7 +5,8 @@ import { Link, useNavigate, useParams } from 'react-router';
 import { isApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { formatDate, formatKhr, formatUsd, useI18n } from '../../lib/i18n';
-import { Button, EmptyState, ErrorState, PageTitle, QueryView, Seo, Skeleton } from '../../ui';
+import { Clock3, CreditCard, Lock, ScanLine } from 'lucide-react';
+import { Button, EmptyState, ErrorState, METHOD_MARKS, PageTitle, PaymentMarks, QueryView, Seo, Skeleton, cx } from '../../ui';
 import { rememberCardReturn } from '../checkout/orderAccess';
 import { invalidateOrder, useOrder, usePaymentStatus, useSwitchPayment, type OrderView, type Payment, type PayMethod } from '../orders/api';
 
@@ -33,7 +34,7 @@ export function PayPage() {
     );
   }
   return (
-    <section className="mx-auto max-w-[640px] px-4 pb-16 pt-6 lg:pt-10">
+    <section className="mx-auto max-w-[1040px] px-4 pb-16 pt-6 lg:px-8 lg:pt-8">
       <Seo title={t('pay.title')} noindex />
       <QueryView query={order} skeleton={<Skeleton className="h-[480px] w-full" />}>
         {(d) => <PayView order={d.order} initialPayment={d.payment ?? null} />}
@@ -94,95 +95,150 @@ function PayView({ order, initialPayment }: { order: OrderView; initialPayment: 
   const instructions = payment?.instructions ?? null;
   const usable = payment && payment.status === 'pending' && instructions && instructions.kind !== 'none';
   const showChooser = choosing || !usable;
+  const amountCents = payment?.amountCents ?? order.pricing.totalCents;
 
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <p className="text-sm text-graphite">{t('pay.orderNumber', { number: order.number })}</p>
+        <p className="text-sm font-medium text-graphite">{t('pay.orderNumber', { number: order.number })}</p>
         <PageTitle className="mt-1">{instructions?.kind === 'redirect' && !showChooser ? t('pay.cardTitle') : t('pay.title')}</PageTitle>
       </div>
 
-      <div className="rounded-[10px] border border-cobalt/30 bg-cobalt/[0.04] p-5">
-        <div className="flex items-baseline justify-between gap-3">
-          <span className="text-graphite">{t('pay.amount')}</span>
-          <span className="text-right">
-            <span className="tabular block font-display text-4xl font-bold">{formatUsd(payment?.amountCents ?? order.pricing.totalCents)}</span>
-            <span className="tabular block text-sm text-graphite">{formatKhr(order.pricing.totalKhr, lang)}</span>
-          </span>
-        </div>
-        {reservedUntil && <Countdown until={reservedUntil} />}
-      </div>
-
-      {switchPay.isError && <ErrorState message={isApiError(switchPay.error) ? switchPay.error.message : undefined} />}
-
-      {showChooser ? (
-        <div className="flex flex-col gap-2">
-          <h2 className="font-semibold">{t('pay.choose')}</h2>
-          {METHODS.map((m) => (
-            <Button key={m} variant={m === 'aba_khqr' ? 'buy' : 'secondary'} size="lg" block loading={switchPay.isPending && switchPay.variables === m} onClick={() => switchPay.mutate(m, { onSuccess: () => setChoosing(false) })}>
-              {t(`co.pay.${m}`)}
-            </Button>
-          ))}
-          {usable && (
-            <Button variant="ghost" onClick={() => setChoosing(false)}>
-              {t('pay.keep')}
+      <div className="grid gap-6 md:grid-cols-[minmax(0,380px)_minmax(0,1fr)] md:items-start lg:gap-10">
+        <div className="flex flex-col gap-3 md:order-2">
+          <div className="overflow-hidden rounded-[16px] bg-obsidian text-paper">
+            <div className="flex items-end justify-between gap-3 p-5">
+              <span className="text-[15px] text-paper/70">{t('pay.amount')}</span>
+              <span className="text-right">
+                <span className="tabular block font-display text-[44px] font-bold leading-none">{formatUsd(amountCents)}</span>
+                <span className="tabular mt-1 block text-sm text-paper/60">{formatKhr(order.pricing.totalKhr, lang)}</span>
+              </span>
+            </div>
+            {reservedUntil && <Countdown until={reservedUntil} />}
+          </div>
+          {switchPay.isError && <ErrorState message={isApiError(switchPay.error) ? switchPay.error.message : undefined} />}
+          {!showChooser && (
+            <p className="flex items-center gap-3 rounded-[12px] bg-chalk px-4 py-3 text-[15px] font-medium">
+              <span aria-hidden className="live-dot size-2.5 shrink-0 rounded-full bg-success" />
+              {t('pay.live')}
+            </p>
+          )}
+          {!showChooser && instructions?.kind === 'qr' && (
+            <ol className="flex flex-col gap-3 rounded-[16px] border border-stone p-5 text-[15px]">
+              {(['pay.step1', 'pay.step2', 'pay.step3'] as const).map((k, i) => (
+                <li key={k} className="flex gap-3">
+                  <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-full bg-stone font-display text-[15px] font-bold">
+                    {i + 1}
+                  </span>
+                  <span className="pt-0.5">{t(k)}</span>
+                </li>
+              ))}
+            </ol>
+          )}
+          {!showChooser && (
+            <Button variant="secondary" className="rounded-[10px]" onClick={() => setChoosing(true)}>
+              {t('pay.another')}
             </Button>
           )}
+          <p className="text-sm text-graphite">{t('pay.waiting')}</p>
         </div>
-      ) : instructions?.kind === 'qr' ? (
-        <KhqrPanel number={order.number} qr={instructions.qrString} deeplink={instructions.deeplink} />
-      ) : instructions?.kind === 'redirect' ? (
-        <form method={instructions.method} action={instructions.url} onSubmit={() => rememberCardReturn(order.number)} className="flex flex-col gap-3">
-          {Object.entries(instructions.fields).map(([k, v]) => (
-            <input key={k} type="hidden" name={k} value={v} />
-          ))}
-          <p className="text-[15px]">{t('pay.cardBody')}</p>
-          <Button type="submit" variant="buy" size="lg" block>
-            {t('pay.continueCard')}
-          </Button>
-        </form>
-      ) : null}
 
-      {!showChooser && (
-        <Button variant="secondary" onClick={() => setChoosing(true)}>
-          {t('pay.another')}
-        </Button>
-      )}
-      <p className="text-sm text-graphite">{t('pay.waiting')}</p>
+        <div className="md:order-1">
+          {showChooser ? (
+            <div className="flex flex-col gap-2 rounded-[16px] border border-stone p-5">
+              <h2 className="mb-1 font-display text-2xl font-bold">{t('pay.choose')}</h2>
+              {METHODS.map((m) => (
+                <Button
+                  key={m}
+                  variant={m === 'aba_khqr' ? 'buy' : 'secondary'}
+                  size="lg"
+                  block
+                  className="justify-between rounded-[10px]"
+                  loading={switchPay.isPending && switchPay.variables === m}
+                  onClick={() => switchPay.mutate(m, { onSuccess: () => setChoosing(false) })}
+                >
+                  {t(`co.pay.${m}`)}
+                  <PaymentMarks kinds={METHOD_MARKS[m] ?? []} />
+                </Button>
+              ))}
+              {usable && (
+                <Button variant="ghost" onClick={() => setChoosing(false)}>
+                  {t('pay.keep')}
+                </Button>
+              )}
+            </div>
+          ) : instructions?.kind === 'qr' ? (
+            <KhqrPanel number={order.number} qr={instructions.qrString} deeplink={instructions.deeplink} amountCents={amountCents} />
+          ) : instructions?.kind === 'redirect' ? (
+            <form method={instructions.method} action={instructions.url} onSubmit={() => rememberCardReturn(order.number)} className="flex flex-col gap-4 rounded-[16px] border border-stone p-5">
+              {Object.entries(instructions.fields).map(([k, v]) => (
+                <input key={k} type="hidden" name={k} value={v} />
+              ))}
+              <div className="flex items-center gap-3">
+                <span aria-hidden className="grid size-11 place-items-center rounded-full bg-stone">
+                  <CreditCard className="size-5" />
+                </span>
+                <PaymentMarks kinds={['visa', 'mastercard']} />
+              </div>
+              <p className="text-[15px]">{t('pay.cardBody')}</p>
+              <Button type="submit" variant="buy" size="lg" block className="rounded-[10px]">
+                <Lock className="size-4" aria-hidden />
+                {t('pay.continueCard')}
+              </Button>
+            </form>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }
 
-function KhqrPanel({ number, qr, deeplink }: { number: string; qr: string; deeplink: string | null }) {
+/** The KHQR card as Cambodian banking apps show it: red header with the cut corner, who you pay, how much, the code. */
+function KhqrPanel({ number, qr, deeplink, amountCents }: { number: string; qr: string; deeplink: string | null; amountCents: number }) {
   const { t } = useI18n();
   const [svg, setSvg] = useState<string | null>(null);
   useEffect(() => {
     let live = true;
-    void QRCode.toString(qr, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#0E1113', light: '#FFFFFF' } }).then((s) => live && setSvg(s));
+    void QRCode.toString(qr, { type: 'svg', margin: 0, errorCorrectionLevel: 'M', color: { dark: '#0E1113', light: '#FFFFFF' } }).then((s) => live && setSvg(s));
     return () => {
       live = false;
     };
   }, [qr]);
   const phone = useMemo(() => typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches, []);
   return (
-    <div className="flex flex-col items-center gap-4 rounded-[10px] bg-paper p-5 shadow-[0_0_0_1px_#EAE7DF]">
-      <div className="w-full rounded-t-[8px] bg-vermilion py-2 text-center font-bold tracking-wide text-paper">KHQR</div>
-      <div role="img" aria-label={t('pay.qrLabel', { number })} className="aspect-square w-[min(72vw,280px)] [&>svg]:h-full [&>svg]:w-full" dangerouslySetInnerHTML={svg ? { __html: svg } : undefined}>
-        {svg ? undefined : <Skeleton className="h-full w-full" />}
+    <div className="mx-auto flex w-full max-w-[380px] flex-col gap-4">
+      <div className="overflow-hidden rounded-[18px] bg-white shadow-[0_24px_50px_-24px_rgb(14_17_19/0.45),0_0_0_1px_rgb(14_17_19/0.06)]">
+        <div className="relative grid h-[58px] place-items-center bg-[#E1232E] [clip-path:polygon(0_0,100%_0,100%_55%,calc(100%-30px)_100%,0_100%)]">
+          <span className="font-sans text-[22px] font-extrabold tracking-[0.08em] text-white">KHQR</span>
+        </div>
+        <div className="px-6 pb-4 pt-4">
+          <p className="text-[14px] font-medium text-graphite">{t('brand.name')}</p>
+          <p className="tabular mt-0.5 flex items-baseline gap-1.5">
+            <span className="font-display text-[34px] font-bold leading-none">{formatUsd(amountCents)}</span>
+            <span className="text-sm font-semibold text-graphite">USD</span>
+          </p>
+        </div>
+        <div aria-hidden className="mx-6 border-t-2 border-dashed border-[#E6E2D9]" />
+        <div className="p-6">
+          <div role="img" aria-label={t('pay.qrLabel', { number })} className="relative mx-auto aspect-square w-full max-w-[280px] [&>svg]:h-full [&>svg]:w-full" dangerouslySetInnerHTML={svg ? { __html: svg } : undefined}>
+            {svg ? undefined : <Skeleton className="h-full w-full" />}
+          </div>
+        </div>
+        <p className="flex items-center justify-center gap-2 bg-chalk px-4 py-3 text-center text-[13px] font-medium text-graphite">
+          <ScanLine className="size-4" aria-hidden />
+          {t('pay.scanAny')}
+        </p>
       </div>
-      <ol className="list-decimal self-stretch pl-5 text-[15px]">
-        <li>{t('pay.step1')}</li>
-        <li>{t('pay.step2')}</li>
-        <li>{t('pay.step3')}</li>
-      </ol>
       {deeplink && phone && (
-        <a href={deeplink} className="inline-flex h-12 w-full items-center justify-center rounded-[6px] bg-cobalt font-semibold text-paper">
+        <a href={deeplink} className="inline-flex h-12 w-full items-center justify-center rounded-[10px] bg-cobalt font-semibold text-paper">
           {t('pay.openAba')}
         </a>
       )}
     </div>
   );
 }
+
+const HOLD_MS = 30 * 60_000;
 
 function Countdown({ until }: { until: string }) {
   const { t, lang } = useI18n();
@@ -194,12 +250,22 @@ function Countdown({ until }: { until: string }) {
   const left = Math.max(0, new Date(until).getTime() - now);
   const mm = Math.floor(left / 60000);
   const ss = Math.floor((left % 60000) / 1000);
+  const pct = Math.min(100, (left / HOLD_MS) * 100);
+  const low = left < 5 * 60_000;
   return (
-    <p className="mt-3 border-t border-cobalt/20 pt-3 text-[15px] text-cobalt">
-      {t('pay.holding', { time: formatDate(until, lang, { day: undefined, month: undefined, year: undefined, hour: '2-digit', minute: '2-digit' }) })}{' '}
-      <span className="tabular font-semibold" aria-hidden>
-        ({mm}:{String(ss).padStart(2, '0')})
-      </span>
-    </p>
+    <div className="border-t border-paper/10 px-5 pb-5 pt-4">
+      <div className="flex items-center justify-between gap-3">
+        <p className="flex items-center gap-2 text-[14px] text-paper/80">
+          <Clock3 className="size-4 shrink-0" aria-hidden />
+          {t('pay.holding', { time: formatDate(until, lang, { day: undefined, month: undefined, year: undefined, hour: '2-digit', minute: '2-digit' }) })}
+        </p>
+        <span className={cx('tabular font-display text-2xl font-bold leading-none', low && 'text-[#FF8A8F]')} aria-hidden>
+          {mm}:{String(ss).padStart(2, '0')}
+        </span>
+      </div>
+      <div aria-hidden className="mt-3 h-1.5 overflow-hidden rounded-full bg-paper/15">
+        <div className={cx('h-full rounded-full transition-[width] duration-1000 ease-linear', low ? 'bg-vermilion' : 'bg-paper')} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
   );
 }

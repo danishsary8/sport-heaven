@@ -3,6 +3,7 @@ import type { cartEn } from './i18n';
 /** Khmer copy for this feature, loaded only when the shop is shown in Khmer. */
 export const cartKm: Record<keyof typeof cartEn, string> = {
   'bag.title': 'កាបូបរបស់អ្នក',
+  'bag.weAccept': 'យើងទទួល',
   'bag.summary': 'សេចក្តីសង្ខេបការបញ្ជាទិញ',
   'bag.empty': 'កាបូបរបស់អ្នកទទេ',
   'bag.emptyBody': 'ស្វែងរកស្បែកជើង អាវ ឬសម្លៀកបំពាក់ក្រុម ហើយដាក់នៅទីនេះ។',

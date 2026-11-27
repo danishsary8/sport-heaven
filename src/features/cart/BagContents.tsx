@@ -1,4 +1,4 @@
-import { Check, ChevronDown, Minus, Plus, Trash2 } from 'lucide-react';
+import { Check, ChevronDown, Lock, Minus, Plus, Trash2, Truck } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
 import { isApiError } from '../../lib/api';
@@ -278,11 +278,11 @@ export function BagTotals({ cart }: { cart: Cart }) {
         <dt>{t('bag.delivery')}</dt>
         <dd>{t('bag.deliveryLater')}</dd>
       </div>
-      <div className="mt-1 flex justify-between border-t border-stone pt-2 text-lg font-semibold">
-        <dt>{t('bag.total')}</dt>
-        <dd className="tabular">{formatUsd(p.totalCents)}</dd>
+      <div className="mt-2 flex items-end justify-between border-t border-dashed border-[#C9C5BB] pt-3">
+        <dt className="font-semibold">{t('bag.total')}</dt>
+        <dd className="tabular font-display text-[30px] font-bold leading-none">{formatUsd(p.totalCents)}</dd>
       </div>
-      {p.freeDeliveryRemainingCents ? <p className="text-sm text-cobalt">{t('bag.freeDeliveryIn', { amount: formatUsd(p.freeDeliveryRemainingCents) })}</p> : null}
+      {p.freeDeliveryRemainingCents ? <FreeDeliveryBar spent={p.merchandiseCents} remaining={p.freeDeliveryRemainingCents} /> : null}
       {p.messages.map((m) => (
         <p key={m} className="text-sm text-graphite">
           {m}
@@ -292,17 +292,35 @@ export function BagTotals({ cart }: { cart: Cart }) {
   );
 }
 
+/** How close the bag is to free delivery, as a bar that fills toward the threshold. */
+function FreeDeliveryBar({ spent, remaining }: { spent: number; remaining: number }) {
+  const { t } = useI18n();
+  const pct = Math.min(100, Math.max(6, Math.round((spent / (spent + remaining)) * 100)));
+  return (
+    <div className="mt-2 rounded-[10px] bg-cobalt/[0.06] p-3">
+      <p className="flex items-center gap-2 text-sm font-medium text-cobalt">
+        <Truck className="size-4 shrink-0" aria-hidden />
+        {t('bag.freeDeliveryIn', { amount: formatUsd(remaining) })}
+      </p>
+      <div aria-hidden className="mt-2 h-1.5 overflow-hidden rounded-full bg-cobalt/15">
+        <div className="h-full rounded-full bg-cobalt transition-[width] duration-700 ease-out" style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
 export function CheckoutButton({ cart, onNavigate }: { cart: Cart; onNavigate?: () => void }) {
   const { t } = useI18n();
   if (!cart.checkoutReady) {
     return (
-      <Button variant="buy" size="lg" block disabled>
+      <Button variant="buy" size="lg" block disabled className="rounded-[10px]">
         {t('bag.checkout')}
       </Button>
     );
   }
   return (
-    <Link to="/checkout" onClick={onNavigate} className="inline-flex h-13 w-full items-center justify-center rounded-[6px] bg-vermilion px-6 text-base font-semibold text-paper hover:bg-[#A91D25]">
+    <Link to="/checkout" onClick={onNavigate} className="inline-flex h-13 w-full items-center justify-center gap-2 rounded-[10px] bg-vermilion px-6 text-base font-semibold text-paper transition-colors hover:bg-[#A91D25]">
+      <Lock className="size-4" aria-hidden />
       {t('bag.checkout')}
     </Link>
   );

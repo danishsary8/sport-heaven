@@ -1,5 +1,7 @@
 export const payEn = {
   'pay.title': 'Pay with KHQR',
+  'pay.live': 'Waiting for your payment',
+  'pay.scanAny': 'Scan with any Cambodian banking app',
   'pay.cardTitle': 'Pay by card',
   'pay.orderNumber': 'Order {number}',
   'pay.amount': 'Amount to pay',

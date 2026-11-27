@@ -3,6 +3,15 @@ import type { checkoutEn } from './i18n';
 /** Khmer copy for this feature, loaded only when the shop is shown in Khmer. */
 export const checkoutKm: Record<keyof typeof checkoutEn, string> = {
   'co.title': 'បញ្ជាទិញ',
+  'co.itemCount': '{n} មុខ',
+  'co.optional': 'មិនចាំបាច់',
+  'steps.label': 'ជំហានបញ្ជាទិញ',
+  'steps.bag': 'កាបូប',
+  'steps.details': 'ព័ត៌មាន',
+  'steps.payment': 'ការបង់ប្រាក់',
+  'steps.done': 'រួចរាល់',
+  'steps.finished': 'រួចរាល់',
+  'steps.secure': 'ការបញ្ជាទិញមានសុវត្ថិភាព',
   'co.haveAccount': 'មានគណនីហើយ? ចូលគណនីដើម្បីប្រើអាសយដ្ឋានដែលបានរក្សាទុក និងទទួលពិន្ទុ។',
   'co.contact': 'ព័ត៌មានរបស់អ្នក',
   'co.name': 'ឈ្មោះពេញ',
