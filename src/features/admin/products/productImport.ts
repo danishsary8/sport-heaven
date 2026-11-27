@@ -29,7 +29,7 @@ export interface ImportRow {
 
 /** RFC 4180-style CSV: quoted cells (with "" for a quote), commas and line breaks inside quotes, CRLF, a BOM. Blank lines are skipped. */
 export function parseCsv(text: string): string[][] {
-  const src = text.replace(/^﻿/, '');
+  const src = text.replace(/^\uFEFF/, '');
   const rows: string[][] = [];
   let row: string[] = [];
   let cell = '';
