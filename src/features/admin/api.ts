@@ -1,11 +1,11 @@
-import { useMutation, useQuery, useQueryClient, type QueryKey } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient, type QueryKey } from '@tanstack/react-query';
 import { apiFetch, type FetchOptions } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 
 type Query = FetchOptions['query'];
 
 /** Admin reads: never cached across sign-outs (the 'admin' key is private) and fresh on every visit. */
-export function useAdminQuery<T>(key: QueryKey, path: string, query?: Query, opts: { enabled?: boolean; refetchInterval?: number } = {}) {
+export function useAdminQuery<T>(key: QueryKey, path: string, query?: Query, opts: { enabled?: boolean; refetchInterval?: number; keepPrevious?: boolean } = {}) {
   const { status, user } = useAuth();
   const staff = status === 'member' && (user?.role === 'staff' || user?.role === 'admin');
   return useQuery({
@@ -14,6 +14,8 @@ export function useAdminQuery<T>(key: QueryKey, path: string, query?: Query, opt
     enabled: staff && (opts.enabled ?? true),
     staleTime: 0,
     refetchInterval: opts.refetchInterval,
+    // Filters, pages and ranges: keep showing the last answer while the next one loads (no flash).
+    placeholderData: opts.keepPrevious ? keepPreviousData : undefined,
   });
 }
 

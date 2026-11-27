@@ -226,3 +226,18 @@ export interface WebhookRow {
   receivedAt: string;
   processedAt: string | null;
 }
+
+export interface SalesTotals {
+  paidOrders: number;
+  revenueCents: number;
+  averageOrderCents: number;
+}
+
+export interface Sales {
+  days: { date: string; paidOrders: number; revenueCents: number }[];
+  totals: SalesTotals;
+  previous: SalesTotals;
+  topProducts: { productId: string; name: string; imageUrl: string | null; qty: number; revenueCents: number }[];
+  byCategory: { slug: string; name: string; revenueCents: number }[];
+  branch: string | null;
+}

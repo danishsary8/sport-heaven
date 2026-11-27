@@ -1,12 +1,15 @@
 import type { ReactNode } from 'react';
 import { Seo, cx } from '../../ui';
 
-export function AdminPage({ title, actions, children }: { title: string; actions?: ReactNode; children: ReactNode }) {
+export function AdminPage({ title, description, actions, children }: { title: string; description?: string; actions?: ReactNode; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-5">
       <Seo title={`${title} (admin)`} noindex />
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="font-display text-4xl font-bold leading-none">{title}</h1>
+        <div>
+          <h1 className="font-display text-4xl font-bold leading-none">{title}</h1>
+          {description && <p className="mt-2 text-[15px] text-graphite">{description}</p>}
+        </div>
         {actions}
       </div>
       {children}
