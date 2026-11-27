@@ -97,6 +97,19 @@ describe('admin products', () => {
     expect(await screen.findByText('2 products set to draft')).toBeTruthy();
   });
 
+  it('after a bulk change, keeps only the rows that failed ticked', async () => {
+    server.use(
+      http.patch(`${API}/v1/admin/products/${PID2}`, () => HttpResponse.json({ error: { code: 'invalid', message: 'Needs a price' } }, { status: 422 })),
+    );
+    renderRoutes(routes, '/admin/products', { signedIn: true });
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Select Predator Elite FG' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select Copa Pure FG' }));
+    fireEvent.click(within(screen.getByRole('region', { name: '2 selected' })).getByRole('button', { name: 'Make draft' }));
+    expect(await screen.findByRole('region', { name: '1 selected' })).toBeTruthy();
+    expect(screen.getByRole('checkbox', { name: 'Select Copa Pure FG' })).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'Select Predator Elite FG' })).not.toBeChecked();
+  });
+
   it('changes one product status right from the list', async () => {
     renderRoutes(routes, '/admin/products', { signedIn: true });
     fireEvent.change(await screen.findByRole('combobox', { name: 'Status of Copa Pure FG' }), { target: { value: 'active' } });
@@ -149,6 +162,30 @@ describe('admin products', () => {
     fireEvent.click(within(hover).getByRole('button', { name: 'Swap with main photo' }));
     fireEvent.click(within(photos).getByRole('button', { name: 'Save photos' }));
     await waitFor(() => expect(calls.find((c) => c.method === 'PUT' && c.url.endsWith('/images'))?.body).toEqual({ images: [{ path: 'media/0b7e2f4c-1111-4222-8333-444455556666.png' }, { path: 'catalog/pred.jpg', color: 'Red', alt: 'Predator' }] }));
+  });
+
+  it('makes the third photo the main one in one step', async () => {
+    let n = 0;
+    server.use(
+      http.post(`${API}/v1/admin/media`, () => {
+        n += 1;
+        return HttpResponse.json({ path: `media/new-${n}.png`, url: `http://api.test/v1/media/new-${n}.png` }, { status: 201 });
+      }),
+    );
+    renderRoutes(routes, `/admin/products/${PID}`, { signedIn: true });
+    const photos = await screen.findByRole('region', { name: 'Photos' });
+    const add = within(photos).getByLabelText('Add photos');
+    fireEvent.change(add, { target: { files: [new File(['x'], 'b.png', { type: 'image/png' })] } });
+    await waitFor(() => expect(n).toBe(1));
+    fireEvent.change(add, { target: { files: [new File(['y'], 'c.png', { type: 'image/png' })] } });
+    const make = await within(photos).findByRole('button', { name: 'Make main photo' });
+    fireEvent.click(make);
+    fireEvent.click(within(photos).getByRole('button', { name: 'Save photos' }));
+    await waitFor(() =>
+      expect(calls.find((c) => c.method === 'PUT' && c.url.endsWith('/images'))?.body).toEqual({
+        images: [{ path: 'media/new-2.png' }, { path: 'catalog/pred.jpg', color: 'Red', alt: 'Predator' }, { path: 'media/new-1.png' }],
+      }),
+    );
   });
 
   it('refuses files that are not photos before uploading', async () => {

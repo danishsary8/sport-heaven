@@ -49,7 +49,9 @@ export function ProductsTable({ products }: { products: AdminProductListRow[] })
     setBusy(null);
     if (done > 0) toast.success(`${done} ${done === 1 ? 'product' : 'products'} set to ${status}`);
     if (failed.length > 0) toast.error(`${failed.length} could not be changed: ${isApiError(failed[0]!.reason) ? failed[0]!.reason.message : 'something went wrong'}`);
-    if (failed.length === 0) setSelected(new Set());
+    // Keep only the rows that failed ticked, ready to retry.
+    const failedIds = new Set(ids.filter((_, i) => results[i]!.status === 'rejected'));
+    setSelected((s) => new Set([...s].filter((id) => failedIds.has(id))));
   };
 
   return (

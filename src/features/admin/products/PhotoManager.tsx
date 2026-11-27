@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, ArrowLeftRight, ImagePlus, Trash2, Upload } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowLeftRight, ImagePlus, Star, Trash2, Upload } from 'lucide-react';
 import { useRef, useState, type Dispatch, type DragEvent, type ReactNode, type SetStateAction } from 'react';
 import { apiFetch, isApiError } from '../../../lib/api';
 import { Button, cx, useToast } from '../../../ui';
@@ -72,6 +72,9 @@ export function PhotoManager({ product, tiles, onChange }: { product: AdminProdu
       return n;
     });
 
+  // Puts photo i first; the others keep their order behind it.
+  const makeMain = (i: number) => update((t) => [t[i]!, ...t.filter((_, j) => j !== i)]);
+
   const submit = () =>
     save.mutate(
       {
@@ -93,6 +96,11 @@ export function PhotoManager({ product, tiles, onChange }: { product: AdminProdu
       {i === 1 && (
         <IconButton label="Swap with main photo" onClick={() => move(1, 0)}>
           <ArrowLeftRight />
+        </IconButton>
+      )}
+      {i > 1 && (
+        <IconButton label="Make main photo" onClick={() => makeMain(i)}>
+          <Star />
         </IconButton>
       )}
       {i > 1 && (
