@@ -50,13 +50,14 @@ function ProductsList() {
     setParams(n);
   };
 
-  const exportCsv = async () => {
+  // Exports follow the search, status and category filters. "products" uses the new-product import columns.
+  const exportCsv = async (format: 'prices' | 'products') => {
     try {
-      const text = await apiFetch<string>('/v1/admin/products/export.csv', { as: 'text' });
+      const text = await apiFetch<string>('/v1/admin/products/export.csv', { as: 'text', query: { q: query.q, status: query.status, category: query.category, format } });
       const url = URL.createObjectURL(new Blob([text], { type: 'text/csv' }));
       const a = document.createElement('a');
       a.href = url;
-      a.download = `sport-heaven-prices-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.download = `sport-heaven-${format}-${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (e) {
@@ -70,7 +71,10 @@ function ProductsList() {
       description="Tick products to change many at once. Click one to edit its details, sizes and photos."
       actions={
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" onClick={() => void exportCsv()}>
+          <Button variant="secondary" onClick={() => void exportCsv('products')} title="Every product in the list below, in the same columns as the import">
+            Export products (CSV)
+          </Button>
+          <Button variant="secondary" onClick={() => void exportCsv('prices')} title="One row per size of the products in the list below, for updating prices">
             Export prices (CSV)
           </Button>
           <Link to="/admin/products/new" className="inline-flex h-11 items-center gap-2 rounded-[8px] bg-obsidian px-5 font-semibold text-paper transition-colors hover:bg-[#2A2E31]">
@@ -82,7 +86,10 @@ function ProductsList() {
     >
       <details className="group rounded-[14px] border border-dashed border-[#C9C5BB] p-4 [&_summary::-webkit-details-marker]:hidden">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-semibold">
-          Import from a spreadsheet
+          <span>
+            Import from a spreadsheet
+            <span className="block text-sm font-normal text-graphite">Add many new products at once, or update prices, from a CSV file</span>
+          </span>
           <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden />
         </summary>
         <div className="mt-4 flex flex-col gap-5 divide-y divide-dashed divide-[#C9C5BB]">
@@ -333,11 +340,13 @@ function ProductEditor({ product }: { product: AdminProduct }) {
         <h2 id="sizes-h" className="mb-3 font-display text-[28px] font-bold leading-none">
           Sizes and prices
         </h2>
+        <AllSizesPrice productId={product.id} sizes={product.variants.length} />
         <ul className="divide-y divide-stone rounded-[8px] border border-stone">
           {[...product.variants]
             .sort((a, b) => a.sizeSort - b.sizeSort)
             .map((v) => (
-              <VariantRow key={v.id} productId={product.id} v={v} color={colorName(v.colorId)} />
+              // Keyed on the price too, so a row shows the new price after "Apply to all sizes".
+              <VariantRow key={`${v.id}:${v.priceCents}:${v.compareAtCents}`} productId={product.id} v={v} color={colorName(v.colorId)} />
             ))}
         </ul>
       </section>
@@ -367,6 +376,42 @@ function ShopPreview({ name, status, photos, fromCents }: { name: string; status
       {Number.isFinite(fromCents) && <p className="tabular mt-1 font-semibold">{formatUsd(fromCents)}</p>}
       <p className="mt-3 text-xs text-graphite">{hover ? 'Point at the photo to see the second pose.' : 'Add a second photo for the hover pose.'}</p>
     </section>
+  );
+}
+
+/** One price (and optional "was" price) for every size at once. Sizes can still be changed one by one below. */
+function AllSizesPrice({ productId, sizes }: { productId: string; sizes: number }) {
+  const toast = useToast();
+  const [price, setPrice] = useState('');
+  const [compare, setCompare] = useState('');
+  const save = useAdminMutation((body: unknown) => put(`/v1/admin/products/${productId}/prices`, body), [['product', productId], ['products']]);
+  const submit = () => {
+    const p = toCents(price);
+    if (p === null) return toast.error('Enter the price like 95.00');
+    const c = compare.trim() ? toCents(compare) : null;
+    if (compare.trim() && c === null) return toast.error('Enter the "was" price like 120.00, or leave it empty');
+    if (c !== null && c <= p) return toast.error('The "was" price must be higher than the price');
+    save.mutate(
+      { priceCents: p, compareAtCents: c },
+      {
+        onSuccess: () => {
+          toast.success(`Price set for all ${sizes} ${sizes === 1 ? 'size' : 'sizes'}`);
+          setPrice('');
+          setCompare('');
+        },
+        onError: (e) => toast.error(isApiError(e) ? e.message : 'Something went wrong.'),
+      },
+    );
+  };
+  return (
+    <div className="mb-4 flex flex-wrap items-end gap-3 rounded-[8px] bg-chalk p-3">
+      <span className="min-w-[120px] pb-2 text-sm font-semibold">Same price for all sizes</span>
+      <Field label="Price for all sizes" value={price} onChange={(e) => setPrice(e.target.value)} inputMode="decimal" className="w-28" />
+      <Field label="Was, for all sizes (optional)" value={compare} onChange={(e) => setCompare(e.target.value)} inputMode="decimal" className="w-36" />
+      <Button size="sm" variant="primary" loading={save.isPending} onClick={submit} className="mb-1">
+        Apply to all sizes
+      </Button>
+    </div>
   );
 }
 

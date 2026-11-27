@@ -47,7 +47,8 @@ beforeEach(() => {
   server.use(
     ...adminBase('admin'),
     http.get(`${API}/v1/admin/products`, () => HttpResponse.json({ products: [{ ...ROW, ...LIST }, ROW2], total: 2, page: 1, pageSize: 50 })),
-    http.get(`${API}/v1/admin/products/export.csv`, () => new HttpResponse('sku,price_usd\nPRED-EU39,255.00', { headers: { 'content-type': 'text/csv' } })),
+    http.get(`${API}/v1/admin/products/export.csv`, async ({ request }) => (await rec(request), new HttpResponse('sku,price_usd\nPRED-EU39,255.00', { headers: { 'content-type': 'text/csv' } }))),
+    http.put(`${API}/v1/admin/products/:id/prices`, async ({ request }) => (await rec(request), HttpResponse.json({ product: PRODUCT }))),
     http.get(`${API}/v1/admin/products/:id`, () => HttpResponse.json({ product: PRODUCT })),
     http.get(`${API}/v1/admin/brands`, () => HttpResponse.json({ brands: [{ id: 'b1', slug: 'adidas', name: 'Adidas' }] })),
     http.get(`${API}/v1/admin/categories`, () => HttpResponse.json({ categories: [{ id: 'c1', slug: 'boots', nameI18n: { en: 'Boots' } }] })),
@@ -313,5 +314,31 @@ describe('admin products', () => {
     renderRoutes(routes, '/admin/products', { signedIn: true });
     fireEvent.click(await screen.findByRole('button', { name: 'Export prices (CSV)' }));
     await waitFor(() => expect(create).toHaveBeenCalled());
+  });
+
+  it('exports only what the list is filtered to, as prices or as whole products', async () => {
+    Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:x'), revokeObjectURL: vi.fn() });
+    renderRoutes(routes, '/admin/products?category=boots&status=active&q=copa', { signedIn: true });
+    fireEvent.click(await screen.findByRole('button', { name: 'Export products (CSV)' }));
+    await waitFor(() => expect(calls.find((c) => c.url.startsWith('/v1/admin/products/export.csv'))).toBeTruthy());
+    const products = new URL(`http://x${calls.find((c) => c.url.startsWith('/v1/admin/products/export.csv'))!.url}`).searchParams;
+    expect(Object.fromEntries(products)).toEqual({ q: 'copa', status: 'active', category: 'boots', format: 'products' });
+    calls = [];
+    fireEvent.click(screen.getByRole('button', { name: 'Export prices (CSV)' }));
+    await waitFor(() => expect(calls.find((c) => c.url.startsWith('/v1/admin/products/export.csv'))).toBeTruthy());
+    const prices = new URL(`http://x${calls[0]!.url}`).searchParams;
+    expect(prices.get('format')).toBe('prices');
+    expect(prices.get('category')).toBe('boots');
+  });
+
+  it('sets one price for every size, and each size can still be saved on its own', async () => {
+    renderRoutes(routes, `/admin/products/${PID}`, { signedIn: true });
+    const sizes = await screen.findByRole('region', { name: 'Sizes and prices' });
+    fireEvent.change(within(sizes).getByLabelText('Price for all sizes'), { target: { value: '15' } });
+    fireEvent.change(within(sizes).getByLabelText('Was, for all sizes (optional)'), { target: { value: '20.00' } });
+    fireEvent.click(within(sizes).getByRole('button', { name: 'Apply to all sizes' }));
+    await waitFor(() => expect(calls).toContainEqual({ method: 'PUT', url: `/v1/admin/products/${PID}/prices`, body: { priceCents: 1500, compareAtCents: 2000 } }));
+    expect(await screen.findByText('Price set for all 1 size')).toBeTruthy();
+    expect(within(sizes).getByRole('button', { name: 'Save EU 39' })).toBeTruthy();
   });
 });
