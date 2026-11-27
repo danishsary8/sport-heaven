@@ -118,8 +118,8 @@ export function OverviewPage() {
             <Todo to="/admin/orders?needsRefund=true" label="Refunds to make" n={overview.data.needsRefund} icon={<Banknote />} urgent />
             <Todo to="/admin/returns?status=requested" label="Returns to decide" n={overview.data.openReturns} icon={<RotateCcw />} urgent />
             <Todo to="/admin/questions?status=pending" label="Questions to answer" n={overview.data.pendingQuestions} icon={<HelpCircle />} />
-            <Todo to="/admin/stock" label="Sizes with 1 to 3 left" n={overview.data.lowStockRows} icon={<Warehouse />} />
-            <Todo to="/admin/stock" label="Stock rows to count" n={overview.data.needsCountRows} icon={<ClipboardList />} />
+            <Todo to="/admin/stock?view=low" label="Sizes with 1 to 3 left" n={overview.data.lowStockRows} icon={<Warehouse />} />
+            <Todo to="/admin/stock?view=count" label="Stock rows to count" n={overview.data.needsCountRows} icon={<ClipboardList />} />
             {admin && <Todo to="/admin/logs" label="Messages that failed" n={overview.data.outboxFailed} icon={<AlertTriangle />} urgent />}
           </ul>
         </section>

@@ -4,15 +4,17 @@ import { nav, signInAs, testPhone } from './helpers';
 test('staff sell a pair at the counter and the count goes down', async ({ page }) => {
   await signInAs(page, testPhone(), 'staff', 'sensok');
   await nav(page, '/admin/stock');
-  const search = page.getByLabel('SKU or product name');
+  const search = page.getByLabel('Scan or search');
   await search.fill('predator');
   await search.press('Enter');
-  const row = page.getByRole('listitem', { name: /^EU 41/ }).first();
-  const onHand = Number((await row.locator('span.tabular').first().textContent())?.trim());
+  const row = page.getByRole('row', { name: /^EU 41/ }).first();
+  // Cells: free, on the shelf, held, actions.
+  const shelf = row.getByRole('cell').nth(1);
+  const onHand = parseInt((await shelf.textContent()) ?? '', 10);
   await row.getByRole('button', { name: 'Sell EU 41' }).click();
   await page.getByRole('button', { name: 'Record sale of 1 item' }).click();
   await expect(page.getByText('Sale recorded')).toBeVisible();
-  await expect(row.locator('span.tabular').first()).toHaveText(String(onHand - 1));
+  await expect(shelf).toHaveText(new RegExp(`^${onHand - 1}\\b`));
 });
 
 test('an admin price change shows in the shop', async ({ page, browser }) => {

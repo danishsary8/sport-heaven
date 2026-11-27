@@ -71,6 +71,21 @@ export interface Lookup {
   branchId: string;
   products: { id: string; slug: string; name: string; variants: LookupVariant[] }[];
 }
+/** One size on the stock screen (`GET /v1/admin/stock/list`). `low`: 1 to 3 left to sell online. */
+export interface StockSize extends LookupVariant {
+  needsCount: boolean;
+  low: boolean;
+}
+export type StockView = 'all' | 'low' | 'out' | 'count';
+export interface StockList {
+  branchId: string;
+  view: StockView;
+  page: number;
+  pageSize: number;
+  total: number;
+  counts: Record<StockView, number>;
+  products: { id: string; slug: string; name: string; status: string; category: string | null; imageUrl: string | null; variants: StockSize[] }[];
+}
 export interface StockRow {
   variantId: string;
   sku: string;
