@@ -1,10 +1,27 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { en, type DictKey } from './dict.en';
-import { km } from './dict.km';
+import { en, type Dict, type DictKey } from './dict.en';
 import type { Lang } from './types';
 
 const STORAGE_KEY = 'sc.lang';
-const DICTS = { en, km } as const;
+
+/**
+ * Khmer copy is loaded on demand: English readers never download it (it is a large share of the first
+ * page's JavaScript). main.tsx loads it before the first render when Khmer is the saved choice, so
+ * Khmer readers don't see English first.
+ */
+let kmDict: Dict | null = null;
+let kmLoading: Promise<Dict> | null = null;
+
+export function loadLang(lang: Lang): Promise<void> {
+  if (lang !== 'km' || kmDict) return Promise.resolve();
+  kmLoading ??= import('./dict.km').then((m) => (kmDict = m.km));
+  return kmLoading.then(() => undefined);
+}
+
+/** The saved language, if any (shared with main.tsx). */
+export function storedLang(): Lang | null {
+  return readStored();
+}
 
 interface I18nValue {
   lang: Lang;
@@ -30,6 +47,11 @@ export function interpolate(text: string, vars?: Record<string, string | number>
 
 export function I18nProvider({ children, initial }: { children: ReactNode; initial?: Lang }) {
   const [lang, setLangState] = useState<Lang>(() => initial ?? readStored() ?? 'en');
+  // Re-render once the Khmer copy arrives (when switching to Khmer for the first time).
+  const [, setLoaded] = useState(0);
+  useEffect(() => {
+    if (lang === 'km' && !kmDict) void loadLang('km').then(() => setLoaded((n) => n + 1));
+  }, [lang]);
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -45,8 +67,10 @@ export function I18nProvider({ children, initial }: { children: ReactNode; initi
   }, []);
 
   const value = useMemo<I18nValue>(
-    () => ({ lang, setLang, t: (key, vars) => interpolate(DICTS[lang][key] ?? en[key], vars) }),
-    [lang, setLang],
+    // Until the Khmer copy has loaded, English stands in (only on the very first switch to Khmer).
+    () => ({ lang, setLang, t: (key, vars) => interpolate((lang === 'km' && kmDict ? kmDict[key] : undefined) ?? en[key], vars) }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- kmDict is module state; setLoaded re-renders when it changes
+    [lang, setLang, kmDict],
   );
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }

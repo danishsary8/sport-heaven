@@ -1,10 +1,10 @@
-import { catalogKm } from '../../features/catalog/i18n';
-import { pagesKm } from '../../features/pages/i18n';
-import { cartKm } from '../../features/cart/i18n';
-import { checkoutKm } from '../../features/checkout/i18n';
-import { payKm } from '../../features/payment/i18n';
-import { ordersKm } from '../../features/orders/i18n';
-import { accountKm } from '../../features/account/i18n';
+import { catalogKm } from '../../features/catalog/i18n.km';
+import { pagesKm } from '../../features/pages/i18n.km';
+import { cartKm } from '../../features/cart/i18n.km';
+import { checkoutKm } from '../../features/checkout/i18n.km';
+import { payKm } from '../../features/payment/i18n.km';
+import { ordersKm } from '../../features/orders/i18n.km';
+import { accountKm } from '../../features/account/i18n.km';
 import type { Dict } from './dict.en';
 
 /** Khmer copy. Every English key must exist here (the type enforces it). */
