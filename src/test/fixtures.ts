@@ -13,8 +13,8 @@ export const MENU = {
 
 export const BRANCHES = {
   branches: [
-    { id: 'sensok', name: 'Sport Castle Sen Sok', shortName: 'Sen Sok', address: 'St 1986', district: 'Sen Sok', phone: '012 000 001', telegram: null, hours: '8:00–21:00', landmarks: null, lat: 11.58, lng: 104.88, pickupEnabled: true },
-    { id: 'sonthormuk', name: 'Sport Castle Sonthormuk', shortName: 'Sonthormuk', address: 'St 271', district: 'Tuol Kork', phone: '012 000 002', telegram: '@sc_sonthormuk', hours: '8:00–21:00', landmarks: null, lat: null, lng: null, pickupEnabled: true },
+    { id: 'sensok', name: 'Sport Heaven Sen Sok', shortName: 'Sen Sok', address: 'St 1986', district: 'Sen Sok', phone: '012 000 001', telegram: null, hours: '8:00–21:00', landmarks: null, lat: 11.58, lng: 104.88, pickupEnabled: true },
+    { id: 'sonthormuk', name: 'Sport Heaven Sonthormuk', shortName: 'Sonthormuk', address: 'St 271', district: 'Tuol Kork', phone: '012 000 002', telegram: '@sc_sonthormuk', hours: '8:00–21:00', landmarks: null, lat: null, lng: null, pickupEnabled: true },
   ],
 };
 

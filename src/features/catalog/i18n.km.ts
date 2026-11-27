@@ -121,7 +121,7 @@ export const catalogKm: Record<keyof typeof catalogEn, string> = {
   'qa.title': 'សំណួរ និងចម្លើយ',
   'qa.none': 'មិនទាន់មានសំណួរទេ។ សួរជាមុនគេ។',
   'qa.askedBy': '{name}, {date}',
-  'qa.answer': 'ចម្លើយពី Sport Castle',
+  'qa.answer': 'ចម្លើយពី Sport Heaven',
   'qa.ask': 'សួរសំណួរ',
   'qa.name': 'ឈ្មោះរបស់អ្នក',
   'qa.question': 'សំណួររបស់អ្នក',

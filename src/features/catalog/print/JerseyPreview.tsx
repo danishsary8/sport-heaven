@@ -21,7 +21,7 @@ const DEFAULT_THEME: JerseyVisualTheme = {
   trim: '#D81E2B',
   text: '#FFFFFF',
   pattern: 'angkor',
-  crestLabel: 'SPORT CASTLE',
+  crestLabel: 'SPORT HEAVEN',
 };
 
 export function JerseyPreviewSvg({

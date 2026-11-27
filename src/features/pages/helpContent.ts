@@ -60,15 +60,15 @@ const en: Record<TopicId, HelpTopic> = {
     ],
   },
   about: {
-    title: 'About Sport Castle',
+    title: 'About Sport Heaven',
     summary: 'A football and motorsport shop with three stores in Phnom Penh.',
     blocks: [
-      { text: ['Sport Castle sells football boots, club and national team kits, match balls and F1 teamwear from three stores in Phnom Penh: Sen Sok, Chomkadong and Sonthormuk.', 'Order online and pay with ABA KHQR or a card, or reserve and pick up in store.'] },
+      { text: ['Sport Heaven sells football boots, club and national team kits, match balls and F1 teamwear from three stores in Phnom Penh: Sen Sok, Chomkadong and Sonthormuk.', 'Order online and pay with ABA KHQR or a card, or reserve and pick up in store.'] },
     ],
   },
   terms: {
     title: 'Terms of sale',
-    summary: 'The rules for buying from Sport Castle.',
+    summary: 'The rules for buying from Sport Heaven.',
     draft: true,
     blocks: [
       { heading: 'Prices', text: ['Prices are in US dollars. The price you pay is the one shown at checkout.'] },

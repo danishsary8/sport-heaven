@@ -22,9 +22,9 @@ describe('stores and help', () => {
   it('lists each store with hours, phone and a Google Maps link', async () => {
     renderRoutes(routes, '/stores');
     expect(await screen.findByRole('heading', { level: 1, name: 'Our stores' })).toBeTruthy();
-    const store = (await screen.findByRole('heading', { level: 2, name: 'Sport Castle Sen Sok' })).closest('article')!;
+    const store = (await screen.findByRole('heading', { level: 2, name: 'Sport Heaven Sen Sok' })).closest('article')!;
     expect(within(store).getByRole('link', { name: /012 000 001/ })).toHaveAttribute('href', 'tel:012000001');
-    expect(within(store).getByRole('link', { name: 'Open Sport Castle Sen Sok in Google Maps' }).getAttribute('href')).toContain('11.58');
+    expect(within(store).getByRole('link', { name: 'Open Sport Heaven Sen Sok in Google Maps' }).getAttribute('href')).toContain('11.58');
   });
 
   it('shows the help topics and the returns rules', async () => {

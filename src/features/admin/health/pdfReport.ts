@@ -246,7 +246,7 @@ export function generateSystemHealthPdfBytes(
   const contentWidth = pageWidth - marginX * 2;
   let y = 0;
 
-  // Color palette (Swiss-editorial Sport Castle operations theme)
+  // Color palette (Swiss-editorial Sport Heaven operations theme)
   const INK: [number, number, number] = [14, 17, 19];
   const MUTED: [number, number, number] = [90, 93, 87];
   const PARCHMENT: [number, number, number] = [244, 242, 236];
@@ -269,7 +269,7 @@ export function generateSystemHealthPdfBytes(
   doc.setTextColor(229, 193, 105);
   doc.setFont('courier', 'bold');
   doc.setFontSize(8.5);
-  doc.text('SPORT CASTLE | BACKEND OPERATIONS TELEMETRY', marginX, 26);
+  doc.text('SPORT HEAVEN | BACKEND OPERATIONS TELEMETRY', marginX, 26);
 
   doc.setTextColor(253, 252, 249);
   doc.setFont('helvetica', 'bold');
@@ -748,7 +748,7 @@ export function generateSystemHealthPdfBytes(
     doc.setFont('courier', 'normal');
     doc.setFontSize(7.2);
     doc.text(
-      `Generated ${formatUtcStamp(report.generatedAtIso)} | Sport Castle Operations | Sport Castle`,
+      `Generated ${formatUtcStamp(report.generatedAtIso)} | Sport Heaven Operations | Sport Heaven`,
       marginX,
       pageHeight - 22,
     );

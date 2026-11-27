@@ -15,7 +15,7 @@ export function Footer() {
         <div className="flex flex-col gap-5 border-b border-paper/15 pb-10 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p aria-hidden className="font-display text-[44px] font-extrabold uppercase leading-[0.85] tracking-[-0.01em] lg:text-[64px]">
-              Sport<span className="text-vermilion">·</span>Castle
+              Sport<span className="text-vermilion">·</span>Heaven
             </p>
             <p className="mt-3 max-w-[44ch] text-[15px] text-paper/75">{t('footer.payments')}</p>
             <PaymentMarks kinds={['khqr', 'cash']} className="mt-3" />

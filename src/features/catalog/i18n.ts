@@ -116,7 +116,7 @@ export const catalogEn = {
   'qa.title': 'Questions and answers',
   'qa.none': 'No questions yet. Ask the first one.',
   'qa.askedBy': '{name}, {date}',
-  'qa.answer': 'Answer from Sport Castle',
+  'qa.answer': 'Answer from Sport Heaven',
   'qa.ask': 'Ask a question',
   'qa.name': 'Your name',
   'qa.question': 'Your question',

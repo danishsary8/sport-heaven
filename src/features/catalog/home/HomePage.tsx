@@ -15,7 +15,7 @@ export function HomePage() {
   const home = useHome();
   return (
     <>
-      <Seo title="Sport Castle" description={t('home.description')} canonical="/" />
+      <Seo title="Sport Heaven" description={t('home.description')} canonical="/" />
       <QueryView
         query={home}
         skeleton={

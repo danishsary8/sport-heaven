@@ -18,7 +18,7 @@ const MENU = {
 };
 const BRANCHES = {
   branches: [
-    { id: 'sensok', name: 'Sport Castle Sen Sok', shortName: 'Sen Sok', address: 'St 1986', district: 'Sen Sok', phone: '012 000 001', telegram: null, hours: '8:00–21:00', landmarks: null, lat: null, lng: null, pickupEnabled: true },
+    { id: 'sensok', name: 'Sport Heaven Sen Sok', shortName: 'Sen Sok', address: 'St 1986', district: 'Sen Sok', phone: '012 000 001', telegram: null, hours: '8:00–21:00', landmarks: null, lat: null, lng: null, pickupEnabled: true },
   ],
 };
 const cartWith = (qtys: number[]) => ({ cart: { lines: qtys.map((qty, i) => ({ id: String(i), qty })) } });
@@ -76,7 +76,7 @@ describe('app shell', () => {
     server.use(http.get(`${API}/v1/cart`, () => HttpResponse.json({ error: { code: 'internal', message: 'x' } }, { status: 500 })));
     renderRoutes(routes, '/');
     expect(await screen.findByRole('link', { name: 'Bag' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Sport Castle home' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Sport Heaven home' })).toBeTruthy();
   });
 
   it('shows a 404 page with search for unknown links', async () => {

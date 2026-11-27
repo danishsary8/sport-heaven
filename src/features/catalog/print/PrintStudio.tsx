@@ -85,7 +85,7 @@ export function PrintStudio({ value, onChange, swatch }: { value: PrintState; on
           </div>
           <div className="print-press order-first mx-auto w-[150px] sm:order-none sm:w-[180px]" key={`${value.name}|${value.number}`}>
             <JerseyPreviewSvg
-              theme={{ primary: swatch ?? '#0A338F', secondary: '#0E1113', trim: '#C8232C', text: '#FFFFFF', pattern: 'solid', crestLabel: 'SPORT CASTLE' }}
+              theme={{ primary: swatch ?? '#0A338F', secondary: '#0E1113', trim: '#C8232C', text: '#FFFFFF', pattern: 'solid', crestLabel: 'SPORT HEAVEN' }}
               playerName={value.name.trim()}
               squadNumber={value.number}
               patch={value.patch}

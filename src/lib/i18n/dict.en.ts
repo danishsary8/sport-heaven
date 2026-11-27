@@ -8,9 +8,9 @@ import { accountEn } from '../../features/account/i18n';
 
 /** English copy: the source of every key. Sentence case; buttons name the action. */
 const base = {
-  'brand.name': 'Sport Castle',
+  'brand.name': 'Sport Heaven',
   'nav.menu': 'Menu',
-  'nav.home': 'Sport Castle home',
+  'nav.home': 'Sport Heaven home',
   'nav.main': 'Main',
   'nav.categories': 'Shop by category',
   'nav.track': 'Track an order',
@@ -67,7 +67,7 @@ const base = {
   'footer.privacy': 'Privacy',
   'footer.payments': 'Pay with KHQR from any banking app, or cash when you pick up.',
   'footer.storesFallback': 'Sen Sok, Chomkadong and Sonthormuk, Phnom Penh',
-  'footer.rights': '© {year} Sport Castle, Phnom Penh',
+  'footer.rights': '© {year} Sport Heaven, Phnom Penh',
   'notFound.title': "This page doesn't exist",
   'notFound.body': 'The link may be old, or the product may have sold out for good.',
   'notFound.search': 'Search the shop',
