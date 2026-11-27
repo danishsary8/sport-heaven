@@ -52,7 +52,7 @@ beforeEach(() => {
     http.post(`${API}/v1/admin/stock/:action`, async ({ request, params }) => {
       const body = await request.json();
       posts.push({ path: String(params.action), body });
-      return HttpResponse.json(params.action === 'sale' ? { saleId: 'S-2', lines: [] } : { stock: {}, delta: 1 });
+      return HttpResponse.json(params.action === 'sale' ? { saleId: 'S-2', lines: [] } : params.action === 'restock' ? { refId: 'RESTOCK-1', sizes: 1, units: 3 } : { stock: {}, delta: 1 });
     }),
   );
 });
@@ -143,5 +143,20 @@ describe('stock screen', () => {
     fireEvent.click(within(row).getByRole('button', { name: 'History EU 41' }));
     const dialog = await screen.findByRole('dialog', { name: 'History of PRED-EU41' });
     expect(await within(dialog).findByText('Counter sale')).toBeTruthy();
+  });
+
+  it('restocks the ticked sizes with the same amount each', async () => {
+    await open();
+    fireEvent.click(screen.getByRole('button', { name: 'Restock' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Restock every size of Predator Elite FG' }));
+    const bar = screen.getByRole('region', { name: 'Restock 2 sizes' });
+    fireEvent.click(within(bar).getByRole('button', { name: 'One more each' }));
+    fireEvent.click(within(bar).getByRole('button', { name: 'One more each' }));
+    fireEvent.change(within(bar).getByLabelText('Note (optional)'), { target: { value: 'Delivery 27 Nov' } });
+    // Unticking one size leaves one to restock.
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Restock EU 40' }));
+    const one = screen.getByRole('region', { name: 'Restock 1 size' });
+    fireEvent.click(within(one).getByRole('button', { name: 'Add 3 to each (3 units)' }));
+    await waitFor(() => expect(posts).toEqual([{ path: 'restock', body: { branchId: 'sensok', lines: [{ variantId: V41, qty: 3 }], note: 'Delivery 27 Nov' } }]));
   });
 });

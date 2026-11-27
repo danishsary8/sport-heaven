@@ -1,4 +1,4 @@
-import { ArrowLeftRight, ClipboardCheck, History, Minus, Plus, Search, ShoppingBag, X } from 'lucide-react';
+import { ArrowLeftRight, ClipboardCheck, History, Minus, PackagePlus, Plus, Search, ShoppingBag, X } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router';
 import { isApiError } from '../../../lib/api';
@@ -75,6 +75,20 @@ export function StockPage() {
 
   const [sale, setSale] = useState<SaleLine[]>([]);
   const [saleError, setSaleError] = useState<string | null>(null);
+  // Restock mode: pick sizes (across filters and pages) and add the same amount to each.
+  const [restocking, setRestocking] = useState(false);
+  const [picked, setPicked] = useState<Map<string, string>>(new Map());
+  const togglePick = (ids: { id: string; label: string }[], on: boolean) =>
+    setPicked((prev) => {
+      const next = new Map(prev);
+      for (const { id, label } of ids) {
+        if (on) next.set(id, label);
+        else next.delete(id);
+      }
+      return next;
+    });
+  const pageSizes = (list.data?.products ?? []).flatMap((p) => p.variants.map((v) => ({ id: v.id, label: `${p.name}, ${v.size}` })));
+  const allOnPagePicked = pageSizes.length > 0 && pageSizes.every((x) => picked.has(x.id));
   const [dialog, setDialog] = useState<{ kind: 'count' | 'transfer' | 'history'; v: StockSize; name: string } | null>(null);
   const record = useAdminMutation((body: unknown) => post('/v1/admin/stock/sale', body), [['stock'], ['overview']]);
 
@@ -90,7 +104,23 @@ export function StockPage() {
   const current = VIEWS.find((v) => v.id === view)!;
 
   return (
-    <AdminPage title="Stock" description={`What is on the shelf at ${branchName || 'your store'}, size by size.`}>
+    <AdminPage
+      title="Stock"
+      description={`What is on the shelf at ${branchName || 'your store'}, size by size.`}
+      actions={
+        <Button
+          variant={restocking ? 'primary' : 'secondary'}
+          aria-pressed={restocking}
+          onClick={() => {
+            setRestocking((r) => !r);
+            setPicked(new Map());
+          }}
+        >
+          <PackagePlus className="size-4" aria-hidden />
+          {restocking ? 'Done restocking' : 'Restock'}
+        </Button>
+      }
+    >
       <div className="flex flex-wrap items-end gap-3">
         {user?.role === 'admin' ? (
           <Select
@@ -99,6 +129,7 @@ export function StockPage() {
             onChange={(e) => {
               setBranch(e.target.value);
               setSale([]);
+              setPicked(new Map());
             }}
           >
             {(branches.data?.branches ?? []).map((b) => (
@@ -195,11 +226,33 @@ export function StockPage() {
         <EmptyState title={q ? `Nothing found for “${q}”` : current.empty} body={q ? 'Check the SKU, or search by part of the product name.' : undefined} />
       ) : (
         <div className={cx('flex flex-col gap-3 transition-opacity', list.isPlaceholderData && 'opacity-60')}>
+          {restocking && (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[10px] bg-cobalt/5 px-4 py-3 text-[15px]">
+              <span>Tick the sizes that arrived, then set how many to add to each.</span>
+              <button type="button" className="font-semibold underline underline-offset-4" onClick={() => togglePick(pageSizes, !allOnPagePicked)}>
+                {allOnPagePicked ? 'Untick this page' : `Tick all ${pageSizes.length} sizes on this page`}
+              </button>
+            </div>
+          )}
           {list.data.products.map((p) => {
             const onHand = p.variants.reduce((n, v) => n + v.onHand, 0);
+            const sizes = p.variants.map((v) => ({ id: v.id, label: `${p.name}, ${v.size}` }));
+            const pickedHere = sizes.filter((x) => picked.has(x.id)).length;
             return (
               <section key={p.id} aria-label={p.name} className="overflow-hidden rounded-[10px] border border-stone bg-paper">
                 <header className="flex items-center gap-3 border-b border-stone px-3 py-2.5">
+                  {restocking && (
+                    <input
+                      type="checkbox"
+                      aria-label={`Restock every size of ${p.name}`}
+                      className="size-5 shrink-0 accent-obsidian"
+                      checked={pickedHere === sizes.length}
+                      ref={(el) => {
+                        if (el) el.indeterminate = pickedHere > 0 && pickedHere < sizes.length;
+                      }}
+                      onChange={(e) => togglePick(sizes, e.target.checked)}
+                    />
+                  )}
                   <Picture src={p.imageUrl} alt="" sizes="48px" width={48} height={48} className="stage size-12 shrink-0 overflow-hidden rounded-[6px]" />
                   <div className="min-w-0 flex-1">
                     <h2 className="truncate font-semibold leading-snug">{p.name}</h2>
@@ -227,6 +280,15 @@ export function StockPage() {
                         <tr key={v.id} aria-label={`${v.size} ${v.color}`} className={cx('align-middle max-sm:grid max-sm:grid-cols-[minmax(0,1fr)_auto_auto_auto] max-sm:items-center', flagged && 'bg-brass/10')}>
                           <th scope="row" className="px-3 py-2 text-left font-normal">
                             <span className="flex flex-wrap items-center gap-1.5">
+                              {restocking && (
+                                <input
+                                  type="checkbox"
+                                  aria-label={`Restock ${v.size}`}
+                                  className="mr-1 size-5 accent-obsidian"
+                                  checked={picked.has(v.id)}
+                                  onChange={(e) => togglePick([{ id: v.id, label: `${p.name}, ${v.size}` }], e.target.checked)}
+                                />
+                              )}
                               <span className="font-semibold">{v.size}</span>
                               {v.available <= 0 ? <Pill tone="bad">Sold out</Pill> : v.low ? <Pill tone="warn">Low</Pill> : null}
                               {v.needsCount && <Pill tone="info">To count</Pill>}
@@ -246,7 +308,8 @@ export function StockPage() {
                             <span className="block text-[11px] text-graphite sm:sr-only"> held</span>
                             <span className="sr-only"> for online orders</span>
                           </td>
-                          <td className="px-3 py-2 max-sm:col-span-4 max-sm:pt-0">
+                          <td className={cx('px-3 py-2 max-sm:col-span-4 max-sm:pt-0', restocking && 'max-sm:hidden')}>
+                            <span className={cx(restocking && 'hidden')}>
                             <span className="grid grid-cols-[1fr_1fr_auto_auto] gap-1.5 sm:flex sm:flex-wrap sm:justify-end">
                               <Button size="sm" variant="buy" aria-label={`Sell ${v.size}`} disabled={free < 1} onClick={() => addToSale(v, p.name)}>
                                 <ShoppingBag className="size-4" aria-hidden />
@@ -263,6 +326,7 @@ export function StockPage() {
                                 <History className="size-4" aria-hidden />
                               </Button>
                             </span>
+                            </span>
                           </td>
                         </tr>
                       );
@@ -276,7 +340,9 @@ export function StockPage() {
         </div>
       )}
 
-      {sale.length > 0 && (
+      {restocking && picked.size > 0 && <RestockBar branchId={branchId} picked={picked} onDone={() => setPicked(new Map())} />}
+
+      {!restocking && sale.length > 0 && (
         <section aria-labelledby="sale-h" className="sticky bottom-3 z-20 rounded-[10px] border-2 border-vermilion/60 bg-paper p-4 shadow-[0_18px_40px_-20px_rgb(14_17_19/0.45)]">
           <h2 id="sale-h" className="mb-2 font-semibold">
             Sale
@@ -343,6 +409,81 @@ export function StockPage() {
       {dialog?.kind === 'transfer' && <TransferDialog v={dialog.v} branchId={branchId} onClose={() => setDialog(null)} />}
       {dialog?.kind === 'history' && <HistoryDialog v={dialog.v} branchId={branchId} onClose={() => setDialog(null)} />}
     </AdminPage>
+  );
+}
+
+/** The restock tray: how many to add to each ticked size, an optional delivery note, and one button. */
+function RestockBar({ branchId, picked, onDone }: { branchId: string; picked: Map<string, string>; onDone(): void }) {
+  const toast = useToast();
+  const [qty, setQty] = useState('1');
+  const [note, setNote] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const save = useAdminMutation((body: unknown) => post<{ sizes: number; units: number }>('/v1/admin/stock/restock', body), [['stock'], ['overview']]);
+  const n = Number(qty);
+  const valid = Number.isInteger(n) && n >= 1 && n <= 999;
+  // "Product, EU 40" labels grouped by product: "Product: EU 40, EU 41".
+  const groups = new Map<string, string[]>();
+  for (const label of picked.values()) {
+    const at = label.lastIndexOf(', ');
+    const product = label.slice(0, at);
+    groups.set(product, [...(groups.get(product) ?? []), label.slice(at + 2)]);
+  }
+  const names = [...groups].map(([product, sizes]) => `${product}: ${sizes.join(', ')}`);
+  const step = (d: number) => setQty((s) => String(Math.min(999, Math.max(1, (Number(s) || 0) + d))));
+  return (
+    <section aria-labelledby="restock-h" className="sticky bottom-3 z-20 rounded-[10px] border-2 border-obsidian bg-paper p-4 shadow-[0_18px_40px_-20px_rgb(14_17_19/0.45)]">
+      <h2 id="restock-h" className="font-semibold">
+        Restock {picked.size} {picked.size === 1 ? 'size' : 'sizes'}
+      </h2>
+      <p className="mt-0.5 line-clamp-2 text-sm text-graphite">
+        {names.slice(0, 3).join(' · ')}
+        {names.length > 3 ? ` and ${names.length - 3} more products` : ''}
+      </p>
+      <div className="mt-3 flex flex-wrap items-end gap-3">
+        <div className="flex items-end gap-1.5">
+          <button type="button" aria-label="One less each" className="grid h-11 w-11 place-items-center rounded-[8px] border border-obsidian hover:bg-stone" onClick={() => step(-1)}>
+            <Minus className="size-4" strokeWidth={2.5} aria-hidden />
+          </button>
+          <Field
+            label="Add to each"
+            inputMode="numeric"
+            value={qty}
+            onChange={(e) => setQty(e.target.value.replace(/\D/g, '').slice(0, 3))}
+            onFocus={(e) => e.target.select()}
+            className="w-24 [&_input]:text-center [&_input]:text-lg [&_input]:font-bold"
+          />
+          <button type="button" aria-label="One more each" className="grid h-11 w-11 place-items-center rounded-[8px] border border-obsidian hover:bg-stone" onClick={() => step(1)}>
+            <Plus className="size-4" strokeWidth={2.5} aria-hidden />
+          </button>
+        </div>
+        <Field label="Note (optional)" placeholder="Supplier, invoice number…" value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} className="min-w-[200px] flex-1" />
+        <Button
+          variant="primary"
+          disabled={!valid}
+          loading={save.isPending}
+          onClick={() => {
+            setError(null);
+            save.mutate(
+              { branchId, lines: [...picked.keys()].map((variantId) => ({ variantId, qty: n })), ...(note.trim() ? { note: note.trim() } : {}) },
+              {
+                onSuccess: (r) => {
+                  toast.success(`Added ${n} to ${r.sizes} ${r.sizes === 1 ? 'size' : 'sizes'} (${r.units} units)`);
+                  setNote('');
+                  onDone();
+                },
+                onError: (e) => setError(isApiError(e) ? e.message : 'Something went wrong.'),
+              },
+            );
+          }}
+        >
+          Add {valid ? n : ''} to each ({valid ? n * picked.size : 0} units)
+        </Button>
+        <Button variant="ghost" onClick={onDone}>
+          Untick all
+        </Button>
+      </div>
+      {error && <ErrorState message={error} className="mt-3" />}
+    </section>
   );
 }
 
