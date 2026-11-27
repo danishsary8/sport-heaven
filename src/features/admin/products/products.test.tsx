@@ -124,6 +124,18 @@ describe('admin products', () => {
     expect(await screen.findByText('2 products now $11.90')).toBeTruthy();
   });
 
+  it('exports just the ticked products', async () => {
+    Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:x'), revokeObjectURL: vi.fn() });
+    renderRoutes(routes, '/admin/products?category=boots', { signedIn: true });
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Select Predator Elite FG' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select Copa Pure FG' }));
+    fireEvent.click(within(screen.getByRole('region', { name: '2 selected' })).getByRole('button', { name: 'Export' }));
+    await waitFor(() => expect(calls.find((c) => c.url.startsWith('/v1/admin/products/export.csv'))).toBeTruthy());
+    const params = new URL(`http://x${calls.find((c) => c.url.startsWith('/v1/admin/products/export.csv'))!.url}`).searchParams;
+    expect(Object.fromEntries(params)).toEqual({ format: 'products', ids: `${PID},${PID2}` });
+    expect(screen.getByRole('region', { name: '2 selected' })).toBeTruthy();
+  });
+
   it('changes one product status right from the list', async () => {
     renderRoutes(routes, '/admin/products', { signedIn: true });
     fireEvent.change(await screen.findByRole('combobox', { name: 'Status of Copa Pure FG' }), { target: { value: 'active' } });

@@ -1,8 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { Archive, Eye, EyeOff, ImageOff, X } from 'lucide-react';
+import { Archive, Download, Eye, EyeOff, ImageOff, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { isApiError } from '../../../lib/api';
+import { apiFetch, isApiError } from '../../../lib/api';
 import { formatUsd } from '../../../lib/i18n';
 import { Button, cx, useToast } from '../../../ui';
 import { patch, put } from '../api';
@@ -58,6 +58,21 @@ export function ProductsTable({ products }: { products: AdminProductListRow[] })
     // Keep only the rows that failed ticked, ready to retry.
     const failedIds = new Set(ids.filter((_, i) => results[i]!.status === 'rejected'));
     setSelected((s) => new Set([...s].filter((id) => failedIds.has(id))));
+  };
+
+  // The ticked products as a CSV in the import columns: edit it and import it back to update them.
+  const exportSelected = async (ids: string[]) => {
+    try {
+      const text = await apiFetch<string>('/v1/admin/products/export.csv', { as: 'text', query: { format: 'products', ids: ids.join(',') } });
+      const url = URL.createObjectURL(new Blob([text], { type: 'text/csv' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sport-heaven-selected-${ids.length}-products-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (e) {
+      toast.error(isApiError(e) ? e.message : 'The export failed.');
+    }
   };
 
   // One price for every size of every ticked product (any "was" price is cleared).
@@ -179,6 +194,10 @@ export function ProductsTable({ products }: { products: AdminProductListRow[] })
           <Button size="sm" variant="ghost" className="text-paper hover:bg-paper/10" disabled={busy !== null} onClick={() => void setStatus([...selected], 'archived')}>
             <Archive className="size-4" aria-hidden />
             Archive
+          </Button>
+          <Button size="sm" variant="ghost" className="text-paper hover:bg-paper/10" disabled={busy !== null} onClick={() => void exportSelected([...selected])}>
+            <Download className="size-4" aria-hidden />
+            Export
           </Button>
           <form
             className="flex items-center gap-1 border-l border-paper/20 pl-2"
