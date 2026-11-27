@@ -1,4 +1,4 @@
-import type { Brand, Category } from '../types';
+import type { AdminProduct, Brand, Category } from '../types';
 
 /** The columns of a new-product spreadsheet, in template order. Sizes are separated by "|" (or ";"). */
 export const IMPORT_COLUMNS = ['name', 'brand', 'category', 'colour', 'colour_hex', 'sizes', 'price', 'compare_at', 'description', 'main_photo', 'hover_photo'] as const;
@@ -14,17 +14,98 @@ export interface CreateBody {
   categorySlug: string;
   name: { en: string };
   description?: { en: string };
-  status: 'draft';
+  status: ProductStatus;
   colors: { name: string; swatchHex?: string }[];
   variants: { color: string; size: string; priceCents: number; compareAtCents?: number }[];
   images?: { path: string }[];
 }
+
+type ProductStatus = 'active' | 'draft' | 'archived';
+const STATUSES: ProductStatus[] = ['active', 'draft', 'archived'];
 
 export interface ImportRow {
   line: number;
   name: string;
   body: CreateBody;
   problems: string[];
+  /** The shop product this row is about: the slug column, or the web address made from the name. */
+  matchSlug: string;
+  /** Set only when the file says so; empty cells leave an existing product as it is. */
+  status?: ProductStatus;
+  description: string;
+  photos: string[];
+  priceCents: number;
+  compareAtCents: number | null;
+}
+
+export interface ImportOp {
+  method: 'PUT' | 'PATCH';
+  path: string;
+  body: unknown;
+}
+
+export interface ImportPlan {
+  line: number;
+  kind: 'new' | 'update' | 'same';
+  productId?: string;
+  changes: string[];
+  ops: ImportOp[];
+}
+
+const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
+
+/**
+ * Decides, per row, whether it adds a product or updates one already in the shop (found by its web address),
+ * and lists what an update changes. For existing products, price and "was" price apply to every size; the
+ * main and hover photos replace the first two (extra photos stay); empty name/description/status/photo cells
+ * leave those as they are. Sizes, colours, brand and category of existing products are not changed.
+ */
+export function planImport(rows: ImportRow[], existing: Map<string, AdminProduct>): ImportPlan[] {
+  return rows.map((r): ImportPlan => {
+    const p = existing.get(r.matchSlug);
+    if (!p) return { line: r.line, kind: 'new', changes: [`${r.body.variants.length} ${r.body.variants.length === 1 ? 'size' : 'sizes'}`], ops: [] };
+    const changes: string[] = [];
+    const ops: ImportOp[] = [];
+    if (p.variants.some((v) => v.priceCents !== r.priceCents || v.compareAtCents !== r.compareAtCents)) {
+      const prices = p.variants.map((v) => v.priceCents);
+      const lo = Math.min(...prices);
+      const hi = Math.max(...prices);
+      const was = lo === hi ? usd(lo) : `${usd(lo)}–${usd(hi)}`;
+      changes.push(lo === r.priceCents && hi === r.priceCents ? `"was" price ${r.compareAtCents === null ? 'removed' : `→ ${usd(r.compareAtCents)}`}` : `price ${was} → ${usd(r.priceCents)}`);
+      ops.push({ method: 'PUT', path: `/v1/admin/products/${p.id}/prices`, body: { priceCents: r.priceCents, compareAtCents: r.compareAtCents } });
+    }
+    const current = [...p.images].sort((a, b) => a.sort - b.sort);
+    if (r.photos.length && r.photos.some((path, i) => current[i]?.path !== path)) {
+      const colour = (id: string | null) => p.colors.find((c) => c.id === id)?.name;
+      const rest = current.slice(r.photos.length).filter((c) => !r.photos.includes(c.path));
+      changes.push(r.photos.length === 1 ? 'main photo' : 'main and hover photos');
+      ops.push({
+        method: 'PUT',
+        path: `/v1/admin/products/${p.id}/images`,
+        body: {
+          images: [
+            ...r.photos.map((path) => ({ path })),
+            ...rest.map((c) => ({ path: c.path, ...(colour(c.colorId) ? { color: colour(c.colorId) } : {}), ...(c.alt ? { alt: c.alt } : {}) })),
+          ],
+        },
+      });
+    }
+    const patch: Record<string, unknown> = {};
+    if (r.name && r.name !== p.nameI18n.en) {
+      patch.name = { ...p.nameI18n, en: r.name };
+      changes.push('name');
+    }
+    if (r.description && r.description !== p.descriptionI18n?.en) {
+      patch.description = { ...(p.descriptionI18n ?? {}), en: r.description };
+      changes.push('description');
+    }
+    if (r.status && r.status !== p.status) {
+      patch.status = r.status;
+      changes.push(`status ${p.status} → ${r.status}`);
+    }
+    if (Object.keys(patch).length) ops.push({ method: 'PATCH', path: `/v1/admin/products/${p.id}`, body: patch });
+    return { line: r.line, kind: changes.length ? 'update' : 'same', productId: p.id, changes, ops };
+  });
 }
 
 /** RFC 4180-style CSV: quoted cells (with "" for a quote), commas and line breaks inside quotes, CRLF, a BOM. Blank lines are skipped. */
@@ -105,6 +186,10 @@ export function checkImport(text: string, brands: Brand[], categories: Category[
     const brand = findBrand(at(r, 'brand'));
     const category = findCategory(at(r, 'category'));
     const slug = slugify(name);
+    const cellOf = (c: string) => (cols.includes(c) ? (r[cols.indexOf(c)] ?? '').trim().toLowerCase() : '');
+    const matchSlug = cellOf('slug') || slug;
+    const statusCell = cellOf('status') as ProductStatus | '';
+    const status = statusCell && STATUSES.includes(statusCell) ? statusCell : undefined;
 
     const description = at(r, 'description');
     if (!name) problems.push('name is empty');
@@ -124,8 +209,9 @@ export function checkImport(text: string, brands: Brand[], categories: Category[
     else if (compare !== undefined && price !== null && compare <= price) problems.push('compare_at must be higher than the price');
     if (description.length > 500) problems.push('description is longer than 500 characters');
     if (photos.some((p) => !PHOTO.test(p) || p.split('/').includes('..'))) problems.push('photo paths look like catalog/name.jpg');
-    if (slug.length >= 2 && seen.has(slug)) problems.push(`the same product is already on line ${seen.get(slug)}`);
-    else if (slug.length >= 2) seen.set(slug, line);
+    if (statusCell && !status) problems.push('status must be active, draft or archived (or empty)');
+    if (matchSlug.length >= 2 && seen.has(matchSlug)) problems.push(`the same product is already on line ${seen.get(matchSlug)}`);
+    else if (matchSlug.length >= 2) seen.set(matchSlug, line);
 
     const body: CreateBody = {
       slug,
@@ -133,12 +219,12 @@ export function checkImport(text: string, brands: Brand[], categories: Category[
       categorySlug: category?.slug ?? '',
       name: { en: name },
       ...(description ? { description: { en: description } } : {}),
-      status: 'draft',
+      status: status ?? 'draft',
       colors: [{ name: colour, ...(hex ? { swatchHex: hex } : {}) }],
       variants: sizes.map((size) => ({ color: colour, size, priceCents: price ?? 0, ...(compare != null ? { compareAtCents: compare } : {}) })),
       ...(photos.length ? { images: photos.map((path) => ({ path })) } : {}),
     };
-    return { line, name, body, problems };
+    return { line, name, body, problems, matchSlug, ...(status ? { status } : {}), description, photos, priceCents: price ?? 0, compareAtCents: compare ?? null };
   });
   return { rows, problems: rows.flatMap((r) => r.problems.map((p) => `Line ${r.line}: ${p}`)) };
 }

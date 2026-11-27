@@ -1,20 +1,34 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, CircleAlert, Download, FileSpreadsheet } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
-import { isApiError } from '../../../lib/api';
+import { apiFetch, isApiError } from '../../../lib/api';
 import { formatUsd } from '../../../lib/i18n';
 import { Button, cx } from '../../../ui';
-import { apiFetch } from '../../../lib/api';
 import { post, useAdminQuery } from '../api';
 import type { AdminProduct, AdminProductListRow, Brand, Category } from '../types';
-import { IMPORT_TEMPLATE, checkImport, type ImportRow } from './productImport';
+import { IMPORT_TEMPLATE, checkImport, planImport, type ImportPlan, type ImportRow } from './productImport';
 
-type Result = { line: number; ok: true; id: string; name: string } | { line: number; ok: false; name: string; message: string };
+type Result = { line: number; ok: true; id: string; kind: 'new' | 'update' } | { line: number; ok: false; message: string };
+
+const KIND_LABEL: Record<ImportPlan['kind'], string> = { new: 'New', update: 'Update', same: 'No change' };
+const KIND_STYLE: Record<ImportPlan['kind'], string> = { new: 'bg-success/10 text-success', update: 'bg-[#E8EEFB] text-[#1C3F94]', same: 'bg-stone text-graphite' };
+
+/** Finds the shop products the file's rows point at (by web address), with their sizes and photos. */
+async function lookUp(rows: ImportRow[]): Promise<Map<string, AdminProduct>> {
+  const found = new Map<string, AdminProduct>();
+  for (const r of rows) {
+    const list = await apiFetch<{ products: AdminProductListRow[] }>('/v1/admin/products', { query: { q: r.matchSlug, pageSize: 10 } });
+    const hit = list.products.find((p) => p.slug === r.matchSlug);
+    if (hit) found.set(r.matchSlug, (await apiFetch<{ product: AdminProduct }>(`/v1/admin/products/${hit.id}`)).product);
+  }
+  return found;
+}
 
 /**
- * New products from a spreadsheet: download the template, fill it in, upload. Every row is checked first;
- * nothing is created while any row has a problem. Products are created as drafts so they can get photos first.
+ * Products from a spreadsheet: rows for products already in the shop (matched by the slug column, or by the
+ * name's web address) update them; other rows add new products. Every row is checked and labelled first —
+ * New, Update (with what changes) or No change — and nothing is sent while any row has a problem.
  */
 export function ProductImport() {
   const qc = useQueryClient();
@@ -22,12 +36,27 @@ export function ProductImport() {
   const brands = useAdminQuery<{ brands: Brand[] }>(['brands'], '/v1/admin/brands');
   const categories = useAdminQuery<{ categories: Category[] }>(['categories'], '/v1/admin/categories');
   const [file, setFile] = useState<{ name: string; text: string } | null>(null);
+  const [plans, setPlans] = useState<ImportPlan[] | null>(null);
+  const [lookupError, setLookupError] = useState<string | null>(null);
   const [results, setResults] = useState<Result[] | null>(null);
   const [busy, setBusy] = useState(false);
-  const [taken, setTaken] = useState<string[]>([]);
   const ready = !!brands.data && !!categories.data;
   const check = file && ready ? checkImport(file.text, brands.data!.brands, categories.data!.categories) : null;
-  const ok = !!check && check.rows.length > 0 && check.problems.length === 0;
+  const valid = !!check && check.rows.length > 0 && check.problems.length === 0;
+
+  // Once the file is valid, compare it with the shop so every row can be labelled before anything is sent.
+  useEffect(() => {
+    if (!valid || !check) return;
+    let live = true;
+    lookUp(check.rows)
+      .then((found) => live && setPlans(planImport(check.rows, found)))
+      .catch((e: unknown) => live && setLookupError(isApiError(e) ? e.message : 'Could not check the shop. Try again.'));
+    return () => {
+      live = false;
+    };
+    // The file text is what the check is made from.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [file?.text, valid]);
 
   const template = () => {
     const url = URL.createObjectURL(new Blob([IMPORT_TEMPLATE], { type: 'text/csv' }));
@@ -38,45 +67,44 @@ export function ProductImport() {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
-  const create = async (rows: ImportRow[]) => {
+  const apply = async (rows: ImportRow[], plan: ImportPlan[]) => {
     setBusy(true);
-    // First make sure none of the products is already in the shop, so the file is created whole or not at all.
-    const clashes: string[] = [];
-    for (const r of rows) {
-      try {
-        const found = await apiFetch<{ products: AdminProductListRow[] }>('/v1/admin/products', { query: { q: r.body.slug, pageSize: 10 } });
-        if (found.products.some((p) => p.slug === r.body.slug)) clashes.push(`Line ${r.line}: ${r.body.slug} is already in the shop. Change the name or edit that product.`);
-      } catch (e) {
-        clashes.push(`Line ${r.line}: could not check the shop (${isApiError(e) ? e.message : 'try again'}).`);
-      }
-    }
-    setTaken(clashes);
-    if (clashes.length) {
-      setBusy(false);
-      return;
-    }
     const out: Result[] = [];
-    // One at a time, so the results read in file order and a slow server is not flooded.
+    // One row at a time, in file order, so a slow server is not flooded and results read top to bottom.
     for (const r of rows) {
+      const p = plan.find((x) => x.line === r.line)!;
+      if (p.kind === 'same') continue;
       try {
-        const res = await post<{ product: AdminProduct }>('/v1/admin/products', r.body);
-        out.push({ line: r.line, ok: true, id: res.product.id, name: r.name });
+        if (p.kind === 'new') {
+          const res = await post<{ product: AdminProduct }>('/v1/admin/products', r.body);
+          out.push({ line: r.line, ok: true, id: res.product.id, kind: 'new' });
+        } else {
+          for (const op of p.ops) await apiFetch(op.path, { method: op.method, body: op.body });
+          out.push({ line: r.line, ok: true, id: p.productId!, kind: 'update' });
+        }
       } catch (e) {
-        out.push({ line: r.line, ok: false, name: r.name, message: isApiError(e) ? e.message : 'Something went wrong' });
+        out.push({ line: r.line, ok: false, message: isApiError(e) ? e.message : 'Something went wrong' });
       }
       setResults([...out]);
     }
-    await Promise.all([qc.invalidateQueries({ queryKey: ['admin', 'products'] }), qc.invalidateQueries({ queryKey: ['catalog'] })]);
+    setResults([...out]);
+    await Promise.all([qc.invalidateQueries({ queryKey: ['admin', 'products'] }), qc.invalidateQueries({ queryKey: ['admin', 'product'] }), qc.invalidateQueries({ queryKey: ['catalog'] })]);
     setBusy(false);
   };
 
-  const created = results?.filter((r) => r.ok).length ?? 0;
+  const count = (k: ImportPlan['kind']) => plans?.filter((p) => p.kind === k).length ?? 0;
+  const news = count('new');
+  const updates = count('update');
+  const applyLabel = [news && `${news} new ${news === 1 ? 'product' : 'products'}`, updates && `${updates} ${updates === 1 ? 'update' : 'updates'}`].filter(Boolean).join(', ');
+  const created = results?.filter((r) => r.ok && r.kind === 'new').length ?? 0;
+  const updated = results?.filter((r) => r.ok && r.kind === 'update').length ?? 0;
+  const failed = results?.filter((r) => !r.ok).length ?? 0;
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-3">
         <FileSpreadsheet className="size-5 text-graphite" aria-hidden />
-        <span className="font-semibold">Add new products</span>
+        <span className="font-semibold">Add or update products</span>
         <Button size="sm" variant="ghost" onClick={template}>
           <Download className="size-4" aria-hidden />
           Download template
@@ -93,7 +121,8 @@ export function ProductImport() {
               const f = e.target.files?.[0];
               if (!f) return;
               setResults(null);
-              setTaken([]);
+              setPlans(null);
+              setLookupError(null);
               setFile({ name: f.name, text: await f.text() });
               // Lets the same file name be chosen again after fixing it in a spreadsheet app.
               e.target.value = '';
@@ -101,7 +130,10 @@ export function ProductImport() {
           />
         </label>
       </div>
-      <p className="text-sm text-graphite">One row per product. Sizes are separated by | (EU 40|EU 41). Photos can be added after, on each product.</p>
+      <p className="text-sm text-graphite">
+        One row per product. Sizes are separated by | (EU 40|EU 41). A row whose slug (or name) is already in the shop updates that product: its price for every size, its main and hover photos, name,
+        description and status. Empty cells leave things as they are. Tip: export products, edit the file, import it back.
+      </p>
 
       {file && (
         <section aria-label="New products check" className="rounded-[12px] bg-chalk p-4">
@@ -109,11 +141,15 @@ export function ProductImport() {
             <p className="text-sm text-graphite">Checking {file.name}…</p>
           ) : (
             <>
-              <p className={cx('flex items-center gap-2 font-semibold', check.problems.length ? 'text-vermilion' : 'text-success')}>
-                {check.problems.length ? <CircleAlert className="size-4" aria-hidden /> : <CheckCircle2 className="size-4" aria-hidden />}
+              <p className={cx('flex items-center gap-2 font-semibold', check.problems.length || lookupError ? 'text-vermilion' : 'text-success')}>
+                {check.problems.length || lookupError ? <CircleAlert className="size-4" aria-hidden /> : <CheckCircle2 className="size-4" aria-hidden />}
                 {check.problems.length
-                  ? `${check.problems.length} ${check.problems.length === 1 ? 'problem' : 'problems'} in ${file.name}. Fix them and choose the file again; nothing was created.`
-                  : `${check.rows.length} ${check.rows.length === 1 ? 'product' : 'products'} ready in ${file.name}.`}
+                  ? `${check.problems.length} ${check.problems.length === 1 ? 'problem' : 'problems'} in ${file.name}. Fix them and choose the file again; nothing was changed.`
+                  : lookupError
+                    ? lookupError
+                    : plans
+                      ? `${check.rows.length} ${check.rows.length === 1 ? 'row' : 'rows'} checked in ${file.name}: ${news} new, ${updates} to update, ${count('same')} unchanged.`
+                      : `Comparing ${file.name} with the shop…`}
               </p>
               {check.problems.length > 0 && (
                 <ul className="mt-2 list-disc pl-5 text-sm">
@@ -122,30 +158,24 @@ export function ProductImport() {
                   ))}
                 </ul>
               )}
-              {taken.length > 0 && (
-                <ul role="alert" className="mt-2 list-disc pl-5 text-sm font-medium text-vermilion">
-                  {taken.map((p) => (
-                    <li key={p}>{p}</li>
-                  ))}
-                </ul>
-              )}
               {check.rows.length > 0 && (
                 <div className="mt-3 overflow-x-auto">
-                  <table className="w-full min-w-[560px] text-left text-sm">
+                  <table className="w-full min-w-[640px] text-left text-sm">
                     <thead className="text-graphite">
                       <tr>
                         <th className="py-1 pr-2 font-medium">Line</th>
                         <th className="py-1 pr-2 font-medium">Name</th>
-                        <th className="py-1 pr-2 font-medium">Brand, category</th>
-                        <th className="py-1 pr-2 font-medium">Sizes</th>
+                        <th className="py-1 pr-2 font-medium">Status</th>
+                        <th className="py-1 pr-2 font-medium">What happens</th>
                         <th className="py-1 font-medium">Price</th>
                       </tr>
                     </thead>
                     <tbody>
                       {check.rows.map((r) => {
+                        const plan = plans?.find((p) => p.line === r.line);
                         const res = results?.find((x) => x.line === r.line);
                         return (
-                          <tr key={r.line} className={cx('border-t border-stone', r.problems.length > 0 && 'text-vermilion')}>
+                          <tr key={r.line} className={cx('border-t border-stone align-top', r.problems.length > 0 && 'text-vermilion')}>
                             <td className="tabular py-1.5 pr-2">{r.line}</td>
                             <td className="py-1.5 pr-2 font-medium">
                               {res?.ok ? (
@@ -157,9 +187,12 @@ export function ProductImport() {
                               )}
                               {res && !res.ok && <span className="block text-xs text-vermilion">{res.message}</span>}
                             </td>
-                            <td className="py-1.5 pr-2">{[r.body.brandSlug, r.body.categorySlug].filter(Boolean).join(', ') || '–'}</td>
-                            <td className="py-1.5 pr-2">{r.body.variants.map((v) => v.size).join(', ') || '–'}</td>
-                            <td className="tabular py-1.5">{r.body.variants[0] ? formatUsd(r.body.variants[0].priceCents) : '–'}</td>
+                            <td className="py-1.5 pr-2">
+                              {plan && <span className={cx('rounded-full px-2 py-0.5 text-xs font-semibold', KIND_STYLE[plan.kind])}>{KIND_LABEL[plan.kind]}</span>}
+                              {res?.ok && <span className="ml-1 text-xs text-success">{res.kind === 'new' ? 'created' : 'done'}</span>}
+                            </td>
+                            <td className="py-1.5 pr-2 text-graphite">{plan ? (plan.kind === 'new' ? `Add as ${r.body.status} · ${plan.changes.join(', ')}` : plan.changes.join(', ') || '–') : '–'}</td>
+                            <td className="tabular py-1.5">{r.body.variants[0] ? formatUsd(r.priceCents) : '–'}</td>
                           </tr>
                         );
                       })}
@@ -168,13 +201,14 @@ export function ProductImport() {
                 </div>
               )}
               <div className="mt-3 flex flex-wrap items-center gap-3">
-                <Button variant="primary" size="sm" disabled={!ok || busy || results !== null} loading={busy} onClick={() => void create(check.rows)}>
-                  Create {check.rows.length} {check.rows.length === 1 ? 'product' : 'products'} as drafts
+                <Button variant="primary" size="sm" disabled={!valid || !plans || !applyLabel || busy || results !== null} loading={busy} onClick={() => void apply(check.rows, plans!)}>
+                  {applyLabel ? `Import ${applyLabel}` : 'Import'}
                 </Button>
+                {plans && !applyLabel && <span className="text-sm text-graphite">Everything in the file already matches the shop.</span>}
                 {results && !busy && (
                   <span className="text-sm font-semibold">
-                    {created} created
-                    {results.length > created && <span className="text-vermilion">, {results.length - created} failed (see the lines above)</span>}
+                    {[created && `${created} created`, updated && `${updated} updated`].filter(Boolean).join(', ') || 'Nothing changed'}
+                    {failed > 0 && <span className="text-vermilion">, {failed} failed (see the lines above)</span>}
                   </span>
                 )}
               </div>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { IMPORT_TEMPLATE, checkImport, parseCsv } from './productImport';
+import { IMPORT_TEMPLATE, checkImport, parseCsv, planImport } from './productImport';
 
 const BRANDS = [{ id: 'b1', slug: 'adidas', name: 'Adidas' }];
 const CATEGORIES = [{ id: 'c1', slug: 'boots', nameI18n: { en: 'Football Boots' } }];
@@ -79,5 +79,81 @@ describe('checkImport', () => {
 
   it('offers a template with every column', () => {
     expect(IMPORT_TEMPLATE.split('\n')[0]).toBe(HEAD);
+  });
+});
+
+describe('planImport (new or update)', () => {
+  const HEAD2 = `${HEAD},slug,status`;
+  const existing = {
+    id: 'p1',
+    slug: 'copa-pure-3-fg',
+    brandId: 'b1',
+    categoryId: 'c1',
+    nameI18n: { en: 'Copa Pure 3 FG', km: 'កូប៉ា' },
+    status: 'active' as const,
+    isCustomizable: false,
+    updatedAt: '2026-11-27T00:00:00Z',
+    shortNameI18n: null,
+    descriptionI18n: { en: 'Old text', km: 'ចាស់' },
+    highlights: [],
+    specs: {},
+    attributes: {},
+    flags: {},
+    heroTagline: null,
+    colors: [{ id: 'col1', name: 'White', swatchHex: null, sort: 0 }],
+    variants: [
+      { id: 'v1', colorId: 'col1', sizeLabel: 'EU 40', sizeSort: 400, sku: 'C-40', priceCents: 12000, compareAtCents: null, status: 'active' as const },
+      { id: 'v2', colorId: 'col1', sizeLabel: 'EU 41', sizeSort: 410, sku: 'C-41', priceCents: 12000, compareAtCents: null, status: 'active' as const },
+    ],
+    images: [
+      { id: 'i1', colorId: 'col1', path: 'catalog/copa.jpg', alt: 'Copa', sort: 0 },
+      { id: 'i2', colorId: null, path: 'catalog/copa-side.jpg', alt: null, sort: 1 },
+      { id: 'i3', colorId: null, path: 'catalog/copa-sole.jpg', alt: null, sort: 2 },
+    ],
+  };
+
+  it('marks a product that is not in the shop as new', () => {
+    const { rows } = checkImport(`${HEAD}\nPredator 26 FG,Adidas,boots,Red,,EU 40,200,,,,`, BRANDS, CATEGORIES);
+    expect(planImport(rows, new Map())[0]).toMatchObject({ kind: 'new' });
+  });
+
+  it('matches by the slug column, and lists exactly what will change', () => {
+    const { rows, problems } = checkImport(
+      `${HEAD2}\nCopa Pure 3 FG,Adidas,boots,White,,EU 40|EU 41,11.90,,,media/new-front.webp,media/new-back.webp,copa-pure-3-fg,active`,
+      BRANDS,
+      CATEGORIES,
+    );
+    expect(problems).toEqual([]);
+    const [plan] = planImport(rows, new Map([['copa-pure-3-fg', existing]]));
+    expect(plan).toMatchObject({ kind: 'update', productId: 'p1' });
+    expect(plan!.changes).toEqual(['price $120.00 → $11.90', 'main and hover photos']);
+    expect(plan!.ops).toEqual([
+      { method: 'PUT', path: '/v1/admin/products/p1/prices', body: { priceCents: 1190, compareAtCents: null } },
+      // The first two photos are replaced; the extra sole photo stays after them.
+      { method: 'PUT', path: '/v1/admin/products/p1/images', body: { images: [{ path: 'media/new-front.webp' }, { path: 'media/new-back.webp' }, { path: 'catalog/copa-sole.jpg' }] } },
+    ]);
+  });
+
+  it('says "no change" when the row matches the shop, and leaves empty cells alone', () => {
+    const { rows } = checkImport(`${HEAD2}\nCopa Pure 3 FG,Adidas,boots,White,,EU 40|EU 41,120,,,,,copa-pure-3-fg,`, BRANDS, CATEGORIES);
+    expect(planImport(rows, new Map([['copa-pure-3-fg', existing]]))[0]).toMatchObject({ kind: 'same', changes: [], ops: [] });
+  });
+
+  it('updates name, description and status, keeping the Khmer text', () => {
+    const { rows } = checkImport(`${HEAD2}\nCopa Pure 3 Elite FG,Adidas,boots,White,,EU 40|EU 41,120,,New text,,,copa-pure-3-fg,draft`, BRANDS, CATEGORIES);
+    const [plan] = planImport(rows, new Map([['copa-pure-3-fg', existing]]));
+    expect(plan!.changes).toEqual(['name', 'description', 'status active → draft']);
+    expect(plan!.ops).toEqual([
+      {
+        method: 'PATCH',
+        path: '/v1/admin/products/p1',
+        body: { name: { en: 'Copa Pure 3 Elite FG', km: 'កូប៉ា' }, description: { en: 'New text', km: 'ចាស់' }, status: 'draft' },
+      },
+    ]);
+  });
+
+  it('refuses an unknown status', () => {
+    const { problems } = checkImport(`${HEAD2}\nCopa Pure 3 FG,Adidas,boots,White,,EU 40,120,,,,,copa-pure-3-fg,live`, BRANDS, CATEGORIES);
+    expect(problems).toEqual(['Line 2: status must be active, draft or archived (or empty)']);
   });
 });

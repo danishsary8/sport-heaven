@@ -5,7 +5,7 @@ import { Link } from 'react-router';
 import { isApiError } from '../../../lib/api';
 import { formatUsd } from '../../../lib/i18n';
 import { Button, cx, useToast } from '../../../ui';
-import { patch } from '../api';
+import { patch, put } from '../api';
 import type { AdminProductListRow } from '../types';
 
 type Status = AdminProductListRow['status'];
@@ -23,6 +23,12 @@ const price = (p: AdminProductListRow) =>
  * The products as a table a manager can work in: photo (hover shows the second pose), price range, stock,
  * a warning when the hover photo is missing, status changed in place, and rows selected for bulk changes.
  */
+/** "11.90" or "$11.90" → 1190; anything else → null. */
+function toCents(v: string): number | null {
+  const t = v.trim().replace(/^\$/, '');
+  return /^\d+(\.\d{1,2})?$/.test(t) ? Math.round(Number(t) * 100) : null;
+}
+
 export function ProductsTable({ products }: { products: AdminProductListRow[] }) {
   const toast = useToast();
   const qc = useQueryClient();
@@ -52,6 +58,24 @@ export function ProductsTable({ products }: { products: AdminProductListRow[] })
     // Keep only the rows that failed ticked, ready to retry.
     const failedIds = new Set(ids.filter((_, i) => results[i]!.status === 'rejected'));
     setSelected((s) => new Set([...s].filter((id) => failedIds.has(id))));
+  };
+
+  // One price for every size of every ticked product (any "was" price is cleared).
+  const [bulkPrice, setBulkPrice] = useState('');
+  const setPrice = async (ids: string[]) => {
+    const cents = toCents(bulkPrice);
+    if (cents === null) return toast.error('Enter the price like 11.90');
+    setBusy('bulk');
+    const results = await Promise.allSettled(ids.map((id) => put(`/v1/admin/products/${id}/prices`, { priceCents: cents, compareAtCents: null })));
+    const failed = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
+    const done = ids.length - failed.length;
+    await refresh();
+    setBusy(null);
+    if (done > 0) toast.success(`${done} ${done === 1 ? 'product' : 'products'} now ${formatUsd(cents)}`);
+    if (failed.length > 0) toast.error(`${failed.length} could not be changed: ${isApiError(failed[0]!.reason) ? failed[0]!.reason.message : 'something went wrong'}`);
+    const failedIds = new Set(ids.filter((_, i) => results[i]!.status === 'rejected'));
+    setSelected((s) => new Set([...s].filter((id) => failedIds.has(id))));
+    if (failed.length === 0) setBulkPrice('');
   };
 
   return (
@@ -156,6 +180,25 @@ export function ProductsTable({ products }: { products: AdminProductListRow[] })
             <Archive className="size-4" aria-hidden />
             Archive
           </Button>
+          <form
+            className="flex items-center gap-1 border-l border-paper/20 pl-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void setPrice([...selected]);
+            }}
+          >
+            <input
+              value={bulkPrice}
+              onChange={(e) => setBulkPrice(e.target.value)}
+              inputMode="decimal"
+              placeholder="11.90"
+              aria-label="New price for the selected products"
+              className="h-9 w-20 rounded-[8px] bg-paper/10 px-2 text-sm text-paper placeholder:text-paper/50 focus:outline-2 focus:outline-paper"
+            />
+            <Button type="submit" size="sm" variant="ghost" className="text-paper hover:bg-paper/10" disabled={busy !== null || !bulkPrice.trim()}>
+              Set price
+            </Button>
+          </form>
           <button type="button" onClick={() => setSelected(new Set())} aria-label="Clear selection" className="grid size-9 place-items-center rounded-full text-paper/70 hover:bg-paper/10 hover:text-paper">
             <X className="size-4" aria-hidden />
           </button>

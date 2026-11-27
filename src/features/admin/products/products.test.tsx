@@ -111,6 +111,19 @@ describe('admin products', () => {
     expect(screen.getByRole('checkbox', { name: 'Select Predator Elite FG' })).not.toBeChecked();
   });
 
+  it('sets one price for every size of all the ticked products', async () => {
+    renderRoutes(routes, '/admin/products', { signedIn: true });
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Select Predator Elite FG' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select Copa Pure FG' }));
+    const bar = screen.getByRole('region', { name: '2 selected' });
+    fireEvent.change(within(bar).getByLabelText('New price for the selected products'), { target: { value: '11.90' } });
+    fireEvent.click(within(bar).getByRole('button', { name: 'Set price' }));
+    await waitFor(() => expect(calls.filter((c) => c.url.endsWith('/prices'))).toHaveLength(2));
+    expect(calls).toContainEqual({ method: 'PUT', url: `/v1/admin/products/${PID}/prices`, body: { priceCents: 1190, compareAtCents: null } });
+    expect(calls).toContainEqual({ method: 'PUT', url: `/v1/admin/products/${PID2}/prices`, body: { priceCents: 1190, compareAtCents: null } });
+    expect(await screen.findByText('2 products now $11.90')).toBeTruthy();
+  });
+
   it('changes one product status right from the list', async () => {
     renderRoutes(routes, '/admin/products', { signedIn: true });
     fireEvent.change(await screen.findByRole('combobox', { name: 'Status of Copa Pure FG' }), { target: { value: 'active' } });
@@ -247,7 +260,7 @@ describe('admin products', () => {
     fireEvent.change(await screen.findByLabelText('New products spreadsheet'), { target: { files: [new File([csv], 'new.csv', { type: 'text/csv' })] } });
     const check = await screen.findByRole('region', { name: 'New products check' });
     expect(await within(check).findByText('Line 2: unknown brand "Fake"')).toBeTruthy();
-    expect(within(check).getByRole('button', { name: /Create/ })).toBeDisabled();
+    expect(within(check).getByRole('button', { name: /Import/ })).toBeDisabled();
   });
 
   it('creates every product in a good spreadsheet as a draft', async () => {
@@ -255,26 +268,36 @@ describe('admin products', () => {
     const csv = 'name,brand,category,colour,sizes,price\nCopa Pure,adidas,boots,White,EU 40|EU 41,120\nCopa Lite,Adidas,Boots,Black,EU 42,90';
     fireEvent.change(await screen.findByLabelText('New products spreadsheet'), { target: { files: [new File([csv], 'new.csv', { type: 'text/csv' })] } });
     const check = await screen.findByRole('region', { name: 'New products check' });
-    fireEvent.click(await within(check).findByRole('button', { name: 'Create 2 products as drafts' }));
+    expect(await within(check).findAllByText('New')).toHaveLength(2);
+    fireEvent.click(await within(check).findByRole('button', { name: 'Import 2 new products' }));
     await waitFor(() => expect(calls.filter((c) => c.method === 'POST' && c.url === '/v1/admin/products')).toHaveLength(2));
     expect(calls[0]!.body).toMatchObject({ slug: 'copa-pure', brandSlug: 'adidas', status: 'draft', variants: [{ size: 'EU 40', priceCents: 12000 }, { size: 'EU 41', priceCents: 12000 }] });
     expect(await within(check).findByText('2 created')).toBeTruthy();
   });
 
-  it('creates nothing when a product in the file already exists in the shop', async () => {
-    server.use(
-      http.get(`${API}/v1/admin/products`, ({ request }) => {
-        const q = new URL(request.url).searchParams.get('q');
-        return HttpResponse.json({ products: q === 'copa-lite' ? [{ ...ROW, ...LIST, slug: 'copa-lite' }] : [], total: 0, page: 1, pageSize: 50 });
-      }),
-    );
+  it('updates products already in the shop and adds the new ones, labelling each row first', async () => {
     renderRoutes(routes, '/admin/products', { signedIn: true });
-    const csv = 'name,brand,category,colour,sizes,price\nCopa Pure,adidas,boots,White,EU 40,120\nCopa Lite,Adidas,Boots,Black,EU 42,90';
-    fireEvent.change(await screen.findByLabelText('New products spreadsheet'), { target: { files: [new File([csv], 'new.csv', { type: 'text/csv' })] } });
+    const csv = [
+      'name,brand,category,colour,sizes,price,compare_at,main_photo,hover_photo,slug,status',
+      'Predator Elite FG,adidas,boots,Red,EU 39,11.90,,media/front.webp,media/back.webp,predator,',
+      'Copa Lite,Adidas,Boots,Black,EU 42,90,,,,,',
+      'Copa Pure FG,Adidas,Boots,Black,EU 42,180,,,,copa,',
+    ].join('\n');
+    server.use(http.get(`${API}/v1/admin/products/${PID2}`, () => HttpResponse.json({ product: { ...PRODUCT, id: PID2, slug: 'copa', nameI18n: { en: 'Copa Pure FG' }, variants: [{ ...PRODUCT.variants[0], priceCents: 18000, compareAtCents: null }], images: [] } })));
+    fireEvent.change(await screen.findByLabelText('New products spreadsheet'), { target: { files: [new File([csv], 'mixed.csv', { type: 'text/csv' })] } });
     const check = await screen.findByRole('region', { name: 'New products check' });
-    fireEvent.click(await within(check).findByRole('button', { name: 'Create 2 products as drafts' }));
-    expect(await within(check).findByText('Line 3: copa-lite is already in the shop. Change the name or edit that product.')).toBeTruthy();
-    expect(calls.filter((c) => c.method === 'POST')).toEqual([]);
+    const predator = await within(check).findByRole('row', { name: /Predator Elite FG/ });
+    expect(predator).toHaveTextContent('Update');
+    expect(predator).toHaveTextContent('price $255.00 → $11.90');
+    expect(predator).toHaveTextContent('main and hover photos');
+    expect(within(check).getByRole('row', { name: /Copa Lite/ })).toHaveTextContent('New');
+    expect(within(check).getByRole('row', { name: /Copa Pure FG/ })).toHaveTextContent('No change');
+    fireEvent.click(within(check).getByRole('button', { name: 'Import 1 new product, 1 update' }));
+    expect(await within(check).findByText('1 created, 1 updated')).toBeTruthy();
+    expect(calls).toContainEqual({ method: 'PUT', url: `/v1/admin/products/${PID}/prices`, body: { priceCents: 1190, compareAtCents: null } });
+    expect(calls).toContainEqual({ method: 'PUT', url: `/v1/admin/products/${PID}/images`, body: { images: [{ path: 'media/front.webp' }, { path: 'media/back.webp' }] } });
+    expect(calls.filter((c) => c.method === 'POST' && c.url === '/v1/admin/products').map((c) => (c.body as { slug: string }).slug)).toEqual(['copa-lite']);
+    expect(calls.some((c) => c.url.includes(PID2) && c.method !== 'GET')).toBe(false);
   });
 
   it('clears the selection when the list changes, so hidden products are never changed', async () => {
