@@ -1,10 +1,10 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { Archive, Download, Eye, EyeOff, ImageOff, X } from 'lucide-react';
+import { Archive, Download, Eye, EyeOff, ImageOff, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { apiFetch, isApiError } from '../../../lib/api';
 import { formatUsd } from '../../../lib/i18n';
-import { Button, cx, useToast } from '../../../ui';
+import { Button, cx, Sheet, useToast } from '../../../ui';
 import { patch, put } from '../api';
 import type { AdminProductListRow } from '../types';
 
@@ -56,6 +56,22 @@ export function ProductsTable({ products }: { products: AdminProductListRow[] })
     if (done > 0) toast.success(`${done} ${done === 1 ? 'product' : 'products'} set to ${status}`);
     if (failed.length > 0) toast.error(`${failed.length} could not be changed: ${isApiError(failed[0]!.reason) ? failed[0]!.reason.message : 'something went wrong'}`);
     // Keep only the rows that failed ticked, ready to retry.
+    const failedIds = new Set(ids.filter((_, i) => results[i]!.status === 'rejected'));
+    setSelected((s) => new Set([...s].filter((id) => failedIds.has(id))));
+  };
+
+  // Deleting is for good, so it asks first. The server refuses products that have orders (archive those).
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const deleteProducts = async (ids: string[]) => {
+    setBusy('bulk');
+    const results = await Promise.allSettled(ids.map((id) => apiFetch(`/v1/admin/products/${id}`, { method: 'DELETE' })));
+    const failed = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
+    const done = ids.length - failed.length;
+    await refresh();
+    setBusy(null);
+    setConfirmDelete(false);
+    if (done > 0) toast.success(`${done} ${done === 1 ? 'product' : 'products'} deleted`);
+    if (failed.length > 0) toast.error(`${failed.length} could not be deleted: ${isApiError(failed[0]!.reason) ? failed[0]!.reason.message : 'something went wrong'}`);
     const failedIds = new Set(ids.filter((_, i) => results[i]!.status === 'rejected'));
     setSelected((s) => new Set([...s].filter((id) => failedIds.has(id))));
   };
@@ -218,11 +234,34 @@ export function ProductsTable({ products }: { products: AdminProductListRow[] })
               Set price
             </Button>
           </form>
+          <Button size="sm" variant="ghost" className="text-[#FF8A80] hover:bg-[#FF8A80]/15" disabled={busy !== null} onClick={() => setConfirmDelete(true)}>
+            <Trash2 className="size-4" aria-hidden />
+            Delete
+          </Button>
           <button type="button" onClick={() => setSelected(new Set())} aria-label="Clear selection" className="grid size-9 place-items-center rounded-full text-paper/70 hover:bg-paper/10 hover:text-paper">
             <X className="size-4" aria-hidden />
           </button>
         </section>
       )}
+      <Sheet
+        open={confirmDelete}
+        onClose={() => busy === null && setConfirmDelete(false)}
+        side="center"
+        title={`Delete ${selected.size} ${selected.size === 1 ? 'product' : 'products'}?`}
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" disabled={busy !== null} onClick={() => setConfirmDelete(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" className="bg-vermilion hover:bg-[#B3241B]" loading={busy === 'bulk'} onClick={() => void deleteProducts([...selected])}>
+              Delete {selected.size} {selected.size === 1 ? 'product' : 'products'}
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-[15px]">They are removed from the shop and the admin for good, with their sizes, stock and photos. This cannot be undone.</p>
+        <p className="mt-3 text-sm text-graphite">Products that have orders are kept, so order history stays complete. Archive those instead to hide them.</p>
+      </Sheet>
     </div>
   );
 }

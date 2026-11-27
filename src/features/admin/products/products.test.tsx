@@ -136,6 +136,38 @@ describe('admin products', () => {
     expect(screen.getByRole('region', { name: '2 selected' })).toBeTruthy();
   });
 
+  it('deletes the ticked products after confirming, and explains the ones that have orders', async () => {
+    server.use(
+      http.delete(`${API}/v1/admin/products/:id`, async ({ request, params }) => {
+        await rec(request);
+        return params.id === PID2
+          ? HttpResponse.json({ error: { code: 'product_has_orders', message: 'This product has orders, so it cannot be deleted. Archive it instead.' } }, { status: 409 })
+          : new HttpResponse(null, { status: 204 });
+      }),
+    );
+    renderRoutes(routes, '/admin/products', { signedIn: true });
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Select Predator Elite FG' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select Copa Pure FG' }));
+    fireEvent.click(within(screen.getByRole('region', { name: '2 selected' })).getByRole('button', { name: 'Delete' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Delete 2 products?' });
+    expect(calls.filter((c) => c.method === 'DELETE')).toEqual([]);
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Delete 2 products' }));
+    await waitFor(() => expect(calls.filter((c) => c.method === 'DELETE')).toHaveLength(2));
+    expect(await screen.findByText('1 product deleted')).toBeTruthy();
+    expect(await screen.findByText(/1 could not be deleted: This product has orders/)).toBeTruthy();
+    // Only the product that could not be deleted stays ticked.
+    expect(await screen.findByRole('region', { name: '1 selected' })).toBeTruthy();
+  });
+
+  it('deletes nothing when the confirmation is cancelled', async () => {
+    renderRoutes(routes, '/admin/products', { signedIn: true });
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Select Predator Elite FG' }));
+    fireEvent.click(within(screen.getByRole('region', { name: '1 selected' })).getByRole('button', { name: 'Delete' }));
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'Delete 1 product?' })).getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(calls.filter((c) => c.method === 'DELETE')).toEqual([]);
+  });
+
   it('changes one product status right from the list', async () => {
     renderRoutes(routes, '/admin/products', { signedIn: true });
     fireEvent.change(await screen.findByRole('combobox', { name: 'Status of Copa Pure FG' }), { target: { value: 'active' } });
