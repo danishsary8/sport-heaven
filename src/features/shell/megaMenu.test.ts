@@ -76,7 +76,9 @@ describe('buildMegaMenu', () => {
     ]);
     expect(menu.tiles.every((l) => l.note.length > 0)).toBe(true);
     expect(menu.intro).toMatch(/jacket/i);
-    expect(menu.tiles.slice(0, 5).map((l) => l.art)).toEqual(['anthem', 'drill', 'rain', 'presentation', 'bench']);
+    // Jacket types have no photo of their own: the menu borrows the first matching product's.
+    expect(menu.tiles[0]!.probe).toEqual({ category: 'jackets', q: 'anthem' });
+    expect(menu.tiles.at(-1)!.probe).toBeUndefined();
     expect(menu.columns.map((c) => c.title)).toEqual(['mega.f1.jackets', 'mega.brands']);
     expect(menu.columns[0]!.links[0]).toEqual({ label: 'Scuderia Ferrari', href: '/c/f1?garmentType=jacket&q=Ferrari' });
     expect(menu.columns[1]).toEqual({ title: 'mega.brands', links: [{ label: 'adidas', href: '/c/jackets?brand=adidas', count: 3 }] });

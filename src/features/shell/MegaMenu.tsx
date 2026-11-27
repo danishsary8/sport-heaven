@@ -3,7 +3,10 @@ import { Link } from 'react-router';
 import { useI18n } from '../../lib/i18n';
 import { Picture, cx } from '../../ui';
 import { useFilters, useMenu } from '../catalog/api';
-import { buildMegaMenu, type MenuTile, type TileArt } from './megaMenu';
+import { useQueries } from '@tanstack/react-query';
+import { apiFetch } from '../../lib/api';
+import { buildMegaMenu, type MenuTile } from './megaMenu';
+import type { ProductList } from '../catalog/api';
 
 /**
  * The panel under the header for one category. Left: "Shop all", a line on how the category is organised,
@@ -21,6 +24,7 @@ export function MegaMenuPanel({ id, category, name, onNavigate }: { id: string; 
   const featured = data?.columns.find((c) => c.title === 'mega.collections');
   const columns = data?.columns.filter((c) => c !== featured) ?? [];
   const total = menu.data?.categories.find((c) => c.slug === category)?.productCount;
+  const tiles = useTilePhotos(data?.tiles ?? []);
 
   return (
     <div id={id} className="animate-mega absolute inset-x-0 top-full border-t border-stone bg-paper shadow-[0_30px_50px_-30px_rgb(14_17_19/0.4)]">
@@ -63,14 +67,14 @@ export function MegaMenuPanel({ id, category, name, onNavigate }: { id: string; 
         ) : (
           <div className={cx('mt-7 grid gap-10', columns.length ? (columns.length === 3 ? 'grid-cols-[minmax(0,1fr)_minmax(320px,500px)]' : 'grid-cols-[minmax(0,1fr)_minmax(280px,400px)]') : 'grid-cols-1')}>
             <div className="flex flex-col gap-7">
-            {data.tiles.length > 0 && (
+            {tiles.length > 0 && (
               <section aria-labelledby={`${id}-tiles`}>
                 <h3 id={`${id}-tiles`} className="mb-3 text-sm font-semibold text-graphite">
                   {t(data.tilesTitle)}
                 </h3>
                 {/* At least four slots, so three tiles stay tile-sized instead of stretching across the panel. */}
-                <ul className="grid gap-3" style={{ gridTemplateColumns: `repeat(${Math.min(Math.max(data.tiles.length, 4), 6)}, minmax(0, 1fr))` }}>
-                  {data.tiles.map((tile) => (
+                <ul className="grid gap-3" style={{ gridTemplateColumns: `repeat(${Math.min(Math.max(tiles.length, 4), 6)}, minmax(0, 1fr))` }}>
+                  {tiles.map((tile) => (
                     <li key={tile.href}>
                       <Tile tile={tile} onNavigate={onNavigate} />
                     </li>
@@ -126,8 +130,8 @@ function Tile({ tile, onNavigate }: { tile: MenuTile; onNavigate(): void }) {
       <span className="stage relative block aspect-square overflow-hidden rounded-[10px] shadow-[inset_0_0_0_1px_rgb(14_17_19/0.04)] transition-shadow group-hover:shadow-[inset_0_0_0_2px_#0E1113]">
         {tile.image ? (
           <Picture src={tile.image} alt="" sizes="140px" width={280} height={280} className="absolute inset-0" imgClassName="transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.07]" />
-        ) : tile.art ? (
-          <JacketArt kind={tile.art} />
+        ) : tile.probe ? (
+          <span aria-hidden className="skeleton absolute inset-0" />
         ) : (
           <span aria-hidden className="absolute inset-0 grid place-items-center p-3 text-center font-display text-[26px] font-bold leading-[0.95] text-obsidian/80">
             {tile.label}
@@ -143,63 +147,31 @@ function Tile({ tile, onNavigate }: { tile: MenuTile; onNavigate(): void }) {
   );
 }
 
+
 /**
- * A line drawing of a jacket type, for tiles that have no product photo. Each drawing shows what tells the
- * type apart: the anthem panel, the half zip, the hood, the track stripes, the long quilted parka.
+ * Tiles with a `probe` (types with no photo of their own, such as jacket types) take the photo of the first
+ * product their query finds and its total as their count. Until the answer comes the tile shows a skeleton;
+ * a type with no products is left out, so the menu never links to an empty list.
  */
-function JacketArt({ kind }: { kind: TileArt }) {
-  const long = kind === 'bench';
-  const hem = long ? 94 : 84;
-  const cuff = long ? 74 : 70;
-  const hood = kind === 'rain' || kind === 'bench';
-  return (
-    <svg
-      viewBox="0 0 100 100"
-      aria-hidden
-      className="absolute inset-[14%] size-[72%] text-obsidian/75 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.07]"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      {hood && <path d="M41 18 Q36 3 50 2 Q64 3 59 18" fill="currentColor" fillOpacity={0.1} />}
-      <path
-        d={`M41 17 L29 21 L13 ${cuff - 4} L22 ${cuff} L30 45 L30 ${hem} L70 ${hem} L70 45 L78 ${cuff} L87 ${cuff - 4} L71 21 L59 17 Q50 23 41 17 Z`}
-        fill="currentColor"
-        fillOpacity={0.07}
-      />
-      {!hood && <path d="M41 17 L41 12 Q50 16 59 12 L59 17" />}
-      {kind === 'drill' ? (
-        <>
-          <path d="M50 21 L50 46" />
-          <rect x={47.5} y={45} width={5} height={7} rx={1.5} fill="currentColor" />
-        </>
-      ) : (
-        <path d={`M50 21 L50 ${hem}`} />
-      )}
-      {kind === 'anthem' && (
-        <>
-          <path d="M30 36 L50 48 L70 36" />
-          <path d="M30 44 L50 56 L70 44" />
-        </>
-      )}
-      {kind === 'presentation' && (
-        <>
-          <path d="M27 24 L12.5 62" />
-          <path d="M73 24 L87.5 62" />
-          <circle cx={61} cy={31} r={3} />
-        </>
-      )}
-      {kind === 'rain' && (
-        <>
-          <path d="M46 19 L45 28" />
-          <path d="M54 19 L55 28" />
-          <path d="M34 62 L45 62" />
-          <path d="M55 62 L66 62" />
-        </>
-      )}
-      {long && [50, 62, 74, 86].map((y) => <path key={y} d={`M30 ${y} L70 ${y}`} strokeOpacity={0.55} />)}
-    </svg>
-  );
+function useTilePhotos(tiles: MenuTile[]): MenuTile[] {
+  const { lang } = useI18n();
+  const results = useQueries({
+    queries: tiles.map((tile) => ({
+      queryKey: ['catalog', 'products', 'menu-tile', lang, tile.probe],
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        apiFetch<ProductList>('/v1/catalog/products', { query: { ...tile.probe, page: 1, pageSize: 1 }, withLang: true, signal }),
+      enabled: !!tile.probe,
+      staleTime: 5 * 60_000,
+    })),
+  });
+  return tiles.flatMap((tile, i) => {
+    const res = results[i];
+    if (!tile.probe) return [tile];
+    // A failed lookup still shows the tile, with its name in place of a photo.
+    if (res?.isError) return [{ ...tile, probe: undefined }];
+    if (!res?.data) return [tile];
+    if (res.data.total === 0) return [];
+    const image = res.data.products.find((p) => p.imageUrl)?.imageUrl ?? undefined;
+    return [{ ...tile, image, count: res.data.total, probe: undefined }];
+  });
 }
