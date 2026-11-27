@@ -19,12 +19,15 @@ export function useAdminQuery<T>(key: QueryKey, path: string, query?: Query, opt
   });
 }
 
-/** Admin writes: on success, refresh every admin query whose key starts with one of `invalidate`. */
+/**
+ * Admin writes: on success, refresh every admin query whose key starts with one of `invalidate`, and mark the
+ * shop's catalog data stale so an edit (a new photo, price or name) shows on the next shop page in this tab.
+ */
 export function useAdminMutation<V, R = unknown>(send: (v: V) => Promise<R>, invalidate: QueryKey[] = []) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: send,
-    onSuccess: () => Promise.all(invalidate.map((k) => qc.invalidateQueries({ queryKey: ['admin', ...k] }))),
+    onSuccess: () => Promise.all([...invalidate.map((k) => qc.invalidateQueries({ queryKey: ['admin', ...k] })), qc.invalidateQueries({ queryKey: ['catalog'] })]),
   });
 }
 

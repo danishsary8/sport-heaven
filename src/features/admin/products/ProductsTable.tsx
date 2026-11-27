@@ -38,7 +38,7 @@ export function ProductsTable({ products }: { products: AdminProductListRow[] })
       return n;
     });
 
-  const refresh = () => Promise.all([qc.invalidateQueries({ queryKey: ['admin', 'products'] }), qc.invalidateQueries({ queryKey: ['admin', 'product'] })]);
+  const refresh = () => Promise.all([qc.invalidateQueries({ queryKey: ['admin', 'products'] }), qc.invalidateQueries({ queryKey: ['admin', 'product'] }), qc.invalidateQueries({ queryKey: ['catalog'] })]);
 
   const setStatus = async (ids: string[], status: Status) => {
     setBusy(ids.length === 1 ? ids[0]! : 'bulk');

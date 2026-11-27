@@ -66,7 +66,7 @@ export function ProductImport() {
       }
       setResults([...out]);
     }
-    await qc.invalidateQueries({ queryKey: ['admin', 'products'] });
+    await Promise.all([qc.invalidateQueries({ queryKey: ['admin', 'products'] }), qc.invalidateQueries({ queryKey: ['catalog'] })]);
     setBusy(false);
   };
 
