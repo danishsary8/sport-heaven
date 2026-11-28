@@ -7,6 +7,7 @@ import { formatUsd } from '../../../lib/i18n';
 import { Button, cx, Sheet, useToast } from '../../../ui';
 import { patch, put } from '../api';
 import type { AdminProductListRow } from '../types';
+import { toNinety } from './price';
 import { RestockDialog } from './RestockDialog';
 
 type Status = AdminProductListRow['status'];
@@ -96,7 +97,9 @@ export function ProductsTable({ products }: { products: AdminProductListRow[] })
   // One price for every size of every ticked product (any "was" price is cleared).
   const [bulkPrice, setBulkPrice] = useState('');
   const setPrice = async (ids: string[]) => {
-    const cents = toCents(bulkPrice);
+    const typed = toCents(bulkPrice);
+    // Prices end in .90: the price that will really be saved (the server does the same).
+    const cents = typed === null ? null : toNinety(typed);
     if (cents === null) return toast.error('Enter the price like 11.90');
     setBusy('bulk');
     const results = await Promise.allSettled(ids.map((id) => put(`/v1/admin/products/${id}/prices`, { priceCents: cents, compareAtCents: null })));

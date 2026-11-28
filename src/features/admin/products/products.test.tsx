@@ -278,7 +278,7 @@ describe('admin products', () => {
     const row = screen.getByRole('listitem', { name: /PRED-EU39/ });
     fireEvent.change(within(row).getByLabelText('Price EU 39'), { target: { value: '240.00' } });
     fireEvent.click(within(row).getByRole('button', { name: 'Save EU 39' }));
-    await waitFor(() => expect(calls).toContainEqual({ method: 'PUT', url: `/v1/admin/products/${PID}/variants/${VID}`, body: { priceCents: 24000 } }));
+    await waitFor(() => expect(calls).toContainEqual({ method: 'PUT', url: `/v1/admin/products/${PID}/variants/${VID}`, body: { priceCents: 23990 } }));
   });
 
   it('shows the main and hover photo slots, and a shop preview', async () => {
@@ -372,8 +372,8 @@ describe('admin products', () => {
           status: 'draft',
           colors: [{ name: 'White' }],
           variants: [
-            { color: 'White', size: 'EU 40', priceCents: 12000 },
-            { color: 'White', size: 'EU 41', priceCents: 12000 },
+            { color: 'White', size: 'EU 40', priceCents: 11990 },
+            { color: 'White', size: 'EU 41', priceCents: 11990 },
           ],
         },
       }),
@@ -410,7 +410,7 @@ describe('admin products', () => {
     expect(await within(check).findAllByText('New')).toHaveLength(2);
     fireEvent.click(await within(check).findByRole('button', { name: 'Import 2 new products' }));
     await waitFor(() => expect(calls.filter((c) => c.method === 'POST' && c.url === '/v1/admin/products')).toHaveLength(2));
-    expect(calls[0]!.body).toMatchObject({ slug: 'copa-pure', brandSlug: 'adidas', status: 'draft', variants: [{ size: 'EU 40', priceCents: 12000 }, { size: 'EU 41', priceCents: 12000 }] });
+    expect(calls[0]!.body).toMatchObject({ slug: 'copa-pure', brandSlug: 'adidas', status: 'draft', variants: [{ size: 'EU 40', priceCents: 11990 }, { size: 'EU 41', priceCents: 11990 }] });
     expect(await within(check).findByText('2 created')).toBeTruthy();
   });
 
@@ -422,7 +422,7 @@ describe('admin products', () => {
       'Copa Lite,Adidas,Boots,Black,EU 42,90,,,,,',
       'Copa Pure FG,Adidas,Boots,Black,EU 42,180,,,,copa,',
     ].join('\n');
-    server.use(http.get(`${API}/v1/admin/products/${PID2}`, () => HttpResponse.json({ product: { ...PRODUCT, id: PID2, slug: 'copa', nameI18n: { en: 'Copa Pure FG' }, variants: [{ ...PRODUCT.variants[0], priceCents: 18000, compareAtCents: null }], images: [] } })));
+    server.use(http.get(`${API}/v1/admin/products/${PID2}`, () => HttpResponse.json({ product: { ...PRODUCT, id: PID2, slug: 'copa', nameI18n: { en: 'Copa Pure FG' }, variants: [{ ...PRODUCT.variants[0], priceCents: 17990, compareAtCents: null }], images: [] } })));
     fireEvent.change(await screen.findByLabelText('New products spreadsheet'), { target: { files: [new File([csv], 'mixed.csv', { type: 'text/csv' })] } });
     const check = await screen.findByRole('region', { name: 'New products check' });
     const predator = await within(check).findByRole('row', { name: /Predator Elite FG/ });
@@ -522,7 +522,7 @@ describe('admin products', () => {
     fireEvent.change(within(sizes).getByLabelText('Price for all sizes'), { target: { value: '15' } });
     fireEvent.change(within(sizes).getByLabelText('Was, for all sizes (optional)'), { target: { value: '20.00' } });
     fireEvent.click(within(sizes).getByRole('button', { name: 'Apply to all sizes' }));
-    await waitFor(() => expect(calls).toContainEqual({ method: 'PUT', url: `/v1/admin/products/${PID}/prices`, body: { priceCents: 1500, compareAtCents: 2000 } }));
+    await waitFor(() => expect(calls).toContainEqual({ method: 'PUT', url: `/v1/admin/products/${PID}/prices`, body: { priceCents: 1490, compareAtCents: 2000 } }));
     expect(await screen.findByText('Price set for all 1 size')).toBeTruthy();
     expect(within(sizes).getByRole('button', { name: 'Save EU 39' })).toBeTruthy();
   });

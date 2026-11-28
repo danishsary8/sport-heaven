@@ -28,8 +28,8 @@ describe('checkImport', () => {
       status: 'draft',
       colors: [{ name: 'White', swatchHex: '#FFFFFF' }],
       variants: [
-        { color: 'White', size: 'EU 40', priceCents: 12000, compareAtCents: 15000 },
-        { color: 'White', size: 'EU 41', priceCents: 12000, compareAtCents: 15000 },
+        { color: 'White', size: 'EU 40', priceCents: 11990, compareAtCents: 15000 },
+        { color: 'White', size: 'EU 41', priceCents: 11990, compareAtCents: 15000 },
       ],
       images: [{ path: 'catalog/copa.jpg' }, { path: 'media/0b7e2f4c-1111-4222-8333-444455556666.png' }],
     });
@@ -102,8 +102,8 @@ describe('planImport (new or update)', () => {
     heroTagline: null,
     colors: [{ id: 'col1', name: 'White', swatchHex: null, sort: 0 }],
     variants: [
-      { id: 'v1', colorId: 'col1', sizeLabel: 'EU 40', sizeSort: 400, sku: 'C-40', priceCents: 12000, compareAtCents: null, status: 'active' as const },
-      { id: 'v2', colorId: 'col1', sizeLabel: 'EU 41', sizeSort: 410, sku: 'C-41', priceCents: 12000, compareAtCents: null, status: 'active' as const },
+      { id: 'v1', colorId: 'col1', sizeLabel: 'EU 40', sizeSort: 400, sku: 'C-40', priceCents: 11990, compareAtCents: null, status: 'active' as const },
+      { id: 'v2', colorId: 'col1', sizeLabel: 'EU 41', sizeSort: 410, sku: 'C-41', priceCents: 11990, compareAtCents: null, status: 'active' as const },
     ],
     images: [
       { id: 'i1', colorId: 'col1', path: 'catalog/copa.jpg', alt: 'Copa', sort: 0 },
@@ -126,7 +126,7 @@ describe('planImport (new or update)', () => {
     expect(problems).toEqual([]);
     const [plan] = planImport(rows, new Map([['copa-pure-3-fg', existing]]));
     expect(plan).toMatchObject({ kind: 'update', productId: 'p1' });
-    expect(plan!.changes).toEqual(['price $120.00 → $11.90', 'main and hover photos']);
+    expect(plan!.changes).toEqual(['price $119.90 → $11.90', 'main and hover photos']);
     expect(plan!.ops).toEqual([
       { method: 'PUT', path: '/v1/admin/products/p1/prices', body: { priceCents: 1190, compareAtCents: null } },
       // The first two photos are replaced; the extra sole photo stays after them.
@@ -169,7 +169,7 @@ describe('photo links in the import', () => {
   });
   it('says the photos will be downloaded', () => {
     const { rows } = checkImport(`${HEAD2}\nCopa X,Adidas,boots,White,,EU 40,120,,,https://cdn.example.com/a.webp,,copa-x,`, BRANDS, CATEGORIES);
-    const p = { id: 'p9', slug: 'copa-x', nameI18n: { en: 'Copa X' }, descriptionI18n: null, status: 'active', colors: [], images: [], variants: [{ priceCents: 12000, compareAtCents: null }] } as unknown as Parameters<typeof planImport>[1] extends Map<string, infer P> ? P : never;
+    const p = { id: 'p9', slug: 'copa-x', nameI18n: { en: 'Copa X' }, descriptionI18n: null, status: 'active', colors: [], images: [], variants: [{ priceCents: 11990, compareAtCents: null }] } as unknown as Parameters<typeof planImport>[1] extends Map<string, infer P> ? P : never;
     expect(planImport(rows, new Map([['copa-x', p]]))[0]!.changes).toEqual(['main photo (downloaded from the link)']);
   });
 });

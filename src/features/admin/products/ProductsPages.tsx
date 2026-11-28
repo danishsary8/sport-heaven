@@ -6,6 +6,7 @@ import { Button, EmptyState, ErrorState, Field, QueryView, Select, Skeleton, Tex
 import { AdminOnly } from '../AdminLayout';
 import { patch, post, put, useAdminMutation, useAdminQuery } from '../api';
 import type { AdminProduct, AdminProductListRow, AdminVariant, Brand, Category, CsvImportResult } from '../types';
+import { toNinety } from './price';
 import { ProductsTable } from './ProductsTable';
 import { ProductImport } from './ProductImport';
 import { PhotoManager, tilesOf, type PhotoTile } from './PhotoManager';
@@ -440,8 +441,10 @@ function AllSizesPrice({ productId, sizes }: { productId: string; sizes: number 
   const [compare, setCompare] = useState('');
   const save = useAdminMutation((body: unknown) => put(`/v1/admin/products/${productId}/prices`, body), [['product', productId], ['products']]);
   const submit = () => {
-    const p = toCents(price);
-    if (p === null) return toast.error('Enter the price like 95.00');
+    const typed = toCents(price);
+    if (typed === null) return toast.error('Enter the price like 95.00');
+    // Prices end in .90: the price that will really be saved.
+    const p = toNinety(typed);
     const c = compare.trim() ? toCents(compare) : null;
     if (compare.trim() && c === null) return toast.error('Enter the "was" price like 120.00, or leave it empty');
     if (c !== null && c <= p) return toast.error('The "was" price must be higher than the price');
@@ -477,8 +480,10 @@ function VariantRow({ productId, v, color }: { productId: string; v: AdminVarian
   const save = useAdminMutation((body: unknown) => put(`/v1/admin/products/${productId}/variants/${v.id}`, body), [['product', productId]]);
   const submit = () => {
     const body: Record<string, unknown> = {};
-    const p = toCents(price);
-    if (p === null) return toast.error('Enter the price like 95.00');
+    const typed = toCents(price);
+    if (typed === null) return toast.error('Enter the price like 95.00');
+    // Prices end in .90: the price that will really be saved.
+    const p = toNinety(typed);
     if (p !== v.priceCents) body.priceCents = p;
     const c = compare.trim() ? toCents(compare) : null;
     if (compare.trim() && c === null) return toast.error('Enter the compare-at price like 120.00, or leave it empty');
@@ -520,7 +525,8 @@ export function NewProductPage() {
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const sizes = f.sizes.split(',').map((s) => s.trim()).filter(Boolean);
-    const price = toCents(f.price);
+    const typedPrice = toCents(f.price);
+    const price = typedPrice === null ? null : toNinety(typedPrice);
     const slug = f.slug.trim() || slugify(f.name);
     if (!f.name.trim() || !slug || !f.brand || !f.category || !f.color.trim() || sizes.length === 0 || price === null) return setError('Fill in every field. Enter the price like 120 or 120.50.');
     if (f.hex && !/^#[0-9a-fA-F]{6}$/.test(f.hex)) return setError('Write the colour code like #D81E2B, or leave it empty.');

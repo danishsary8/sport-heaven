@@ -1,4 +1,5 @@
 import type { AdminProduct, Brand, Category } from '../types';
+import { toNinety } from './price';
 
 /** The columns of a new-product spreadsheet, in template order. Sizes are separated by "|" (or ";"). */
 export const IMPORT_COLUMNS = ['name', 'brand', 'category', 'colour', 'colour_hex', 'sizes', 'price', 'compare_at', 'description', 'main_photo', 'hover_photo'] as const;
@@ -198,7 +199,9 @@ export function checkImport(text: string, brands: Brand[], categories: Category[
       .split(/[|;]/)
       .map((s) => s.trim())
       .filter(Boolean);
-    const price = cents(at(r, 'price'));
+    const typedPrice = cents(at(r, 'price'));
+    // Prices end in .90: what will really be saved (the server does the same).
+    const price = typedPrice === null ? null : toNinety(typedPrice);
     const compare = at(r, 'compare_at') ? cents(at(r, 'compare_at')) : undefined;
     const photos = [at(r, 'main_photo'), at(r, 'hover_photo')].filter(Boolean);
     const brand = findBrand(at(r, 'brand'));
