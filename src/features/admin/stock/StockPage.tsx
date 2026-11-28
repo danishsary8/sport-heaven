@@ -1,7 +1,7 @@
 import { ArrowLeftRight, ClipboardCheck, History, Minus, PackagePlus, Plus, Search, ShoppingBag, X } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router';
-import { isApiError } from '../../../lib/api';
+import { apiFetch, isApiError } from '../../../lib/api';
 import { useAuth } from '../../../lib/auth';
 import { Button, EmptyState, ErrorState, Field, Picture, Select, Sheet, Skeleton, cx, useToast } from '../../../ui';
 import { useBranches, useMenu } from '../../catalog/api';
@@ -89,6 +89,29 @@ export function StockPage() {
     });
   const pageSizes = (list.data?.products ?? []).flatMap((p) => p.variants.map((v) => ({ id: v.id, label: `${p.name}, ${v.size}` })));
   const allOnPagePicked = pageSizes.length > 0 && pageSizes.every((x) => picked.has(x.id));
+  // Every size in the whole list (all pages, same store, view, search and category), fetched 50 products at a time.
+  const listKey = [branchId, view, q, category].join('|');
+  const [everything, setEverything] = useState<{ key: string; ids: { id: string; label: string }[] } | null>(null);
+  const [tickingAll, setTickingAll] = useState(false);
+  const allInList = everything?.key === listKey ? everything.ids : null;
+  const allInListPicked = !!allInList && allInList.length > 0 && allInList.every((x) => picked.has(x.id));
+  const tickWholeList = async () => {
+    setTickingAll(true);
+    try {
+      const ids: { id: string; label: string }[] = [];
+      for (let p = 1, pages = 1; p <= pages; p++) {
+        const r = await apiFetch<StockList>('/v1/admin/stock/list', { query: { branchId, view, page: p, pageSize: 50, ...(q ? { q } : {}), ...(category ? { category } : {}) } });
+        pages = Math.ceil(r.total / 50);
+        ids.push(...r.products.flatMap((prod) => prod.variants.map((v) => ({ id: v.id, label: `${prod.name}, ${v.size}` }))));
+      }
+      setEverything({ key: listKey, ids });
+      togglePick(ids, true);
+    } catch (e) {
+      toast.error(isApiError(e) ? e.message : 'Could not load the whole list. Try again.');
+    } finally {
+      setTickingAll(false);
+    }
+  };
   const [dialog, setDialog] = useState<{ kind: 'count' | 'transfer' | 'history'; v: StockSize; name: string } | null>(null);
   const record = useAdminMutation((body: unknown) => post('/v1/admin/stock/sale', body), [['stock'], ['overview']]);
 
@@ -232,6 +255,17 @@ export function StockPage() {
               <button type="button" className="font-semibold underline underline-offset-4" onClick={() => togglePick(pageSizes, !allOnPagePicked)}>
                 {allOnPagePicked ? 'Untick this page' : `Tick all ${pageSizes.length} sizes on this page`}
               </button>
+              {allInListPicked ? (
+                <button type="button" className="font-semibold underline underline-offset-4" onClick={() => togglePick(allInList!, false)}>
+                  Untick all {allInList!.length} sizes
+                </button>
+              ) : (
+                list.data.total > list.data.products.length && (
+                  <button type="button" className="font-semibold underline underline-offset-4 disabled:opacity-60" disabled={tickingAll} onClick={() => void tickWholeList()}>
+                    {tickingAll ? 'Ticking every size…' : `Tick every size in this list (${list.data.total} products)`}
+                  </button>
+                )
+              )}
             </div>
           )}
           {list.data.products.map((p) => {
@@ -418,7 +452,24 @@ function RestockBar({ branchId, picked, onDone }: { branchId: string; picked: Ma
   const [qty, setQty] = useState('1');
   const [note, setNote] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const save = useAdminMutation((body: unknown) => post<{ sizes: number; units: number }>('/v1/admin/stock/restock', body), [['stock'], ['overview']]);
+  // The server takes up to 500 sizes per restock, so a bigger one goes in parts (each part is recorded on its own).
+  const save = useAdminMutation(
+    async (body: { branchId: string; lines: { variantId: string; qty: number }[]; note?: string }) => {
+      const total = { sizes: 0, units: 0 };
+      for (let i = 0; i < body.lines.length; i += 500) {
+        try {
+          const r = await post<{ sizes: number; units: number }>('/v1/admin/stock/restock', { ...body, lines: body.lines.slice(i, i + 500) });
+          total.sizes += r.sizes;
+          total.units += r.units;
+        } catch (e) {
+          if (total.sizes === 0) throw e;
+          throw new Error(`${total.sizes} sizes were restocked, then it stopped: ${isApiError(e) ? e.message : 'something went wrong'}. Untick those and try the rest again.`);
+        }
+      }
+      return total;
+    },
+    [['stock'], ['overview']],
+  );
   const n = Number(qty);
   const valid = Number.isInteger(n) && n >= 1 && n <= 999;
   // "Product, EU 40" labels grouped by product: "Product: EU 40, EU 41".
@@ -471,7 +522,7 @@ function RestockBar({ branchId, picked, onDone }: { branchId: string; picked: Ma
                   setNote('');
                   onDone();
                 },
-                onError: (e) => setError(isApiError(e) ? e.message : 'Something went wrong.'),
+                onError: (e) => setError(isApiError(e) || e instanceof Error ? e.message : 'Something went wrong.'),
               },
             );
           }}

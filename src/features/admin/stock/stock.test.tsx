@@ -145,6 +145,57 @@ describe('stock screen', () => {
     expect(await within(dialog).findByText('Counter sale')).toBeTruthy();
   });
 
+  it('ticks every size in the list across all pages, keeping the filters', async () => {
+    const all = Array.from({ length: 60 }, (_, i) => ({ ...LIST.products[0]!, id: `p${i}`, name: `Boot ${i}`, variants: [size(`00000000-0000-4000-8000-${String(i).padStart(12, '0')}`, 'EU 40', 3, 0)] }));
+    server.use(
+      http.get(`${API}/v1/admin/stock/list`, ({ request }) => {
+        const sp = new URL(request.url).searchParams;
+        lists.push(sp);
+        const page = Number(sp.get('page') ?? 1);
+        const per = Number(sp.get('pageSize') ?? 20);
+        return HttpResponse.json({ ...LIST, total: 60, page, pageSize: per, products: all.slice((page - 1) * per, page * per) });
+      }),
+    );
+    renderRoutes(routes, '/admin/stock?category=boots', { signedIn: true });
+    await screen.findByRole('region', { name: 'Boot 0' });
+    fireEvent.click(screen.getByRole('button', { name: 'Restock' }));
+    lists = [];
+    fireEvent.click(screen.getByRole('button', { name: 'Tick every size in this list (60 products)' }));
+    expect(await screen.findByRole('heading', { name: 'Restock 60 sizes' })).toBeTruthy();
+    expect(lists.map((l) => [l.get('page'), l.get('pageSize'), l.get('category'), l.get('view'), l.get('branchId')])).toEqual([
+      ['1', '50', 'boots', 'all', 'sensok'],
+      ['2', '50', 'boots', 'all', 'sensok'],
+    ]);
+    fireEvent.click(screen.getByRole('button', { name: 'Untick all 60 sizes' }));
+    await waitFor(() => expect(screen.queryByRole('heading', { name: /Restock \d+ size/ })).toBeNull());
+  });
+
+  it('sends a very big restock in parts of 500 sizes', async () => {
+    const all = Array.from({ length: 520 }, (_, i) => ({ ...LIST.products[0]!, id: `p${i}`, name: `Boot ${i}`, variants: [size(`00000000-0000-4000-8000-${String(i).padStart(12, '0')}`, 'EU 40', 3, 0)] }));
+    server.use(
+      http.get(`${API}/v1/admin/stock/list`, ({ request }) => {
+        const sp = new URL(request.url).searchParams;
+        const page = Number(sp.get('page') ?? 1);
+        const per = Number(sp.get('pageSize') ?? 20);
+        return HttpResponse.json({ ...LIST, total: 520, page, pageSize: per, products: all.slice((page - 1) * per, page * per) });
+      }),
+      http.post(`${API}/v1/admin/stock/restock`, async ({ request }) => {
+        const body = (await request.json()) as { lines: unknown[] };
+        posts.push({ path: 'restock', body });
+        return HttpResponse.json({ refId: 'R', sizes: body.lines.length, units: body.lines.length * 2 });
+      }),
+    );
+    renderRoutes(routes, '/admin/stock', { signedIn: true });
+    await screen.findByRole('region', { name: 'Boot 0' });
+    fireEvent.click(screen.getByRole('button', { name: 'Restock' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Tick every size in this list (520 products)' }));
+    const bar = await screen.findByRole('region', { name: 'Restock 520 sizes' });
+    fireEvent.change(within(bar).getByLabelText('Add to each'), { target: { value: '2' } });
+    fireEvent.click(within(bar).getByRole('button', { name: /^Add/ }));
+    await waitFor(() => expect(posts.map((p) => (p.body as { lines: unknown[] }).lines.length)).toEqual([500, 20]));
+    expect(await screen.findByText('Added 2 to 520 sizes (1040 units)')).toBeTruthy();
+  }, 20_000);
+
   it('restocks the ticked sizes with the same amount each', async () => {
     await open();
     fireEvent.click(screen.getByRole('button', { name: 'Restock' }));
