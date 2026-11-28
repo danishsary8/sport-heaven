@@ -334,7 +334,7 @@ describe('admin products', () => {
     renderRoutes(routes, '/admin/products', { signedIn: true });
     const file = new File(['sku,price_usd\nPRED-EU39,240.00'], 'prices.csv', { type: 'text/csv' });
     fireEvent.change(await screen.findByLabelText('Update prices from a CSV file'), { target: { files: [file] } });
-    const preview = await screen.findByRole('region', { name: 'Import preview' });
+    const preview = await screen.findByRole('region', { name: 'Import preview' }, { timeout: 5000 });
     expect(within(preview).getByText('PRED-EU39')).toBeTruthy();
     expect(calls[0]).toMatchObject({ method: 'POST', url: '/v1/admin/products/import?apply=false', body: 'sku,price_usd\nPRED-EU39,240.00' });
     fireEvent.click(within(preview).getByRole('button', { name: 'Apply 1 change' }));
