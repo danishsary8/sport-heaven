@@ -7,6 +7,7 @@ import { useAddToCart } from '../../cart/api';
 import { AddToBagButton, useAddedAlert } from '../../cart/AddToBagButton';
 import { useProduct, type ProductDetail, type Variant } from '../api';
 import { ProductCard } from '../ProductCard';
+import { BackButton } from './BackButton';
 import { Breadcrumbs } from './Breadcrumbs';
 import { Gallery } from './Gallery';
 import { ProductBadges, ServiceList } from './BuyBoxExtras';
@@ -131,8 +132,9 @@ function ProductView({ product }: { product: ProductDetail }) {
       <Breadcrumbs product={product} className="mx-auto max-w-[1320px] px-4 py-3 lg:px-8 lg:pb-0 lg:pt-6" />
       <div className="mx-auto max-w-[1320px] lg:grid lg:grid-cols-[minmax(0,1.15fr)_minmax(360px,1fr)] lg:gap-12 xl:gap-16 lg:px-8 lg:pt-5">
         {/* On desktop the photos stay in view while the buy box and details scroll past. */}
-        <div className="lg:sticky lg:top-24 lg:self-start">
+        <div className="relative lg:sticky lg:top-24 lg:self-start">
           <Gallery images={product.images} color={color} name={product.name} />
+          <BackButton fallback={product.category ? `/c/${encodeURIComponent(product.category)}` : '/shop'} className="absolute left-3 top-3 z-10 lg:hidden" />
         </div>
 
         <div className="px-4 pt-5 lg:px-0 lg:pt-0">

@@ -93,6 +93,7 @@ export const catalogEn = {
   'search.keepTyping': 'Type one more letter to see products.',
   'product.notFound': "This product isn't available",
   'product.notFoundBody': 'It may have sold out for good or moved. Have a look at what is in stock now.',
+  'product.back': 'Back',
   'product.add': 'Add to bag',
   'product.added': 'Added to bag',
   'product.addedShort': 'Added',

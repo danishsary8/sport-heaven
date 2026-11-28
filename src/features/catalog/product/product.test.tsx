@@ -79,6 +79,20 @@ beforeEach(() => {
 });
 
 describe('product page', () => {
+  it('goes back to the page the shopper came from', async () => {
+    const { router } = renderRoutes(routes, '/shop?brand=adidas');
+    await router.navigate('/p/f50');
+    fireEvent.click(await screen.findByRole('button', { name: 'Back' }));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/shop'));
+    expect(router.state.location.search).toBe('?brand=adidas');
+  });
+
+  it("goes to the product's category when the page was opened directly", async () => {
+    const { router } = renderRoutes(routes, '/p/f50');
+    fireEvent.click(await screen.findByRole('button', { name: 'Back' }));
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/c/${DETAIL.product.category}`));
+  });
+
   it('shows sizes as a radio group, crosses out sold-out sizes and waits for a size', async () => {
     renderRoutes(routes, '/p/f50');
     expect(await screen.findByRole('heading', { level: 1, name: 'F50 Elite FG' })).toBeTruthy();

@@ -98,6 +98,7 @@ export const catalogKm: Record<keyof typeof catalogEn, string> = {
 
   'product.notFound': 'ទំនិញនេះមិនមានទេ',
   'product.notFoundBody': 'វាអាចលក់អស់ ឬត្រូវបានផ្លាស់ប្តូរ។ សូមមើលទំនិញដែលមានក្នុងស្តុកឥឡូវនេះ។',
+  'product.back': 'ត្រឡប់ក្រោយ',
   'product.add': 'ដាក់ក្នុងកាបូប',
   'product.added': 'បានដាក់ក្នុងកាបូប',
   'product.addedShort': 'បានដាក់',
