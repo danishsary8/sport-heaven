@@ -5,7 +5,7 @@
  */
 export const CATEGORY_IMAGES: Readonly<Record<string, string>> = {
   boots: '/assets/catalog/hero_mercurial_boot_1795112605976.jpg',
-  jerseys: '/assets/catalog/jersey_barca_2627_home_1795132052931.jpg',
+  jerseys: '/assets/catalog/jersey_cambodia_blue_1795112605589.jpg',
   f1: '/assets/catalog/jersey_f1_mercedes_2026_1795138746906.jpg',
   balls: '/assets/catalog/ball_ucl_pro_2627_1795193989350.jpg',
   jackets: '/assets/catalog/jacket_f1_mclaren_2026_1795194122903.jpg',
