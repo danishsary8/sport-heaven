@@ -178,7 +178,7 @@ const validLink = (v: string) => {
  * Checks a new-product spreadsheet against the shop's brands and categories. Every problem names its line,
  * so the file can be fixed in one go; nothing should be created while any row has a problem.
  */
-export function checkImport(text: string, brands: Brand[], categories: Category[]): { rows: ImportRow[]; problems: string[] } {
+export function checkImport(text: string, brands: Brand[], categories: Category[], round: (cents: number) => number = toNinety): { rows: ImportRow[]; problems: string[] } {
   const [head, ...data] = parseCsv(text);
   if (!head) return { rows: [], problems: ['The file is empty'] };
   const cols = head.map((h) => h.trim().toLowerCase());
@@ -200,8 +200,8 @@ export function checkImport(text: string, brands: Brand[], categories: Category[
       .map((s) => s.trim())
       .filter(Boolean);
     const typedPrice = cents(at(r, 'price'));
-    // Prices end in .90: what will really be saved (the server does the same).
-    const price = typedPrice === null ? null : toNinety(typedPrice);
+    // What will really be saved (.90 when that rule is on; the server does the same).
+    const price = typedPrice === null ? null : round(typedPrice);
     const compare = at(r, 'compare_at') ? cents(at(r, 'compare_at')) : undefined;
     const photos = [at(r, 'main_photo'), at(r, 'hover_photo')].filter(Boolean);
     const brand = findBrand(at(r, 'brand'));

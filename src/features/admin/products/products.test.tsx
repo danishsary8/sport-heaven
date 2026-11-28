@@ -263,6 +263,24 @@ describe('admin products', () => {
     expect(screen.queryByRole('combobox', { name: 'Type' })).toBeNull();
   });
 
+  it('saves a price exactly as typed when the .90 rule is off, and says which rule is on', async () => {
+    server.use(http.get(`${API}/v1/admin/settings`, () => HttpResponse.json({ settings: { price_rounding: { endInNinety: false } } })));
+    renderRoutes(routes, `/admin/products/${PID}`, { signedIn: true });
+    const sizes = await screen.findByRole('region', { name: 'Sizes and prices' });
+    expect(await within(sizes).findByText('Prices are saved exactly as typed.')).toBeTruthy();
+    expect(within(sizes).getByRole('link', { name: 'Change in Settings' })).toHaveAttribute('href', '/admin/settings');
+    const row = within(sizes).getByRole('listitem', { name: /EU 39/ });
+    fireEvent.change(within(row).getByLabelText('Price EU 39'), { target: { value: '0.01' } });
+    fireEvent.click(within(row).getByRole('button', { name: 'Save EU 39' }));
+    await waitFor(() => expect(calls).toContainEqual({ method: 'PUT', url: `/v1/admin/products/${PID}/variants/${VID}`, body: { priceCents: 1 } }));
+  });
+
+  it('says prices end in .90 when the rule is on', async () => {
+    renderRoutes(routes, `/admin/products/${PID}`, { signedIn: true });
+    const sizes = await screen.findByRole('region', { name: 'Sizes and prices' });
+    expect(await within(sizes).findByText('Prices end in .90: $12.00 is saved as $11.90.')).toBeTruthy();
+  });
+
   it('changes one product status right from the list', async () => {
     renderRoutes(routes, '/admin/products', { signedIn: true });
     fireEvent.change(await screen.findByRole('combobox', { name: 'Status of Copa Pure FG' }), { target: { value: 'active' } });

@@ -67,6 +67,14 @@ describe('admin promotions, delivery and settings', () => {
     await waitFor(() => expect(calls).toContainEqual({ method: 'PUT', url: '/v1/admin/shipping-rates/r1', body: { feeCents: 300, freeOverCents: 5000, etaEn: 'Same or next day' } }));
   });
 
+  it('turns the .90 price rule off and on with one switch', async () => {
+    renderRoutes(routes, '/admin/settings', { signedIn: true });
+    const rule = await screen.findByRole('switch', { name: 'End prices in .90' });
+    expect(rule).toHaveAttribute('aria-checked', 'true');
+    fireEvent.click(rule);
+    await waitFor(() => expect(calls).toContainEqual({ method: 'PUT', url: '/v1/admin/settings/price_rounding', body: { endInNinety: false } }));
+  });
+
   it('turns on cash on pickup, changes the hold time and the riel rate', async () => {
     renderRoutes(routes, '/admin/settings', { signedIn: true });
     fireEvent.click(await screen.findByRole('checkbox', { name: 'Cash on pickup' }));

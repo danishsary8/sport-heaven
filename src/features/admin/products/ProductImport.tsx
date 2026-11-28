@@ -8,6 +8,7 @@ import { Button, cx } from '../../../ui';
 import { post, useAdminQuery } from '../api';
 import type { AdminProduct, Brand, Category } from '../types';
 import { findProducts } from './shopLookup';
+import { usePriceRounding } from './usePriceRounding';
 import { IMPORT_TEMPLATE, checkImport, isPhotoLink, planImport, type ImportPlan, type ImportRow } from './productImport';
 
 type Result = { line: number; ok: true; id: string; kind: 'new' | 'update' } | { line: number; ok: false; message: string };
@@ -21,6 +22,7 @@ const KIND_STYLE: Record<ImportPlan['kind'], string> = { new: 'bg-success/10 tex
  * New, Update (with what changes) or No change — and nothing is sent while any row has a problem.
  */
 export function ProductImport() {
+  const { round } = usePriceRounding();
   const qc = useQueryClient();
   const input = useRef<HTMLInputElement>(null);
   const brands = useAdminQuery<{ brands: Brand[] }>(['brands'], '/v1/admin/brands');
@@ -32,7 +34,7 @@ export function ProductImport() {
   const [results, setResults] = useState<Result[] | null>(null);
   const [busy, setBusy] = useState(false);
   const ready = !!brands.data && !!categories.data;
-  const check = file && ready ? checkImport(file.text, brands.data!.brands, categories.data!.categories) : null;
+  const check = file && ready ? checkImport(file.text, brands.data!.brands, categories.data!.categories, round) : null;
   const valid = !!check && check.rows.length > 0 && check.problems.length === 0;
 
   // Once the file is valid, compare it with the shop so every row can be labelled before anything is sent.

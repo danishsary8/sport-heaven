@@ -6,7 +6,7 @@ import { Button, EmptyState, ErrorState, Field, QueryView, Select, Skeleton, Tex
 import { AdminOnly } from '../AdminLayout';
 import { patch, post, put, useAdminMutation, useAdminQuery } from '../api';
 import type { AdminProduct, AdminProductListRow, AdminVariant, Brand, Category, CsvImportResult } from '../types';
-import { toNinety } from './price';
+import { usePriceRounding } from './usePriceRounding';
 import { ProductsTable } from './ProductsTable';
 import { ProductImport } from './ProductImport';
 import { PhotoManager, tilesOf, type PhotoTile } from './PhotoManager';
@@ -395,6 +395,7 @@ function ProductEditor({ product }: { product: AdminProduct }) {
         <h2 id="sizes-h" className="mb-3 font-display text-[28px] font-bold leading-none">
           Sizes and prices
         </h2>
+        <PriceRuleNote />
         <AllSizesPrice productId={product.id} sizes={product.variants.length} />
         <ul className="divide-y divide-stone rounded-[8px] border border-stone">
           {[...product.variants]
@@ -434,8 +435,23 @@ function ShopPreview({ name, status, photos, fromCents }: { name: string; status
   );
 }
 
+/** Which price rule is on (Settings → "End prices in .90"), with a way to change it. */
+function PriceRuleNote() {
+  const { on } = usePriceRounding();
+  return (
+    <p className="-mt-1 mb-3 flex flex-wrap items-center gap-x-2 text-sm text-graphite">
+      <span className={cx('inline-block size-2 rounded-full', on ? 'bg-success' : 'bg-brass')} aria-hidden />
+      {on ? 'Prices end in .90: $12.00 is saved as $11.90.' : 'Prices are saved exactly as typed.'}
+      <Link to="/admin/settings" className="font-semibold text-obsidian underline underline-offset-4">
+        Change in Settings
+      </Link>
+    </p>
+  );
+}
+
 /** One price (and optional "was" price) for every size at once. Sizes can still be changed one by one below. */
 function AllSizesPrice({ productId, sizes }: { productId: string; sizes: number }) {
+  const { round } = usePriceRounding();
   const toast = useToast();
   const [price, setPrice] = useState('');
   const [compare, setCompare] = useState('');
@@ -444,7 +460,7 @@ function AllSizesPrice({ productId, sizes }: { productId: string; sizes: number 
     const typed = toCents(price);
     if (typed === null) return toast.error('Enter the price like 95.00');
     // Prices end in .90: the price that will really be saved.
-    const p = toNinety(typed);
+    const p = round(typed);
     const c = compare.trim() ? toCents(compare) : null;
     if (compare.trim() && c === null) return toast.error('Enter the "was" price like 120.00, or leave it empty');
     if (c !== null && c <= p) return toast.error('The "was" price must be higher than the price');
@@ -473,6 +489,7 @@ function AllSizesPrice({ productId, sizes }: { productId: string; sizes: number 
 }
 
 function VariantRow({ productId, v, color }: { productId: string; v: AdminVariant; color: string }) {
+  const { round } = usePriceRounding();
   const toast = useToast();
   const [price, setPrice] = useState(dollars(v.priceCents));
   const [compare, setCompare] = useState(dollars(v.compareAtCents));
@@ -483,7 +500,7 @@ function VariantRow({ productId, v, color }: { productId: string; v: AdminVarian
     const typed = toCents(price);
     if (typed === null) return toast.error('Enter the price like 95.00');
     // Prices end in .90: the price that will really be saved.
-    const p = toNinety(typed);
+    const p = round(typed);
     if (p !== v.priceCents) body.priceCents = p;
     const c = compare.trim() ? toCents(compare) : null;
     if (compare.trim() && c === null) return toast.error('Enter the compare-at price like 120.00, or leave it empty');
@@ -514,6 +531,7 @@ function VariantRow({ productId, v, color }: { productId: string; v: AdminVarian
 }
 
 export function NewProductPage() {
+  const { round } = usePriceRounding();
   const navigate = useNavigate();
   const brands = useAdminQuery<{ brands: Brand[] }>(['brands'], '/v1/admin/brands');
   const categories = useAdminQuery<{ categories: Category[] }>(['categories'], '/v1/admin/categories');
@@ -526,7 +544,7 @@ export function NewProductPage() {
     e.preventDefault();
     const sizes = f.sizes.split(',').map((s) => s.trim()).filter(Boolean);
     const typedPrice = toCents(f.price);
-    const price = typedPrice === null ? null : toNinety(typedPrice);
+    const price = typedPrice === null ? null : round(typedPrice);
     const slug = f.slug.trim() || slugify(f.name);
     if (!f.name.trim() || !slug || !f.brand || !f.category || !f.color.trim() || sizes.length === 0 || price === null) return setError('Fill in every field. Enter the price like 120 or 120.50.');
     if (f.hex && !/^#[0-9a-fA-F]{6}$/.test(f.hex)) return setError('Write the colour code like #D81E2B, or leave it empty.');

@@ -1,7 +1,7 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { isApiError } from '../../../lib/api';
 import { formatUsd } from '../../../lib/i18n';
-import { Button, ErrorState, Field, QueryView, Select, Skeleton, useToast } from '../../../ui';
+import { Button, ErrorState, Field, QueryView, Select, Skeleton, cx, useToast } from '../../../ui';
 import { AdminOnly } from '../AdminLayout';
 import { patch, post, put, useAdminMutation, useAdminQuery } from '../api';
 import { toCents } from '../products/ProductsPages';
@@ -182,6 +182,7 @@ interface Settings {
   cash_on_pickup_hours: { hours: number };
   online_safety_buffer: { units: number };
   return_rules: { exchangeDays: number; refundDays: number; nonReturnable: string[] };
+  price_rounding?: { endInNinety: boolean };
 }
 const PAY: [string, string][] = [
   ['aba_khqr', 'ABA KHQR'],
@@ -235,6 +236,7 @@ function OperationalSettings({ s }: { s: Settings }) {
   const saveReturns = useSetting('/v1/admin/settings/return_rules');
   return (
     <div className="grid gap-4 lg:grid-cols-2">
+      <PriceRuleCard on={s.price_rounding?.endInNinety !== false} />
       <Card title="Payment methods">
         <div className="flex flex-col gap-2">
           {PAY.map(([id, label]) => (
@@ -276,6 +278,36 @@ function OperationalSettings({ s }: { s: Settings }) {
         </Button>
       </Card>
     </div>
+  );
+}
+
+/** The .90 price rule as one switch: saved as soon as it is flipped. */
+function PriceRuleCard({ on }: { on: boolean }) {
+  const save = useSetting('/v1/admin/settings/price_rounding');
+  return (
+    <Card title="Prices">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p id="price-rule" className="font-semibold">
+            End prices in .90
+          </p>
+          <p className="mt-0.5 text-sm text-graphite">
+            {on ? 'On: a price like $12.00 is saved as $11.90, everywhere prices are entered.' : 'Off: prices are saved exactly as typed, for example $0.01 for a test payment.'}
+          </p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={on}
+          aria-labelledby="price-rule"
+          onClick={() => save({ endInNinety: !on }, on ? 'Prices are now saved exactly as typed' : 'Prices now end in .90')}
+          className={cx('relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-obsidian', on ? 'bg-success' : 'bg-[#C9C5BB]')}
+        >
+          <span aria-hidden className={cx('inline-block size-5 rounded-full bg-paper shadow transition-transform', on ? 'translate-x-6' : 'translate-x-1')} />
+        </button>
+      </div>
+      <p className="mt-3 text-xs text-graphite">Prices already saved don't change when you flip this. "Was" prices are never rounded.</p>
+    </Card>
   );
 }
 

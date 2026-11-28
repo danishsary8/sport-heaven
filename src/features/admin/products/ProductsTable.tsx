@@ -7,7 +7,7 @@ import { formatUsd } from '../../../lib/i18n';
 import { Button, cx, Sheet, useToast } from '../../../ui';
 import { patch, put } from '../api';
 import type { AdminProductListRow } from '../types';
-import { toNinety } from './price';
+import { usePriceRounding } from './usePriceRounding';
 import { RestockDialog } from './RestockDialog';
 
 type Status = AdminProductListRow['status'];
@@ -32,6 +32,7 @@ function toCents(v: string): number | null {
 }
 
 export function ProductsTable({ products }: { products: AdminProductListRow[] }) {
+  const { round } = usePriceRounding();
   const toast = useToast();
   const qc = useQueryClient();
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -98,8 +99,8 @@ export function ProductsTable({ products }: { products: AdminProductListRow[] })
   const [bulkPrice, setBulkPrice] = useState('');
   const setPrice = async (ids: string[]) => {
     const typed = toCents(bulkPrice);
-    // Prices end in .90: the price that will really be saved (the server does the same).
-    const cents = typed === null ? null : toNinety(typed);
+    // The price that will really be saved (.90 when that rule is on; the server does the same).
+    const cents = typed === null ? null : round(typed);
     if (cents === null) return toast.error('Enter the price like 11.90');
     setBusy('bulk');
     const results = await Promise.allSettled(ids.map((id) => put(`/v1/admin/products/${id}/prices`, { priceCents: cents, compareAtCents: null })));
