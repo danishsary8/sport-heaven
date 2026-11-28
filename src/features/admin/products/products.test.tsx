@@ -49,6 +49,7 @@ beforeEach(() => {
     http.get(`${API}/v1/admin/products`, () => HttpResponse.json({ products: [{ ...ROW, ...LIST }, ROW2], total: 2, page: 1, pageSize: 50 })),
     http.get(`${API}/v1/admin/products/export.csv`, async ({ request }) => (await rec(request), new HttpResponse('sku,price_usd\nPRED-EU39,255.00', { headers: { 'content-type': 'text/csv' } }))),
     http.put(`${API}/v1/admin/products/:id/prices`, async ({ request }) => (await rec(request), HttpResponse.json({ product: PRODUCT }))),
+    http.get(`${API}/v1/admin/products/subtypes`, () => HttpResponse.json({ groups: [] })),
     http.get(`${API}/v1/admin/products/:id`, () => HttpResponse.json({ product: PRODUCT })),
     http.get(`${API}/v1/admin/brands`, () => HttpResponse.json({ brands: [{ id: 'b1', slug: 'adidas', name: 'Adidas' }] })),
     http.get(`${API}/v1/admin/categories`, () => HttpResponse.json({ categories: [{ id: 'c1', slug: 'boots', nameI18n: { en: 'Boots' } }] })),
@@ -210,6 +211,56 @@ describe('admin products', () => {
     });
     expect(await screen.findByText('Added 5 to 2 sizes (10 units) at Sonthormuk')).toBeTruthy();
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  });
+
+  it('searches as you type, without pressing Enter', async () => {
+    const asked: URLSearchParams[] = [];
+    server.use(
+      http.get(`${API}/v1/admin/products`, ({ request }) => {
+        asked.push(new URL(request.url).searchParams);
+        return HttpResponse.json({ products: [{ ...ROW, ...LIST }], total: 1, page: 1, pageSize: 50 });
+      }),
+    );
+    renderRoutes(routes, '/admin/products', { signedIn: true });
+    fireEvent.change(await screen.findByRole('searchbox', { name: 'Search products' }), { target: { value: 'pred' } });
+    await waitFor(() => expect(asked.some((sp) => sp.get('q') === 'pred')).toBe(true));
+  });
+
+  it('filters by a sub-type of the chosen category, and the export follows it', async () => {
+    Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:x'), revokeObjectURL: vi.fn() });
+    const asked: URLSearchParams[] = [];
+    server.use(
+      http.get(`${API}/v1/admin/products`, ({ request }) => {
+        asked.push(new URL(request.url).searchParams);
+        return HttpResponse.json({ products: [{ ...ROW, ...LIST }], total: 1, page: 1, pageSize: 50 });
+      }),
+      http.get(`${API}/v1/admin/products/subtypes`, () =>
+        HttpResponse.json({
+          groups: [
+            { key: 'league', title: 'League', options: [{ value: 'Premier League', label: 'Premier League', count: 7 }] },
+            { key: 'season', title: 'Season', options: [{ value: '2026/27', label: '2026–2027', count: 41 }, { value: '2002', label: '2002', count: 1 }] },
+          ],
+        }),
+      ),
+    );
+    const { router } = renderRoutes(routes, '/admin/products?category=jerseys', { signedIn: true });
+    const type = await screen.findByRole('combobox', { name: 'Type' });
+    await within(type).findByRole('option', { name: '2026–2027 (41)' });
+    expect(within(type).getByRole('group', { name: 'Season' })).toBeTruthy();
+    fireEvent.change(type, { target: { value: 'season=2026/27' } });
+    await waitFor(() => expect(asked.at(-1)!.get('season')).toBe('2026/27'));
+    expect(asked.at(-1)!.get('category')).toBe('jerseys');
+    // Another sub-type replaces the first.
+    fireEvent.change(type, { target: { value: 'league=Premier League' } });
+    await waitFor(() => expect(asked.at(-1)!.get('league')).toBe('Premier League'));
+    expect(asked.at(-1)!.get('season')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Export products (CSV)' }));
+    await waitFor(() => expect(calls.find((c) => c.url.startsWith('/v1/admin/products/export.csv'))).toBeTruthy());
+    expect(new URL(`http://x${calls.find((c) => c.url.startsWith('/v1/admin/products/export.csv'))!.url}`).searchParams.get('league')).toBe('Premier League');
+    // A new category clears the sub-type.
+    fireEvent.change(screen.getByRole('combobox', { name: 'Category' }), { target: { value: '' } });
+    await waitFor(() => expect(router.state.location.search).toBe(''));
+    expect(screen.queryByRole('combobox', { name: 'Type' })).toBeNull();
   });
 
   it('changes one product status right from the list', async () => {

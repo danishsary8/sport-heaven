@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { apiFetch, isApiError } from '../../../lib/api';
 import { formatUsd } from '../../../lib/i18n';
@@ -28,6 +28,14 @@ export function ProductsPage() {
   );
 }
 
+/** Sub-type filters the admin list understands (one at a time, within a category). */
+const SUBTYPE_KEYS = ['league', 'continent', 'season', 'kitType', 'surface', 'garmentType'] as const;
+interface SubtypeGroup {
+  key: (typeof SUBTYPE_KEYS)[number];
+  title: string;
+  options: { value: string; label: string; count: number }[];
+}
+
 const STATUS_TABS = [
   ['', 'All'],
   ['active', 'Active'],
@@ -40,20 +48,42 @@ function ProductsList() {
   const [params, setParams] = useSearchParams();
   const [q, setQ] = useState(params.get('q') ?? '');
   const categories = useAdminQuery<{ categories: Category[] }>(['categories'], '/v1/admin/categories');
-  const query = { q: params.get('q') ?? undefined, status: params.get('status') ?? undefined, category: params.get('category') ?? undefined, page: Number(params.get('page') ?? 1), pageSize: 50 };
+  // The one sub-type filter in the URL, if any (league, continent, season, kit, surface or garment type).
+  const subtype = SUBTYPE_KEYS.map((k) => [k, params.get(k)] as const).find(([, v]) => v);
+  const filters = {
+    q: params.get('q') ?? undefined,
+    status: params.get('status') ?? undefined,
+    category: params.get('category') ?? undefined,
+    ...(subtype ? { [subtype[0]]: subtype[1]! } : {}),
+  };
+  const query = { ...filters, page: Number(params.get('page') ?? 1), pageSize: 50 };
+  const subtypes = useAdminQuery<{ groups: SubtypeGroup[] }>(['product-subtypes', filters.category ?? ''], '/v1/admin/products/subtypes', { category: filters.category }, { enabled: !!filters.category });
   const list = useAdminQuery<{ products: AdminProductListRow[]; total: number; page: number; pageSize: number }>(['products'], '/v1/admin/products', query, { keepPrevious: true });
   const set = (k: string, v: string) => {
     const n = new URLSearchParams(params);
     n.delete('page');
-    if (v) n.set(k, v);
+    // A sub-type belongs to its category, and only one is used at a time.
+    if (k === 'category' || k === 'subtype') for (const key of SUBTYPE_KEYS) n.delete(key);
+    if (k === 'subtype') {
+      const at = v.indexOf('=');
+      if (at > 0) n.set(v.slice(0, at), v.slice(at + 1));
+    } else if (v) n.set(k, v);
     else n.delete(k);
     setParams(n);
   };
 
-  // Exports follow the search, status and category filters. "products" uses the new-product import columns.
+  // Live search: the list follows the box a moment after typing stops (Enter still searches at once).
+  useEffect(() => {
+    if (q.trim() === (params.get('q') ?? '')) return;
+    const id = window.setTimeout(() => set('q', q.trim()), 300);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q]);
+
+  // Exports follow the search, status, category and type filters. "products" uses the new-product import columns.
   const exportCsv = async (format: 'prices' | 'products') => {
     try {
-      const text = await apiFetch<string>('/v1/admin/products/export.csv', { as: 'text', query: { q: query.q, status: query.status, category: query.category, format } });
+      const text = await apiFetch<string>('/v1/admin/products/export.csv', { as: 'text', query: { ...filters, format } });
       const url = URL.createObjectURL(new Blob([text], { type: 'text/csv' }));
       const a = document.createElement('a');
       a.href = url;
@@ -118,7 +148,7 @@ function ProductsList() {
             type="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search by name or web address, then press Enter"
+            placeholder="Search by name or web address"
             className="h-11 w-full rounded-full border border-[#C9C5BB] bg-paper pl-10 pr-4 text-[15px] transition-colors focus:border-obsidian"
           />
         </form>
@@ -144,6 +174,30 @@ function ProductsList() {
             </option>
           ))}
         </select>
+        {filters.category && (subtypes.data?.groups?.length ?? 0) > 0 && (
+          <>
+            <label className="sr-only" htmlFor="product-subtype">
+              Type
+            </label>
+            <select
+              id="product-subtype"
+              value={subtype ? `${subtype[0]}=${subtype[1]}` : ''}
+              onChange={(e) => set('subtype', e.target.value)}
+              className={cx('h-11 max-w-[15rem] rounded-full border bg-paper px-4 text-[15px]', subtype ? 'border-obsidian font-semibold' : 'border-[#C9C5BB]')}
+            >
+              <option value="">All types</option>
+              {subtypes.data!.groups.map((g) => (
+                <optgroup key={g.key} label={g.title}>
+                  {g.options.map((o) => (
+                    <option key={o.value} value={`${g.key}=${o.value}`}>
+                      {o.label} ({o.count})
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </>
+        )}
       </div>
 
       <QueryView query={list} skeleton={<Skeleton className="h-80 w-full rounded-[14px]" />} isEmpty={(d) => d.products.length === 0} empty={<EmptyState title="No products match" body="Clear the search or pick another status." />}>
