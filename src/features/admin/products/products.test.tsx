@@ -168,6 +168,50 @@ describe('admin products', () => {
     expect(calls.filter((c) => c.method === 'DELETE')).toEqual([]);
   });
 
+  it('restocks every size of the ticked products by the same amount, at the chosen store', async () => {
+    server.use(
+      http.get(`${API}/v1/admin/products/${PID2}`, () =>
+        HttpResponse.json({
+          product: {
+            ...PRODUCT,
+            id: PID2,
+            variants: [
+              { ...PRODUCT.variants[0], id: 'v2-41', sizeLabel: 'EU 41', sku: 'COPA-41' },
+              { ...PRODUCT.variants[0], id: 'v2-42', sizeLabel: 'EU 42', sku: 'COPA-42', status: 'inactive' },
+            ],
+          },
+        }),
+      ),
+      http.post(`${API}/v1/admin/stock/restock`, async ({ request }) => {
+        await rec(request);
+        return HttpResponse.json({ refId: 'r1', sizes: 2, units: 10 });
+      }),
+    );
+    renderRoutes(routes, '/admin/products', { signedIn: true });
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Select Predator Elite FG' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select Copa Pure FG' }));
+    fireEvent.click(within(screen.getByRole('region', { name: '2 selected' })).getByRole('button', { name: 'Restock' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Restock 2 products' });
+    // Sizes switched off in the shop are left out.
+    expect(await within(dialog).findByText('Adds 1 to each of 2 sizes (2 units) at Sen Sok.')).toBeTruthy();
+    fireEvent.change(within(dialog).getByLabelText('Store'), { target: { value: 'sonthormuk' } });
+    fireEvent.change(within(dialog).getByLabelText('Add to each size'), { target: { value: '5' } });
+    fireEvent.change(within(dialog).getByLabelText('Note (optional)'), { target: { value: 'Invoice 12' } });
+    expect(within(dialog).getByText('Adds 5 to each of 2 sizes (10 units) at Sonthormuk.')).toBeTruthy();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Restock 2 sizes' }));
+    await waitFor(() => expect(calls.find((c) => c.url === '/v1/admin/stock/restock')).toBeTruthy());
+    expect(calls.find((c) => c.url === '/v1/admin/stock/restock')!.body).toEqual({
+      branchId: 'sonthormuk',
+      lines: [
+        { variantId: VID, qty: 5 },
+        { variantId: 'v2-41', qty: 5 },
+      ],
+      note: 'Invoice 12',
+    });
+    expect(await screen.findByText('Added 5 to 2 sizes (10 units) at Sonthormuk')).toBeTruthy();
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  });
+
   it('changes one product status right from the list', async () => {
     renderRoutes(routes, '/admin/products', { signedIn: true });
     fireEvent.change(await screen.findByRole('combobox', { name: 'Status of Copa Pure FG' }), { target: { value: 'active' } });

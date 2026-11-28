@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { Archive, Download, Eye, EyeOff, ImageOff, Trash2, X } from 'lucide-react';
+import { Archive, Download, Eye, EyeOff, ImageOff, PackagePlus, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { apiFetch, isApiError } from '../../../lib/api';
@@ -7,6 +7,7 @@ import { formatUsd } from '../../../lib/i18n';
 import { Button, cx, Sheet, useToast } from '../../../ui';
 import { patch, put } from '../api';
 import type { AdminProductListRow } from '../types';
+import { RestockDialog } from './RestockDialog';
 
 type Status = AdminProductListRow['status'];
 
@@ -62,6 +63,7 @@ export function ProductsTable({ products }: { products: AdminProductListRow[] })
 
   // Deleting is for good, so it asks first. The server refuses products that have orders (archive those).
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [restockOpen, setRestockOpen] = useState(false);
   const deleteProducts = async (ids: string[]) => {
     setBusy('bulk');
     const results = await Promise.allSettled(ids.map((id) => apiFetch(`/v1/admin/products/${id}`, { method: 'DELETE' })));
@@ -211,6 +213,10 @@ export function ProductsTable({ products }: { products: AdminProductListRow[] })
             <Archive className="size-4" aria-hidden />
             Archive
           </Button>
+          <Button size="sm" variant="ghost" className="text-paper hover:bg-paper/10" disabled={busy !== null} onClick={() => setRestockOpen(true)}>
+            <PackagePlus className="size-4" aria-hidden />
+            Restock
+          </Button>
           <Button size="sm" variant="ghost" className="text-paper hover:bg-paper/10" disabled={busy !== null} onClick={() => void exportSelected([...selected])}>
             <Download className="size-4" aria-hidden />
             Export
@@ -243,6 +249,15 @@ export function ProductsTable({ products }: { products: AdminProductListRow[] })
           </button>
         </section>
       )}
+      <RestockDialog
+        open={restockOpen}
+        productIds={[...selected]}
+        onClose={() => setRestockOpen(false)}
+        onDone={() => {
+          setRestockOpen(false);
+          setSelected(new Set());
+        }}
+      />
       <Sheet
         open={confirmDelete}
         onClose={() => busy === null && setConfirmDelete(false)}
