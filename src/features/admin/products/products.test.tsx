@@ -50,6 +50,7 @@ beforeEach(() => {
     http.get(`${API}/v1/admin/products/export.csv`, async ({ request }) => (await rec(request), new HttpResponse('sku,price_usd\nPRED-EU39,255.00', { headers: { 'content-type': 'text/csv' } }))),
     http.put(`${API}/v1/admin/products/:id/prices`, async ({ request }) => (await rec(request), HttpResponse.json({ product: PRODUCT }))),
     http.get(`${API}/v1/admin/products/subtypes`, () => HttpResponse.json({ groups: [] })),
+    http.get(`${API}/v1/admin/settings`, () => HttpResponse.json({ settings: { price_rounding: { endInNinety: true } } })),
     http.get(`${API}/v1/admin/products/:id`, () => HttpResponse.json({ product: PRODUCT })),
     http.get(`${API}/v1/admin/brands`, () => HttpResponse.json({ brands: [{ id: 'b1', slug: 'adidas', name: 'Adidas' }] })),
     http.get(`${API}/v1/admin/categories`, () => HttpResponse.json({ categories: [{ id: 'c1', slug: 'boots', nameI18n: { en: 'Boots' } }] })),

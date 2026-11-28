@@ -26,6 +26,8 @@ beforeEach(() => {
       suggestCalls.push(q);
       return HttpResponse.json({ products: [{ slug: 'messi-boot', name: 'Messi boot', imageUrl: null, priceCents: 27000 }], brands: [], categories: [] });
     }),
+    // Smart search is off unless a test turns it on.
+    http.get(`${API}/v1/search/smart`, () => HttpResponse.json({ available: false, filters: null })),
     http.get(`${API}/v1/search`, ({ request }) => {
       const q = new URL(request.url).searchParams.get('q');
       if (q === 'zzz') return HttpResponse.json({ products: [], total: 0, page: 1, pageSize: 24 });
@@ -35,6 +37,38 @@ beforeEach(() => {
 });
 
 describe('search', () => {
+  it('opens the matching shop page when smart search reads the words as filters, and offers the exact words instead', async () => {
+    const asked: string[] = [];
+    server.use(
+      http.get(`${API}/v1/search/smart`, ({ request }) => {
+        asked.push(new URL(request.url).searchParams.get('q') ?? '');
+        return HttpResponse.json({ available: true, filters: { category: 'jerseys', continent: ['south-america'], priceMaxCents: 10000, q: 'messi' } });
+      }),
+    );
+    const { router } = renderRoutes(routes, '/search?q=argentina%20messi%20shirt%20under%20100');
+    await waitFor(() => expect(router.state.location.pathname).toBe('/c/jerseys'));
+    const sp = router.state.location.search;
+    expect(Object.fromEntries(new URLSearchParams(sp))).toEqual({ continent: 'south-america', priceMax: '10000', q: 'messi', smart: 'argentina messi shirt under 100' });
+    expect(asked).toEqual(['argentina messi shirt under 100']);
+    expect(await screen.findByText(/Smart search read “argentina messi shirt under 100”/)).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Search the exact words instead' })).toHaveAttribute('href', '/search?q=argentina%20messi%20shirt%20under%20100&exact=1');
+  });
+
+  it('shows plain results for the exact words, without asking smart search', async () => {
+    const asked: string[] = [];
+    server.use(http.get(`${API}/v1/search/smart`, () => (asked.push('x'), HttpResponse.json({ available: true, filters: { category: 'boots' } }))));
+    renderRoutes(routes, '/search?q=messi%20boot&exact=1');
+    expect(await screen.findByText('Messi boot')).toBeTruthy();
+    expect(asked).toEqual([]);
+  });
+
+  it('falls back to plain results when smart search is off or reads only keywords', async () => {
+    server.use(http.get(`${API}/v1/search/smart`, () => HttpResponse.json({ available: true, filters: { q: 'messi boot' } })));
+    const { router } = renderRoutes(routes, '/search?q=messi%20boot');
+    expect(await screen.findByText('Messi boot')).toBeTruthy();
+    expect(router.state.location.pathname).toBe('/search');
+  });
+
   it('suggests products after 2 characters with a debounce, and shows popular links before', async () => {
     renderRoutes(routes, '/');
     fireEvent.click(await screen.findByRole('button', { name: 'Search' }));

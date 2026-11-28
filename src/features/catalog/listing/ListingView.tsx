@@ -1,6 +1,6 @@
-import { SlidersHorizontal, X } from 'lucide-react';
+import { SlidersHorizontal, X, Sparkles } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
-import { useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { useI18n, type DictKey } from '../../../lib/i18n';
 import { Button, EmptyState, ErrorState, PageTitle, QueryView, Sheet, cx } from '../../../ui';
 import { isApiError } from '../../../lib/api';
@@ -87,6 +87,7 @@ export function ListingView({
         {total != null && <p className="text-graphite tabular">{total === 1 ? t('listing.countOne') : t('listing.count', { n: total })}</p>}
       </div>
 
+      {params.get('smart') && <SmartNote words={params.get('smart')!} />}
       <div className="mt-5 flex flex-wrap items-center gap-2 border-b border-stone pb-4">
         <Button variant="secondary" size="sm" className="lg:hidden" onClick={() => setSheetOpen(true)}>
           <SlidersHorizontal className="size-4" aria-hidden />
@@ -191,6 +192,20 @@ export function ListingView({
         <FilterPanel facets={facets} hidden={['category', ...hidden]} />
       </Sheet>
     </section>
+  );
+}
+
+/** Says this page came from smart search, and offers the shopper's exact words instead. */
+function SmartNote({ words }: { words: string }) {
+  const { t } = useI18n();
+  return (
+    <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-[10px] bg-cobalt/[0.06] px-4 py-3 text-[15px]">
+      <Sparkles className="size-4 shrink-0 text-cobalt" aria-hidden />
+      <span>{t('search.smartNote', { q: words })}</span>
+      <Link to={`/search?q=${encodeURIComponent(words)}&exact=1`} className="font-semibold underline underline-offset-4">
+        {t('search.exactInstead')}
+      </Link>
+    </p>
   );
 }
 
