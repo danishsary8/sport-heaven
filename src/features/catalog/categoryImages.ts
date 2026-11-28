@@ -13,6 +13,14 @@ export const CATEGORY_IMAGES: Readonly<Record<string, string>> = {
 };
 
 /**
+ * Tiles that show a product's current main photo (so a photo uploaded in the admin appears here too).
+ * The photo above is used while it loads, or if the product cannot be found.
+ */
+export const CATEGORY_IMAGE_PRODUCT: Readonly<Record<string, string>> = {
+  jerseys: 'cambodia-national-team-home-jersey-varaman',
+};
+
+/**
  * Where to centre a tile's crop when it is not the default (50% 65%). Portrait shots (jackets, F1 kits) keep
  * the collar in view and run off the bottom edge instead of losing the top.
  */

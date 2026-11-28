@@ -1,4 +1,4 @@
-import { fireEvent, screen, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { routes } from '../../../app/routes';
@@ -46,6 +46,27 @@ describe('home page', () => {
 
     const brands = screen.getByRole('region', { name: 'Brands' });
     expect(await within(brands).findByRole('link', { name: 'Puma' })).toHaveAttribute('href', '/brands/puma');
+  });
+
+  it("shows the Cambodia home jersey's current main photo on the Jerseys tile, and the built-in photo if it cannot load", async () => {
+    server.use(
+      http.get(`${API}/v1/catalog/products/cambodia-national-team-home-jersey-varaman`, () =>
+        HttpResponse.json({ product: { ...product(9), imageUrl: 'https://api.test/v1/media/1ab9d92d-f03a-4bc3-bc8a-fa22029d0b28.webp' } }),
+      ),
+    );
+    renderRoutes(routes, '/');
+    const grid = await screen.findByRole('region', { name: 'Shop by category' });
+    const tile = await within(grid).findByRole('link', { name: /Jerseys/ });
+    await waitFor(() => expect(tile.querySelector('img')!.getAttribute('src')).toBe('https://api.test/v1/media/1ab9d92d-f03a-4bc3-bc8a-fa22029d0b28.webp'));
+  });
+
+  it('keeps the built-in Jerseys photo when the product cannot load', async () => {
+    server.use(http.get(`${API}/v1/catalog/products/cambodia-national-team-home-jersey-varaman`, () => HttpResponse.json({ error: { code: 'not_found', message: 'x' } }, { status: 404 })));
+    renderRoutes(routes, '/');
+    const grid = await screen.findByRole('region', { name: 'Shop by category' });
+    const tile = await within(grid).findByRole('link', { name: /Jerseys/ });
+    await new Promise((r) => setTimeout(r, 50));
+    expect(tile.querySelector('img')!.getAttribute('src')).toBe('/assets/catalog/jersey_cambodia_blue_1795112605589.jpg');
   });
 
   it('shows the stores with pickup', async () => {

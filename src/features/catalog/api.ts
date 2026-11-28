@@ -89,9 +89,10 @@ export type ProductDetail = ResponseOf<'/v1/catalog/products/{slug}', 'get'>['pr
 export type Variant = ProductDetail['variants'][number];
 export type Questions = ResponseOf<'/v1/catalog/products/{slug}/questions', 'get'>;
 
-export function useProduct(slug: string) {
+export function useProduct(slug: string, opts: { enabled?: boolean } = {}) {
   const { lang } = useI18n();
   return useQuery({
+    enabled: opts.enabled ?? true,
     queryKey: ['catalog', 'product', slug, lang],
     queryFn: ({ signal }) => apiFetch<{ product: ProductDetail }>(`/v1/catalog/products/${encodeURIComponent(slug)}`, { withLang: true, signal }),
   });
