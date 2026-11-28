@@ -23,6 +23,8 @@ export const payEn = {
   'pay.backToBag': 'Return to your bag',
   'pay.nothingToPay': 'This order has nothing left to pay',
   'pay.seeOrder': 'See your order',
+  'pay.receivedTitle': 'We received your payment',
+  'pay.receivedBody': 'Your bank confirmed the payment and our team is checking it now. We will confirm your order shortly. Please don\'t pay again.',
   'pay.noAccess': "We can't open this order here",
   'pay.noAccessBody': 'For your privacy, an order opens only in the tab where it was placed. Find it with the order number and your phone.',
   'pay.noAccessMember': 'This order is not in your account. Find it with the order number and phone.',

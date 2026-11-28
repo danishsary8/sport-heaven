@@ -73,6 +73,20 @@ describe('payment page', () => {
     expect(statusCalls).toBeGreaterThan(0);
   });
 
+  it('says the payment was received when the bank approved it but staff must check it, and never asks to pay again', async () => {
+    server.use(
+      http.get(`${API}/v1/orders/SC-260001/payment-status`, () =>
+        HttpResponse.json({ status: 'pending_payment', paymentStatus: 'unpaid', latestPayment: qrPayment({ status: 'approved' }), reservedUntil: reservedUntil() }),
+      ),
+    );
+    renderRoutes(routes, '/pay/SC-260001');
+    expect(await screen.findByRole('heading', { name: 'We received your payment' })).toBeTruthy();
+    expect(screen.getByText(/Please don't pay again/)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Pay another way' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Credit or debit card' })).toBeNull();
+    expect(screen.getByRole('link', { name: 'See your order' })).toHaveAttribute('href', '/order/SC-260001');
+  });
+
   it('switches to card and sends the shopper to the card page', async () => {
     renderRoutes(routes, '/pay/SC-260001');
     fireEvent.click(await screen.findByRole('button', { name: 'Pay another way' }));

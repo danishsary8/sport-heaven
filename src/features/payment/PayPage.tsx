@@ -92,6 +92,21 @@ function PayView({ order, initialPayment }: { order: OrderView; initialPayment: 
     );
   }
 
+  // The bank approved the payment but it needs a staff check (e.g. an amount in riel): never offer to pay again.
+  if (payment?.status === 'approved') {
+    return (
+      <EmptyState
+        title={t('pay.receivedTitle')}
+        body={t('pay.receivedBody')}
+        action={
+          <Link to={`/order/${order.number}`} className="inline-flex h-11 items-center rounded-[6px] bg-obsidian px-5 font-semibold text-paper">
+            {t('pay.seeOrder')}
+          </Link>
+        }
+      />
+    );
+  }
+
   const instructions = payment?.instructions ?? null;
   const usable = payment && payment.status === 'pending' && instructions && instructions.kind !== 'none';
   const showChooser = choosing || !usable;
