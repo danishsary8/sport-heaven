@@ -2031,6 +2031,7 @@ export interface paths {
                                 };
                                 promoCode: string | null;
                                 checkoutReady: boolean;
+                                deliveryFromCents: number | null;
                                 notices: string[];
                             };
                         };
@@ -2173,6 +2174,7 @@ export interface paths {
                                 };
                                 promoCode: string | null;
                                 checkoutReady: boolean;
+                                deliveryFromCents: number | null;
                                 notices: string[];
                             };
                         };
@@ -2297,6 +2299,7 @@ export interface paths {
                                 };
                                 promoCode: string | null;
                                 checkoutReady: boolean;
+                                deliveryFromCents: number | null;
                                 notices: string[];
                             };
                         };
@@ -2415,6 +2418,7 @@ export interface paths {
                                 };
                                 promoCode: string | null;
                                 checkoutReady: boolean;
+                                deliveryFromCents: number | null;
                                 notices: string[];
                             };
                         };
@@ -2537,6 +2541,7 @@ export interface paths {
                                 };
                                 promoCode: string | null;
                                 checkoutReady: boolean;
+                                deliveryFromCents: number | null;
                                 notices: string[];
                             };
                         };
@@ -2644,6 +2649,7 @@ export interface paths {
                                 };
                                 promoCode: string | null;
                                 checkoutReady: boolean;
+                                deliveryFromCents: number | null;
                                 notices: string[];
                             };
                         };
@@ -2780,6 +2786,7 @@ export interface paths {
                                 };
                                 promoCode: string | null;
                                 checkoutReady: boolean;
+                                deliveryFromCents: number | null;
                                 notices: string[];
                             };
                             shippingOptions: {

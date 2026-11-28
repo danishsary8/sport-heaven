@@ -216,7 +216,7 @@ function ProductView({ product }: { product: ProductDetail }) {
             </div>
           </div>
 
-          {product.isCustomizable && <PrintStudio value={print} onChange={setPrint} swatch={product.colors.find((c) => c.name === color)?.swatchHex} />}
+          {product.isCustomizable && <PrintStudio value={print} onChange={setPrint} />}
 
           <div className="mt-6 hidden lg:block">{buy}</div>
           <ServiceList />

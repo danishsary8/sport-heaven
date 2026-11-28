@@ -2,13 +2,12 @@ import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router';
 import { formatUsd, useI18n } from '../../../lib/i18n';
 import { Field, Select, cx } from '../../../ui';
-import { JerseyPreviewSvg } from './JerseyPreview';
 import type { JerseyFontStyle, JerseyPatchId } from './types';
 import { type PrintState, printErrors } from './printState';
 import { usePrintOptions } from './api';
 
-/** Name and number printing: the letters "press" onto the shirt preview as you type. Fees come from the API. */
-export function PrintStudio({ value, onChange, swatch }: { value: PrintState; onChange(v: PrintState): void; swatch?: string | null }) {
+/** Name and number printing: a short form; the bag and checkout then show the print and its price. Fees come from the API. */
+export function PrintStudio({ value, onChange }: { value: PrintState; onChange(v: PrintState): void }) {
   const { t } = useI18n();
   const options = usePrintOptions();
   const o = options.data;
@@ -37,7 +36,7 @@ export function PrintStudio({ value, onChange, swatch }: { value: PrintState; on
         </span>
       </label>
       {value.on && (
-        <div className="grid gap-5 border-t border-stone p-4 sm:grid-cols-[1fr_180px]">
+        <div className="border-t border-stone p-4">
           <div className="flex flex-col gap-3">
             <Field
               label={t('print.name')}
@@ -82,15 +81,6 @@ export function PrintStudio({ value, onChange, swatch }: { value: PrintState; on
               </div>
             </fieldset>
             <p className="text-sm text-graphite">{t('print.note')}</p>
-          </div>
-          <div className="print-press order-first mx-auto w-[150px] sm:order-none sm:w-[180px]" key={`${value.name}|${value.number}`}>
-            <JerseyPreviewSvg
-              theme={{ primary: swatch ?? '#0A338F', secondary: '#0E1113', trim: '#C8232C', text: '#FFFFFF', pattern: 'solid', crestLabel: 'SPORT HEAVEN' }}
-              playerName={value.name.trim()}
-              squadNumber={value.number}
-              patch={value.patch}
-              fontStyle={value.font}
-            />
           </div>
         </div>
       )}

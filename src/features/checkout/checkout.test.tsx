@@ -66,6 +66,21 @@ async function fillGuestDelivery() {
 }
 
 describe('checkout', () => {
+  it('shows the printed name and number in the summary, and the delivery price before a method is chosen', async () => {
+    const printed = cart([cartLine(1, { customPrint: { name: 'DARA', number: 10, patch: 'none', font: 'pro-condensed' }, printFeeCents: 400, lineTotalCents: 9900 })]);
+    server.use(
+      http.get(`${API}/v1/cart`, () => HttpResponse.json(printed)),
+      http.post(`${API}/v1/checkout/quote`, () => HttpResponse.json({ ...printed, ...QUOTE_EXTRA })),
+    );
+    renderRoutes(routes, '/checkout');
+    const summary = await screen.findByRole('complementary', { name: 'Order summary' });
+    expect(await within(summary).findByText('Printed DARA, number 10 (+$4.00)')).toBeTruthy();
+    expect(within(summary).getByText('Printing').closest('div')!).toHaveTextContent('$4.00');
+    expect(within(summary).getByText('Delivery').closest('div')!).toHaveTextContent('$2.00');
+    // Delivery is not chosen yet, so the total says it is before delivery.
+    expect(within(summary).getByText('Total before delivery')).toBeTruthy();
+  });
+
   it('explains what is missing before sending anything', async () => {
     renderRoutes(routes, '/checkout');
     fireEvent.click(await screen.findByRole('button', { name: 'Place order' }));

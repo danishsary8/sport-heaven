@@ -6119,6 +6119,18 @@
                         "checkoutReady": {
                           "type": "boolean"
                         },
+                        "deliveryFromCents": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "notices": {
                           "type": "array",
                           "items": {
@@ -6132,6 +6144,7 @@
                         "pricing",
                         "promoCode",
                         "checkoutReady",
+                        "deliveryFromCents",
                         "notices"
                       ],
                       "additionalProperties": false
@@ -6687,6 +6700,18 @@
                         "checkoutReady": {
                           "type": "boolean"
                         },
+                        "deliveryFromCents": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "notices": {
                           "type": "array",
                           "items": {
@@ -6700,6 +6725,7 @@
                         "pricing",
                         "promoCode",
                         "checkoutReady",
+                        "deliveryFromCents",
                         "notices"
                       ],
                       "additionalProperties": false
@@ -7222,6 +7248,18 @@
                         "checkoutReady": {
                           "type": "boolean"
                         },
+                        "deliveryFromCents": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "notices": {
                           "type": "array",
                           "items": {
@@ -7235,6 +7273,7 @@
                         "pricing",
                         "promoCode",
                         "checkoutReady",
+                        "deliveryFromCents",
                         "notices"
                       ],
                       "additionalProperties": false
@@ -7732,6 +7771,18 @@
                         "checkoutReady": {
                           "type": "boolean"
                         },
+                        "deliveryFromCents": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "notices": {
                           "type": "array",
                           "items": {
@@ -7745,6 +7796,7 @@
                         "pricing",
                         "promoCode",
                         "checkoutReady",
+                        "deliveryFromCents",
                         "notices"
                       ],
                       "additionalProperties": false
@@ -8235,6 +8287,18 @@
                         "checkoutReady": {
                           "type": "boolean"
                         },
+                        "deliveryFromCents": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "notices": {
                           "type": "array",
                           "items": {
@@ -8248,6 +8312,7 @@
                         "pricing",
                         "promoCode",
                         "checkoutReady",
+                        "deliveryFromCents",
                         "notices"
                       ],
                       "additionalProperties": false
@@ -8757,6 +8822,18 @@
                         "checkoutReady": {
                           "type": "boolean"
                         },
+                        "deliveryFromCents": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "notices": {
                           "type": "array",
                           "items": {
@@ -8770,6 +8847,7 @@
                         "pricing",
                         "promoCode",
                         "checkoutReady",
+                        "deliveryFromCents",
                         "notices"
                       ],
                       "additionalProperties": false
@@ -9308,6 +9386,18 @@
                         "checkoutReady": {
                           "type": "boolean"
                         },
+                        "deliveryFromCents": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "notices": {
                           "type": "array",
                           "items": {
@@ -9321,6 +9411,7 @@
                         "pricing",
                         "promoCode",
                         "checkoutReady",
+                        "deliveryFromCents",
                         "notices"
                       ],
                       "additionalProperties": false

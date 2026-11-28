@@ -38,6 +38,8 @@ export const cartKm: Record<keyof typeof cartEn, string> = {
   'bag.view': 'មើលកាបូប',
   'bag.estimate': 'ប៉ាន់ស្មានការដឹកជញ្ជូនទៅ',
   'bag.chooseProvince': 'ជ្រើសរើសខេត្ត',
+  'bag.printing': 'ការបោះពុម្ព',
+  'bag.pickupFree': 'ឥតគិតថ្លៃ បើមកយកនៅហាង',
   'bag.free': 'ឥតគិតថ្លៃ',
   'bag.noDelivery': 'បច្ចុប្បន្នមិនដឹកទៅខេត្តនេះទេ។ សូមមកយកនៅហាងជំនួសវិញ។',
 };

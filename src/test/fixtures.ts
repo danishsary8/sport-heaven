@@ -111,6 +111,7 @@ export function cart(lines: ReturnType<typeof cartLine>[], over: { totalCents?: 
       },
       promoCode: over.promo?.code ?? null,
       checkoutReady: over.checkoutReady ?? lines.every((l) => l.problem === null),
+      deliveryFromCents: 200,
       notices: ["Items in your bag aren't reserved until you check out"],
     },
   };

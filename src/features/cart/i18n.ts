@@ -35,6 +35,8 @@ export const cartEn = {
   'bag.view': 'View bag',
   'bag.estimate': 'Estimate delivery to',
   'bag.chooseProvince': 'Choose a province',
+  'bag.printing': 'Printing',
+  'bag.pickupFree': 'Free if you pick up in store',
   'bag.free': 'Free',
   'bag.noDelivery': 'No delivery to this province right now. Pick up in store instead.',
 } as const;

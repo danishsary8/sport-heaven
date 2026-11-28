@@ -10,6 +10,7 @@ import { useAddresses } from '../account/api';
 import { useCart, type Cart } from '../cart/api';
 import { PromoField } from '../cart/BagContents';
 import { lineDetails } from '../cart/lineDetails';
+import { bagParts } from '../cart/totals';
 import { EmptyBag } from '../cart/BagPage';
 import { placeName } from '../geo/api';
 import { AddressFields } from './AddressFields';
@@ -271,10 +272,13 @@ function CheckoutForm({ cart }: { cart: Cart }) {
               <fieldset data-field="shippingMethodId">
                 <legend className="mb-2 text-sm font-semibold">{t('co.deliveryOption')}</legend>
                 {!provinceCode ? (
-                  <p className="flex items-center gap-2 rounded-[10px] border border-dashed border-[#C9C5BB] px-4 py-3 text-sm text-graphite">
-                    <MapPin className="size-4" aria-hidden />
-                    {t('co.chooseProvinceFirst')}
-                  </p>
+                  <div className="rounded-[10px] border border-dashed border-[#C9C5BB] px-4 py-3 text-sm text-graphite">
+                    <p className="flex items-center gap-2">
+                      <MapPin className="size-4 shrink-0" aria-hidden />
+                      {t('co.chooseProvinceFirst')}
+                    </p>
+                    {cart.deliveryFromCents != null && <p className="mt-1 pl-6 font-medium text-obsidian">{t('co.deliveryPriceHint', { price: formatUsd(cart.deliveryFromCents) })}</p>}
+                  </div>
                 ) : available.length === 0 && q ? (
                   <p className="rounded-[10px] bg-chalk px-4 py-3 text-sm text-graphite">{t('bag.noDelivery')}</p>
                 ) : (
@@ -363,6 +367,12 @@ function CheckoutForm({ cart }: { cart: Cart }) {
                     {l.qty} × {l.productName}
                   </span>
                   <span className="mt-0.5 block text-sm text-graphite">{lineDetails(l, t)}</span>
+                  {l.customPrint && (
+                    <span className="mt-0.5 block text-sm font-medium text-cobalt">
+                      {t('bag.print', { name: l.customPrint.name, number: l.customPrint.number })}
+                      {l.printFeeCents > 0 && ` (+${formatUsd(l.printFeeCents)})`}
+                    </span>
+                  )}
                 </span>
                 <span className="tabular shrink-0 font-medium">{formatUsd(l.lineTotalCents)}</span>
               </li>
@@ -397,12 +407,20 @@ function CheckoutForm({ cart }: { cart: Cart }) {
 function Totals({ quote, cart, known }: { quote: Quote | undefined; cart: Cart; known: boolean }) {
   const { t, lang } = useI18n();
   const p = quote?.cart.pricing ?? cart.pricing;
+  const { itemsCents, printingCents } = bagParts((quote?.cart ?? cart).lines);
+  const deliveryFrom = (quote?.cart ?? cart).deliveryFromCents;
   return (
     <dl className="flex flex-col gap-1.5 text-[15px]">
       <div className="flex justify-between">
         <dt>{t('bag.items')}</dt>
-        <dd className="tabular">{formatUsd(p.merchandiseCents)}</dd>
+        <dd className="tabular">{formatUsd(itemsCents)}</dd>
       </div>
+      {printingCents > 0 && (
+        <div className="flex justify-between">
+          <dt>{t('bag.printing')}</dt>
+          <dd className="tabular">{formatUsd(printingCents)}</dd>
+        </div>
+      )}
       {p.discounts.map((d) => (
         <div key={`${d.kind}-${d.label}`} className="flex justify-between text-vermilion">
           <dt>{d.label}</dt>
@@ -411,10 +429,21 @@ function Totals({ quote, cart, known }: { quote: Quote | undefined; cart: Cart; 
       ))}
       <div className="flex justify-between">
         <dt>{t('bag.delivery')}</dt>
-        <dd className="tabular">{!known || !quote ? <span className="text-graphite">{t('co.chooseDelivery')}</span> : p.shippingCents ? formatUsd(p.shippingCents) : <span className="font-semibold text-success">{t('bag.free')}</span>}</dd>
+        <dd className="tabular text-right">
+          {known && quote ? (
+            p.shippingCents ? formatUsd(p.shippingCents) : <span className="font-semibold text-success">{t('bag.free')}</span>
+          ) : deliveryFrom != null ? (
+            <>
+              {formatUsd(deliveryFrom)}
+              <span className="block text-xs text-graphite">{t('bag.pickupFree')}</span>
+            </>
+          ) : (
+            <span className="text-graphite">{t('co.chooseDelivery')}</span>
+          )}
+        </dd>
       </div>
       <div className="mt-2 flex items-baseline justify-between border-t border-dashed border-[#C9C5BB] pt-3">
-        <dt className="text-[15px] font-semibold">{t('co.total')}</dt>
+        <dt className="text-[15px] font-semibold">{known && quote ? t('co.total') : t('bag.total')}</dt>
         <dd className="text-right">
           <span className="tabular block font-display text-[34px] font-bold leading-none">{formatUsd(p.totalCents)}</span>
           {known && quote && <span className="tabular mt-1 block text-sm text-graphite">{formatKhr(p.totalKhr, lang)}</span>}

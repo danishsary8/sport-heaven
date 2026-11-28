@@ -58,6 +58,15 @@ describe('bag', () => {
     expect(screen.getByRole('link', { name: 'Check out' })).toHaveAttribute('href', '/checkout');
   });
 
+  it('says what delivery and printing cost in the totals', async () => {
+    renderRoutes(routes, '/bag');
+    const delivery = (await screen.findByText('Delivery')).closest('div')!;
+    expect(delivery).toHaveTextContent('$2.00');
+    expect(screen.getByText('Free if you pick up in store')).toBeTruthy();
+    const printing = screen.getByText('Printing').closest('div')!;
+    expect(printing).toHaveTextContent('$8.00');
+  });
+
   it('changes the quantity and shows the bag the API returns', async () => {
     renderRoutes(routes, '/bag');
     const line = (await screen.findByRole('link', { name: 'Product 1' })).closest('li')!;

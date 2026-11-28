@@ -1,4 +1,5 @@
 import { Check, ChevronDown, Lock, Minus, Plus, Trash2, Truck } from 'lucide-react';
+import { bagParts } from './totals';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
 import { isApiError } from '../../lib/api';
@@ -262,11 +263,12 @@ export function PromoField({ cart }: { cart: Cart }) {
 export function BagTotals({ cart }: { cart: Cart }) {
   const { t } = useI18n();
   const p = cart.pricing;
+  const { itemsCents, printingCents: printing } = bagParts(cart.lines);
   return (
     <dl className="flex flex-col gap-1.5 text-[15px]">
       <div className="flex justify-between">
         <dt>{t('bag.items')}</dt>
-        <dd className="tabular">{formatUsd(p.merchandiseCents)}</dd>
+        <dd className="tabular">{formatUsd(itemsCents)}</dd>
       </div>
       {p.discounts.map((d) => (
         <div key={`${d.kind}-${d.label}`} className="flex justify-between text-vermilion">
@@ -274,9 +276,22 @@ export function BagTotals({ cart }: { cart: Cart }) {
           <dd className="tabular">−{formatUsd(d.amountCents)}</dd>
         </div>
       ))}
-      <div className="flex justify-between text-graphite">
+      {printing > 0 && (
+        <div className="flex justify-between">
+          <dt>{t('bag.printing')}</dt>
+          <dd className="tabular">{formatUsd(printing)}</dd>
+        </div>
+      )}
+      <div className="flex justify-between">
         <dt>{t('bag.delivery')}</dt>
-        <dd>{t('bag.deliveryLater')}</dd>
+        {cart.deliveryFromCents != null ? (
+          <dd className="text-right">
+            <span className="tabular">{formatUsd(cart.deliveryFromCents)}</span>
+            <span className="block text-xs text-graphite">{t('bag.pickupFree')}</span>
+          </dd>
+        ) : (
+          <dd className="text-graphite">{t('bag.deliveryLater')}</dd>
+        )}
       </div>
       <div className="mt-2 flex items-end justify-between border-t border-dashed border-[#C9C5BB] pt-3">
         <dt className="font-semibold">{t('bag.total')}</dt>

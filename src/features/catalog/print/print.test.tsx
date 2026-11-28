@@ -95,6 +95,12 @@ describe('print studio', () => {
     expect(added[0]).toEqual({ variantId: '11111111-1111-4111-8111-111111111111', qty: 1, customPrint: { name: 'SOKHA', number: 10, patch: 'ucl', font: 'pro-condensed' } });
   });
 
+  it('shows the print form without a shirt picture', async () => {
+    const studio = await openStudio();
+    expect(within(studio).getByLabelText('Name on the back')).toBeTruthy();
+    expect(within(studio).queryByRole('img', { name: /Back view of jersey/ })).toBeNull();
+  });
+
   it('explains what is wrong and keeps Add to bag off until the print is valid', async () => {
     const studio = await openStudio();
     fireEvent.change(within(studio).getByLabelText('Name on the back'), { target: { value: 'A' } });
